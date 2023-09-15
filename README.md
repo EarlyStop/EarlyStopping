@@ -8,7 +8,7 @@ Required Installations
 
 Install build tools
 ```bash
-python3 -m pip install build venv
+python3 -m pip install build virtualenv
 ```
 
 Clone git repository
@@ -51,6 +51,6 @@ Create Jupyter kernel from the environment "myenv"
 python3 -m ipykernel install --user --name=myenv
 ```
 
-Open Jupyter notebook example.ipynb with the kernel myenv and run the code!
+From the notebooks directory open the Jupyter notebook example.ipynb with the kernel myenv and run the code!
 
 
