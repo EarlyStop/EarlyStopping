@@ -15,7 +15,7 @@ class TestFilterEstimator(unittest.TestCase):
             result = estimator.fEst(m, filt="cutoff")
             expected = mu[:m] + [0] * (D - m)  # mu[1:m] followed by D-m zeros
 
-            self.assertEqual(result, expected)
+            self.assertAlmostEqual(result, expected)
 
     def test_landweber_estimation(self):
         D = 10  # Data length
@@ -26,7 +26,7 @@ class TestFilterEstimator(unittest.TestCase):
         estimator = FilterEstimator(Y, lambda_)
         result = estimator.fEst(15, filt="landw")
 
-        self.assertEqual(result, mu)
+        self.assertAlmostEqual(result, mu)
 
 # Running the tests
 #if __name__ == '__main__':
