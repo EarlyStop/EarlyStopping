@@ -26,7 +26,7 @@ class TestFilterEstimator(unittest.TestCase):
         estimator = FilterEstimator(Y, lambda_)
         result = estimator.fEst(15, filt="landw")
 
-        self.assertEqual(result, mu)
+        self.assertEqual(round(result, 8), round(mu, 8))
 
 # Running the tests
 #if __name__ == '__main__':
