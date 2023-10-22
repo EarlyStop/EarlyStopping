@@ -6,14 +6,15 @@ class TestFilterEstimator(unittest.TestCase):
 
     def setUp(self):
         self.D = 10
-        self.lambda_ = np.arange(1, self.D+1)  
         self.mu = np.random.normal(0, 1, self.D)  
-        self.Y = self.lambda_ * self.mu  
+         
 
     def test_cutoff_estimation(self):
         """Test the cutoff estimation method for a range of m values."""
+        lambda_ = np.arange(1, self.D+1) 
+        Y = lambda_ * self.mu 
         for m in range(1, self.D+1):
-            estimator = FilterEstimator(self.Y, self.lambda_)
+            estimator = FilterEstimator(Y, lambda_)
             result = estimator.fEst(m, filt=EstimationMethod.CUTOFF)
             expected = np.concatenate((self.mu[:m], np.zeros(self.D - m)))
             
@@ -32,7 +33,6 @@ class TestFilterEstimator(unittest.TestCase):
 
 
 # Running the tests
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+#    unittest.main()
 
-#landweber not working
