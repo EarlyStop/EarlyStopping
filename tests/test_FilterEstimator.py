@@ -1,34 +1,34 @@
 import unittest
-import random
-from EarlyStopping import FilterEstimator
+import numpy as np
+from EarlyStopping import FilterEstimator, EstimationMethod
 
 class TestFilterEstimator(unittest.TestCase):
 
+    def setUp(self):
+        self.D = 10
+        self.lambda_ = np.arange(1, self.D+1)  
+        self.mu = np.random.normal(0, 1, self.D)  
+        self.Y = self.lambda_ * self.mu  
+
     def test_cutoff_estimation(self):
-        D = 10  # Data length
-        lambda_ = list(range(1, D+1))  # Creating a sequence from 1 to D
-        mu = [random.gauss(0, 1) for _ in range(D)]  # Generating D random numbers from a normal distribution
-        Y = [a*b for a, b in zip(lambda_, mu)]  # Multiplying lambda and mu element-wise
-
-        for m in range(1, D+1):
-            estimator = FilterEstimator(Y, lambda_)
-            result = estimator.fEst(m, filt="cutoff")
-            expected = mu[:m] + [0] * (D - m)  # mu[1:m] followed by D-m zeros
-
-            self.assertEqual(result, expected)
+        """Test the cutoff estimation method for a range of m values."""
+        for m in range(1, self.D+1):
+            estimator = FilterEstimator(self.Y, self.lambda_)
+            result = estimator.fEst(m, filt=EstimationMethod.CUTOFF)
+            expected = np.concatenate((self.mu[:m], np.zeros(self.D - m)))
+            
+            for r, e in zip(result, expected):
+                self.assertEqual(r, e)
 
     def test_landweber_estimation(self):
-        D = 10  # Data length
-        lambda_ = [1] * D  # A list of D ones
-        mu = [random.gauss(0, 1) for _ in range(D)]  # Generating D random numbers from a normal distribution
-        Y = [a*b for a, b in zip(lambda_, mu)]  # Multiplying lambda and mu element-wise
-
-        estimator = FilterEstimator(Y, lambda_)
-        result = estimator.fEst(15, filt="landw")
-
-        self.assertEqual(result, mu)
+        """Test the Landweber estimation method."""
+        lambda_ = np.ones(self.D)  
+        estimator = FilterEstimator(self.Y, lambda_)
+        result = estimator.fEst(15, filt=EstimationMethod.LANDWEBER)
+        
+        for r, e in zip(result, self.mu):
+            self.assertAlmostEqual(r, e, places=7)  
 
 # Running the tests
-#if __name__ == '__main__':
-#    unittest.main()
-
+if __name__ == '__main__':
+    unittest.main()
