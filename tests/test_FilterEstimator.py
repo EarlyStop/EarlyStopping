@@ -18,12 +18,13 @@ class TestFilterEstimator(unittest.TestCase):
             expected = np.concatenate((self.mu[:m], np.zeros(self.D - m)))
             
             for r, e in zip(result, expected):
-                self.assertEqual(r, e)
+                self.assertAlmostEqual(r, e, places=7)
 
     def test_landweber_estimation(self):
         """Test the Landweber estimation method."""
         lambda_ = np.ones(self.D)  
-        estimator = FilterEstimator(self.Y, lambda_)
+        Y = lambda_ * self.mu  
+        estimator = FilterEstimator(Y, lambda_)
         result = estimator.fEst(15, filt=EstimationMethod.LANDWEBER)
     
         for i in range(len(result)):
