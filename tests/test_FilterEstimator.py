@@ -30,5 +30,5 @@ class TestFilterEstimator(unittest.TestCase):
             self.assertAlmostEqual(r, e, places=7)  
 
 # Running the tests
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+#    unittest.main()
