@@ -34,35 +34,7 @@ class FilterEstimator:
         self.D = len(Y)
         self.muHat = np.zeros(self.D)
 
-    def cutoff(self, m):
-        """
-        Estimation using the cutoff method for m > 0.
-
-        Parameters:
-        -----------
-        m : int
-            Number of elements to consider for the cutoff estimation.
-
-        """
-        if m > 0:
-            self.muHat[:m] = self.Y[:m] / self.lambda_[:m]
-
-    def landw(self, m):
-        """
-        Estimation using the Landweber method for m iterations.
-
-        Parameters:
-        -----------
-        m : int
-            Number of iterations for the Landweber estimation.
-
-        """
-        iter = 0
-        while iter < m:
-            self.muHat += self.lambda_ * (self.Y - self.lambda_ * self.muHat)
-            iter += 1
-
-    def fEst(self, m, filt=EstimationMethod.CUTOFF):
+    def fEst(self, m):
         """
         Choose processing method (cutoff or Landweber) based on user input.
 
@@ -79,11 +51,8 @@ class FilterEstimator:
             Estimated values.
 
         """
-        if filt == EstimationMethod.CUTOFF:
-            self.cutoff(m)
-        elif filt == EstimationMethod.LANDWEBER:
-            self.landw(m)
-        else:
-            raise ValueError(f"Invalid method choice. Choose from {[e.name for e in EstimationMethod]}")
+
+        self.landw(m)
+   
 
         return self.muHat
