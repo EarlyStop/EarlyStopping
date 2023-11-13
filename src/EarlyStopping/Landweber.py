@@ -1,53 +1,122 @@
 import numpy as np
 
-class Landweber:
-    """
-    A class to perform estimation using the Landweber iterative method.
+class landweber:
+    """ A class to perform estimation using the Landweber iterative method.
 
     Parameters
     ----------
-    Y : array
-        Observed data.
-    lambda_ : array
-        Lambda values used in the estimation.
+    input_matrix: array
+        nxp design matrix of the linear model.
+
+    output_variable: array
+        n-dim vector of the observed data in the linear model.
+
+    true_signal: array or None, default = None 
+        For simulation purposes only. For simulated data the true signal can be
+        included to compute theoretical quantities such as the bias and the mse
+        alongside the iterative procedure.
 
     Attributes
     ----------
-    D : int
-        Length of the observed data Y.
-    muHat : array
-        Estimated values, initialized with zeros.
+    sample_size: int
+        Sample size of the linear model
+    
+    para_size: int
+        Parameter size of the linear model
+
+    iter: int
+        Current Landweber iteration of the algorithm
+
+    landw_estimate: array
+        Landweber estimate at the current iteration for the data given in
+        inputMatrix
+
+    residuals: array
+        Lists the sequence of the squared residuals between the observed data and
+        the Landweber estimator.
+
+    strong_bias2: array
+        Only exists if trueSignal was given. Lists the values of the strong squared
+        bias up to current Landweber iteration.
+
+    strong_variance: array
+        Only exists if trueSignal was given. Lists the values of the strong variance 
+        up to current Landweber iteration.
+
+    strong_error: array
+        Only exists if trueSignal was given. Lists the values of the strong norm error 
+        between the Landweber estimator and the true signal up to
+        current Landweber iteration.
+    
+    weak_bias2: array
+        Only exists if trueSignal was given. Lists the values of the weak squared
+        bias up to current Landweber iteration.
+
+    weak_variance: array
+        Only exists if trueSignal was given. Lists the values of the weak variance 
+        up to current Landweber iteration.
+
+    weak_error: array
+        Only exists if trueSignal was given. Lists the values of the weak norm error 
+        between the Landweber estimator and the true signal up to
+        current Landweber iteration.
 
     """
 
-    def __init__(self, Y, lambda_):
-        """
-        Initialize with observed data, lambda values, and zero-filled estimation.
-        """
-        self.Y = np.array(Y)
-        self.lambda_ = np.array(lambda_)
-        self.D = len(Y)
-        self.muHat = np.zeros(self.D)
+    def __init__(self, input_matrix, output_variable, true_signal = None):
+        self.input_matrix    = input_matrix
+        self.output_variable = output_variable
+        self.true_signal     = true_signal
+ 
+        # Parameters of the model
+        self.sample_size = np.shape(input_matrix)[0]
+        self.para_size   = np.shape(input_matrix)[1]
 
+        # Estimation quantities
+        self.iter               = 0
+        self.landw_estimate     = np.zeros(self.para_size)
 
-    def estimate(self, m):
-        """
-        Perform estimation using the Landweber method for m iterations.
+        # Residual quantities
+        self.__residual_vector = output_variable
+        self.residuals         = np.array([np.sum(self.__residualVector**2)])
+   
+        if self.true_signal is not None:
+            self.__error_vector     = self.output_variable - np.multiply(self.input_matrix, self.true_signal) 
+            self.__strong_bias2_vector     = self.true_signal
+            self.__strong_variance_vector  = np.zeros(self.para_size)
+            self.__weak_bias2_vector     = np.multiply(self.input_matrix,self.true_signal)
+            self.__weak_variance_vector  = np.zeros(self.sample_size)
 
-        Parameters
-        ----------
-        m : int
-            Number of iterations for the Landweber estimation.
+            self.strong_bias2      = np.array([np.sum(self.__strong_bias2_vector**2)])
+            self.strong_variance   = np.array([0])
+            self.strong_error      = self.strong_bias2
 
-        Returns
-        -------
-        array
-            The estimated values after m iterations.
-        """
+            self.weak_bias2        = np.array([np.sum(self.__weak_bias2_vector**2)])
+            self.weak_variance     = np.array([0])
+            self.weak_error        = self.weak_bias2
 
-        for _ in range(m):
-            self.muHat += self.lambda_ * (self.Y - self.lambda_ * self.muHat)
+    def landw(self, iter_num = 1):
+        """Performs iter_num iterations of the Landweber algorithm"""
+        for index in range(iter_num):
+            self.__landw_one_iteration()
+        
+    def __landw_one_iteration(self):
+        """Performs one iteration of the Landweber algorithm"""
+        
+        self.landw_estimate  = self.landw_estimate + np.multiply(np.transpose(self.input_matrix),self.output_variable - np.multiply(A,self.landw_estimate))
 
-        return self.muHat
+        # Update estimation quantities
+        self.__residual_vector  = self.output_variable - np.multiply(self.input_matrix,self.landw_estimate)
+        new_residuals           = np.sum(self.__residual_vector**2)
+        self.residuals          = np.append(self.residuals, new_residuals)
+        self.iter             = self.iter + 1
 
-
+        # Update theoretical quantities
+        if self.true_signal is not None:
+            self.__update_strong_error()
+            self.__update_strong_bias2()
+            self.__update_strong_variance()
+            self.__update_weak_error()
+            self.__update_weak_bias2()
+            self.__update_weak_variance()
+        

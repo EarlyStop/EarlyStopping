@@ -3,6 +3,7 @@ This is a simple package for early stopping methods
 
 # Installation instructions
 Required Installations
+- git
 - Python3
 - JupyterNotebooks
 
