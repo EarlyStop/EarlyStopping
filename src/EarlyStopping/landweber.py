@@ -103,7 +103,7 @@ class landweber:
     def __landw_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         
-        self.landw_estimate  = self.landw_estimate + np.multiply(np.transpose(self.input_matrix),self.output_variable - np.multiply(A,self.landw_estimate))
+        self.landw_estimate  = self.landw_estimate + np.multiply(np.transpose(self.input_matrix),self.output_variable - np.multiply(self.input_matrix,self.landw_estimate))
 
         # Update estimation quantities
         self.__residual_vector  = self.output_variable - np.multiply(self.input_matrix,self.landw_estimate)
@@ -120,3 +120,21 @@ class landweber:
             self.__update_weak_bias2()
             self.__update_weak_variance()
         
+    def __update_strong_error(self): ###
+        new_mse   = np.mean((self.true_signal - self.boost_estimate)**2)
+        self.mse = np.append(self.mse, new_mse)
+
+    def __update_bias2(self, weak_learner):
+        coefficient        = np.dot(self.true_signal, weak_learner) / \
+                             self.sample_size
+        self.__bias2_vector = self.__bias2_vector - coefficient * weak_learner
+        new_bias2           = np.mean(self.__bias2_vector**2)
+        self.bias2         = np.append(self.bias2, new_bias2)
+
+    def __update_stochastic_error(self, weak_learner):
+        coefficient             = np.dot(self.__error_vector, weak_learner) / \
+                                 self.sample_size
+        self.__stoch_error_vector = self.__stoch_error_vector + \
+                                  coefficient * weak_learner
+        new_stoch_error           = np.mean(self.__stoch_error_vector**2)
+        self.stoch_error         = np.append(self.stoch_error, new_stoch_error)
