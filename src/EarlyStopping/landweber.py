@@ -12,6 +12,7 @@ class landweber:
         n-dim vector of the observed data in the linear model.
 
     true_signal: array or None, default = None 
+        d-dim vector
         For simulation purposes only. For simulated data the true signal can be
         included to compute theoretical quantities such as the bias and the mse
         alongside the iterative procedure.
@@ -78,13 +79,17 @@ class landweber:
 
         # Residual quantities
         self.__residual_vector = output_variable
-        self.residuals         = np.array([np.sum(self.__residualVector**2)])
+        self.residuals         = np.array([np.sum(self.__residual_vector**2)])
+
+        # MSE 
+        if self.true_signal is not None:
+            self.mse = np.array([])
    
         if self.true_signal is not None:
-            self.__error_vector     = self.output_variable - np.multiply(self.input_matrix, self.true_signal) 
+            self.__error_vector     = self.output_variable - np.dot(self.input_matrix, self.true_signal) 
             self.__strong_bias2_vector     = self.true_signal
             self.__strong_variance_vector  = np.zeros(self.para_size)
-            self.__weak_bias2_vector     = np.multiply(self.input_matrix,self.true_signal)
+            self.__weak_bias2_vector     = np.dot(self.input_matrix,self.true_signal)
             self.__weak_variance_vector  = np.zeros(self.sample_size)
 
             self.strong_bias2      = np.array([np.sum(self.__strong_bias2_vector**2)])
@@ -103,10 +108,10 @@ class landweber:
     def __landw_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         
-        self.landw_estimate  = self.landw_estimate + np.multiply(np.transpose(self.input_matrix),self.output_variable - np.multiply(self.input_matrix,self.landw_estimate))
+        self.landw_estimate  = self.landw_estimate + np.dot(np.transpose(self.input_matrix),self.output_variable - np.dot(self.input_matrix,self.landw_estimate))
 
         # Update estimation quantities
-        self.__residual_vector  = self.output_variable - np.multiply(self.input_matrix,self.landw_estimate)
+        self.__residual_vector  = self.output_variable - np.dot(self.input_matrix,self.landw_estimate)
         new_residuals           = np.sum(self.__residual_vector**2)
         self.residuals          = np.append(self.residuals, new_residuals)
         self.iter             = self.iter + 1
@@ -120,8 +125,8 @@ class landweber:
             self.__update_weak_bias2()
             self.__update_weak_variance()
         
-    def __update_strong_error(self): ###
-        new_mse   = np.mean((self.true_signal - self.boost_estimate)**2)
+    def __update_strong_error(self): ### I assume this is beta - beta_hat. @Laura: Please confirm
+        new_mse   = np.mean((self.true_signal - self.landw_estimate)**2)
         self.mse = np.append(self.mse, new_mse)
 
     def __update_bias2(self, weak_learner):
