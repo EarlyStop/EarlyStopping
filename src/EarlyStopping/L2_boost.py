@@ -1,6 +1,6 @@
 import numpy as np
 
-class l2_boost():
+class L2_boost():
     """ L2-boosting algorithm for high dimensional linear models.
 
     Parameters
