@@ -1,5 +1,5 @@
 # Early stopping
-This is a simple package for early stopping methods
+This is a simple package for early stopping methods. See also the [documentation](https://esfiep.github.io/EarlyStopping/).
 
 # Installation instructions
 Required Installations
