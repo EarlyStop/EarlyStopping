@@ -81,24 +81,23 @@ class landweber:
         self.__residual_vector = output_variable
         self.residuals         = np.array([np.sum(self.__residual_vector**2)])
 
-        # MSE 
         if self.true_signal is not None:
             self.mse = np.array([])
    
-        if self.true_signal is not None:
-            self.__error_vector     = self.output_variable - np.dot(self.input_matrix, self.true_signal) 
-            self.__strong_bias2_vector     = self.true_signal
-            self.__strong_variance_vector  = np.zeros(self.para_size)
-            self.__weak_bias2_vector     = np.dot(self.input_matrix,self.true_signal)
-            self.__weak_variance_vector  = np.zeros(self.sample_size)
+#        if self.true_signal is not None:
+#            self.__error_vector     = self.output_variable - np.dot(self.input_matrix, self.true_signal) 
+#            self.__strong_bias2_vector     = self.true_signal
+#            self.__strong_variance_vector  = np.zeros(self.para_size)
+#            self.__weak_bias2_vector     = np.dot(self.input_matrix,self.true_signal)
+#            self.__weak_variance_vector  = np.zeros(self.sample_size)#
 
-            self.strong_bias2      = np.array([np.sum(self.__strong_bias2_vector**2)])
-            self.strong_variance   = np.array([0])
-            self.strong_error      = self.strong_bias2
+#            self.strong_bias2      = np.array([np.sum(self.__strong_bias2_vector**2)])
+#            self.strong_variance   = np.array([0])
+#            self.strong_error      = self.strong_bias2
 
-            self.weak_bias2        = np.array([np.sum(self.__weak_bias2_vector**2)])
-            self.weak_variance     = np.array([0])
-            self.weak_error        = self.weak_bias2
+#            self.weak_bias2        = np.array([np.sum(self.__weak_bias2_vector**2)])
+#            self.weak_variance     = np.array([0])
+#            self.weak_error        = self.weak_bias2
 
     def landw(self, iter_num = 1):
         """Performs iter_num iterations of the Landweber algorithm"""
@@ -119,27 +118,27 @@ class landweber:
         # Update theoretical quantities
         if self.true_signal is not None:
             self.__update_strong_error()
-            self.__update_strong_bias2()
-            self.__update_strong_variance()
-            self.__update_weak_error()
-            self.__update_weak_bias2()
-            self.__update_weak_variance()
+#            self.__update_strong_bias2()
+#            self.__update_strong_variance()
+#            self.__update_weak_error()
+#            self.__update_weak_bias2()
+#            self.__update_weak_variance()
         
-    def __update_strong_error(self): ### I assume this is beta - beta_hat. @Laura: Please confirm
+    def __update_strong_error(self): 
         new_mse   = np.mean((self.true_signal - self.landw_estimate)**2)
         self.mse = np.append(self.mse, new_mse)
 
-    def __update_bias2(self, weak_learner):
-        coefficient        = np.dot(self.true_signal, weak_learner) / \
-                             self.sample_size
-        self.__bias2_vector = self.__bias2_vector - coefficient * weak_learner
-        new_bias2           = np.mean(self.__bias2_vector**2)
-        self.bias2         = np.append(self.bias2, new_bias2)
+#    def __update_bias2(self, weak_learner):
+#        coefficient        = np.dot(self.true_signal, weak_learner) / \
+#                             self.sample_size
+#        self.__bias2_vector = self.__bias2_vector - coefficient * weak_learner
+#        new_bias2           = np.mean(self.__bias2_vector**2)
+#        self.bias2         = np.append(self.bias2, new_bias2)
 
-    def __update_stochastic_error(self, weak_learner):
-        coefficient             = np.dot(self.__error_vector, weak_learner) / \
-                                 self.sample_size
-        self.__stoch_error_vector = self.__stoch_error_vector + \
-                                  coefficient * weak_learner
-        new_stoch_error           = np.mean(self.__stoch_error_vector**2)
-        self.stoch_error         = np.append(self.stoch_error, new_stoch_error)
+#    def __update_stochastic_error(self, weak_learner):
+#        coefficient             = np.dot(self.__error_vector, weak_learner) / \
+#                                 self.sample_size
+#        self.__stoch_error_vector = self.__stoch_error_vector + \
+#                                  coefficient * weak_learner
+#        new_stoch_error           = np.mean(self.__stoch_error_vector**2)
+#        self.stoch_error         = np.append(self.stoch_error, new_stoch_error)
