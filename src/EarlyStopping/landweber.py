@@ -83,6 +83,7 @@ class landweber:
 
         if self.true_signal is not None:
             self.mse = np.array([])
+            self.mse_weak = np.array([])
    
 #        if self.true_signal is not None:
 #            self.__error_vector     = self.output_variable - np.dot(self.input_matrix, self.true_signal) 
@@ -117,16 +118,20 @@ class landweber:
 
         # Update theoretical quantities
         if self.true_signal is not None:
-            self.__update_strong_error()
+             self.__update_strong_error()
 #            self.__update_strong_bias2()
 #            self.__update_strong_variance()
-#            self.__update_weak_error()
+             self.__update_weak_error()
 #            self.__update_weak_bias2()
 #            self.__update_weak_variance()
         
     def __update_strong_error(self): 
         new_mse   = np.mean((self.true_signal - self.landw_estimate)**2)
         self.mse = np.append(self.mse, new_mse)
+
+    def __update_weak_error(self): 
+        new_mse_weak   = np.mean(( np.dot(self.input_matrix,self.true_signal) -  np.dot(self.input_matrix,self.landw_estimate))**2)
+        self.mse_weak = np.append(self.mse_weak, new_mse_weak)
 
 #    def __update_bias2(self, weak_learner):
 #        coefficient        = np.dot(self.true_signal, weak_learner) / \
