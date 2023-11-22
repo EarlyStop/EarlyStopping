@@ -79,7 +79,7 @@ class landweber:
 
         # Residual quantities
         self.__residual_vector = output_variable
-        self.residuals         = np.array([np.sum(self.__residual_vector**2)])
+        self.residuals         = np.array([np.mean(self.__residual_vector**2)]) ### mean or sum? before was sum.
 
         if self.true_signal is not None:
             self.mse = np.array([])
@@ -111,7 +111,7 @@ class landweber:
 
         # Update estimation quantities
         self.__residual_vector  = self.output_variable - np.dot(self.input_matrix,self.landw_estimate)
-        new_residuals           = np.sum(self.__residual_vector**2)
+        new_residuals           = np.mean(self.__residual_vector**2) ### mean or sum? before was sum.
         self.residuals          = np.append(self.residuals, new_residuals)
         self.iter             = self.iter + 1
 
