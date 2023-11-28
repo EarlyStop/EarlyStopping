@@ -8,7 +8,7 @@ class landweber:
     input_matrix: array
         nxp design matrix of the linear model.
 
-    output_variable: array
+    response_variable: array
         n-dim vector of the observed data in the linear model.
 
     true_signal: array or None, default = None 
@@ -27,6 +27,9 @@ class landweber:
 
     iter: int
         Current Landweber iteration of the algorithm
+
+    early_stopping_iter: int
+        Early Stopping iteration index
 
     landw_estimate: array
         Landweber estimate at the current iteration for the data given in
@@ -64,10 +67,11 @@ class landweber:
 
     """
 
-    def __init__(self, input_matrix, output_variable, true_signal = None):
-        self.input_matrix    = input_matrix
-        self.output_variable = output_variable
-        self.true_signal     = true_signal
+    def __init__(self, input_matrix, response_variable, learning_rate = 1, true_signal = None):
+        self.input_matrix       = input_matrix
+        self.response_variable  = response_variable
+        self.learning_rate      = learning_rate
+        self.true_signal        = true_signal
  
         # Parameters of the model
         self.sample_size = np.shape(input_matrix)[0]
@@ -75,18 +79,19 @@ class landweber:
 
         # Estimation quantities
         self.iter               = 0
+ #       self.early_stopping_iter = 
         self.landw_estimate     = np.zeros(self.para_size)
 
         # Residual quantities
-        self.__residual_vector = output_variable
-        self.residuals         = np.array([np.mean(self.__residual_vector**2)]) ### mean or sum? before was sum.
+        self.__residual_vector = response_variable
+        self.residuals         = np.array([np.sum(self.__residual_vector**2)])
 
-        if self.true_signal is not None:
-            self.mse = np.array([])
-            self.mse_weak = np.array([])
+#        if self.true_signal is not None:
+#            self.mse = np.array([])
+#            self.mse_weak = np.array([])
    
 #        if self.true_signal is not None:
-#            self.__error_vector     = self.output_variable - np.dot(self.input_matrix, self.true_signal) 
+#            self.__error_vector     = self.response_variable - np.dot(self.input_matrix, self.true_signal) 
 #            self.__strong_bias2_vector     = self.true_signal
 #            self.__strong_variance_vector  = np.zeros(self.para_size)
 #            self.__weak_bias2_vector     = np.dot(self.input_matrix,self.true_signal)
@@ -102,36 +107,45 @@ class landweber:
 
     def landw(self, iter_num = 1):
         """Performs iter_num iterations of the Landweber algorithm"""
-        for index in range(iter_num):
+        for _ in range(iter_num):
             self.__landw_one_iteration()
         
     def __landw_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         
-        self.landw_estimate  = self.landw_estimate + np.dot(np.transpose(self.input_matrix),self.output_variable - np.dot(self.input_matrix,self.landw_estimate))
+        self.landw_estimate = self.landw_estimate + self.learning_rate * np.matmul(np.transpose(self.input_matrix),self.response_variable - np.matmul(self.input_matrix,self.landw_estimate))
 
         # Update estimation quantities
-        self.__residual_vector  = self.output_variable - np.dot(self.input_matrix,self.landw_estimate)
-        new_residuals           = np.mean(self.__residual_vector**2) ### mean or sum? before was sum.
+        self.__residual_vector  = self.response_variable - np.matmul(self.input_matrix,self.landw_estimate)
+        new_residuals           = np.sum(self.__residual_vector**2)
         self.residuals          = np.append(self.residuals, new_residuals)
-        self.iter             = self.iter + 1
+        self.iter               = self.iter + 1
 
-        # Update theoretical quantities
-        if self.true_signal is not None:
-             self.__update_strong_error()
+    def landw_to_early_stop(self, crit, max_iter):
+        """Early stopping for the Landweber procedure
+
+            Procedure is stopped when the residuals go below crit or iteration
+            max_iter is reached.
+        """
+        while self.residuals[self.iter] > crit and self.iter <= max_iter:
+            self.__landw_one_iteration()
+
+ #       # Update theoretical quantities
+ #       if self.true_signal is not None:
+ #            self.__update_strong_error()
 #            self.__update_strong_bias2()
 #            self.__update_strong_variance()
-             self.__update_weak_error()
+ #            self.__update_weak_error()
 #            self.__update_weak_bias2()
 #            self.__update_weak_variance()
         
-    def __update_strong_error(self): 
-        new_mse   = np.mean((self.true_signal - self.landw_estimate)**2)
-        self.mse = np.append(self.mse, new_mse)
+    # def __update_strong_error(self):
+    #     new_mse   = np.mean((self.true_signal - self.landw_estimate)**2)
+    #     self.mse = np.append(self.mse, new_mse)
 
-    def __update_weak_error(self): 
-        new_mse_weak   = np.mean(( np.dot(self.input_matrix,self.true_signal) -  np.dot(self.input_matrix,self.landw_estimate))**2)
-        self.mse_weak = np.append(self.mse_weak, new_mse_weak)
+    # def __update_weak_error(self): 
+    #     new_mse_weak   = np.mean(( np.dot(self.input_matrix,self.true_signal) -  np.dot(self.input_matrix,self.landw_estimate))**2)
+    #     self.mse_weak = np.append(self.mse_weak, new_mse_weak)
 
 #    def __update_bias2(self, weak_learner):
 #        coefficient        = np.dot(self.true_signal, weak_learner) / \
