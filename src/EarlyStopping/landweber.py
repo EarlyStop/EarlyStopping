@@ -31,7 +31,7 @@ class landweber:
     early_stopping_iter: int
         Early Stopping iteration index
 
-    Landweber_estimate: array
+    landweber_estimate: array
         Landweber estimate at the current iteration for the data given in
         inputMatrix
 
@@ -113,7 +113,13 @@ class landweber:
 #            self.weak_error        = self.weak_bias2
 
     def landweber(self, iter_num = 1):
-        """Performs iter_num iterations of the Landweber algorithm"""
+        """Performs iter_num iterations of the Landweber algorithm
+        
+        Parameters
+        ----------
+        iter_num: int, default=1
+            The number of iterations to perform.
+        """
         for _ in range(iter_num):
             self.__landweber_one_iteration()
         
@@ -133,6 +139,14 @@ class landweber:
 
             Procedure is stopped when the residuals go below crit or iteration
             max_iter is reached.
+
+        Parameters
+        ----------
+        crit: float
+            The criterion for stopping. The procedure stops when the residual is below this value.
+
+        max_iter: int
+            The maximum number of iterations to perform.
         """
         while self.residuals[self.iter] > crit and self.iter <= max_iter:
             self.__landweber_one_iteration()
