@@ -31,7 +31,7 @@ class landweber:
     early_stopping_iter: int
         Early Stopping iteration index
 
-    landw_estimate: array
+    Landweber_estimate: array
         Landweber estimate at the current iteration for the data given in
         inputMatrix
 
@@ -65,6 +65,13 @@ class landweber:
         between the Landweber estimator and the true signal up to
         current Landweber iteration.
 
+    Methods
+    -------
+    landweber(iter_num=1)
+        Performs a specified number of iterations of the Landweber algorithm.
+
+    landweber_to_early_stop(crit, max_iter)
+        Applies early stopping to the Landweber iterative procedure.
     """
 
     def __init__(self, input_matrix, response_variable, learning_rate = 1, true_signal = None):
@@ -80,7 +87,7 @@ class landweber:
         # Estimation quantities
         self.iter               = 0
  #       self.early_stopping_iter = 
-        self.landw_estimate     = np.zeros(self.para_size)
+        self.landweber_estimate     = np.zeros(self.para_size)
 
         # Residual quantities
         self.__residual_vector = response_variable
@@ -105,30 +112,30 @@ class landweber:
 #            self.weak_variance     = np.array([0])
 #            self.weak_error        = self.weak_bias2
 
-    def landw(self, iter_num = 1):
+    def landweber(self, iter_num = 1):
         """Performs iter_num iterations of the Landweber algorithm"""
         for _ in range(iter_num):
-            self.__landw_one_iteration()
+            self.__landweber_one_iteration()
         
-    def __landw_one_iteration(self):
+    def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         
-        self.landw_estimate = self.landw_estimate + self.learning_rate * np.matmul(np.transpose(self.input_matrix),self.response_variable - np.matmul(self.input_matrix,self.landw_estimate))
+        self.landweber_estimate = self.landweber_estimate + self.learning_rate * np.matmul(np.transpose(self.input_matrix),self.response_variable - np.matmul(self.input_matrix,self.landweber_estimate))
 
         # Update estimation quantities
-        self.__residual_vector  = self.response_variable - np.matmul(self.input_matrix,self.landw_estimate)
+        self.__residual_vector  = self.response_variable - np.matmul(self.input_matrix,self.landweber_estimate)
         new_residuals           = np.sum(self.__residual_vector**2)
         self.residuals          = np.append(self.residuals, new_residuals)
         self.iter               = self.iter + 1
 
-    def landw_to_early_stop(self, crit, max_iter):
+    def landweber_to_early_stop(self, crit, max_iter):
         """Early stopping for the Landweber procedure
 
             Procedure is stopped when the residuals go below crit or iteration
             max_iter is reached.
         """
         while self.residuals[self.iter] > crit and self.iter <= max_iter:
-            self.__landw_one_iteration()
+            self.__landweber_one_iteration()
 
  #       # Update theoretical quantities
  #       if self.true_signal is not None:
@@ -140,11 +147,11 @@ class landweber:
 #            self.__update_weak_variance()
         
     # def __update_strong_error(self):
-    #     new_mse   = np.mean((self.true_signal - self.landw_estimate)**2)
+    #     new_mse   = np.mean((self.true_signal - self.landweber_estimate)**2)
     #     self.mse = np.append(self.mse, new_mse)
 
     # def __update_weak_error(self): 
-    #     new_mse_weak   = np.mean(( np.dot(self.input_matrix,self.true_signal) -  np.dot(self.input_matrix,self.landw_estimate))**2)
+    #     new_mse_weak   = np.mean(( np.dot(self.input_matrix,self.true_signal) -  np.dot(self.input_matrix,self.landweber_estimate))**2)
     #     self.mse_weak = np.append(self.mse_weak, new_mse_weak)
 
 #    def __update_bias2(self, weak_learner):
