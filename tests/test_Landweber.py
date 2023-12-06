@@ -1,25 +1,25 @@
 import unittest
 import numpy as np
-from EarlyStopping import Landweber
+import EarlyStopping as es
 
-class TestFilterEstimator(unittest.TestCase):
+class Test_landweber(unittest.TestCase):
+    """Tests for the landweber algorithm"""
 
     def setUp(self):
-        self.D = 10
-        self.mu = np.random.normal(0, 1, self.D)  
+        self.para_size = 10
+        self.f = np.random.normal(0, 1, self.para_size)  
         
-    def test_landweber_estimation(self):
-        """Test the Landweber estimation method."""
-        lambda_ = np.ones(self.D)  
-        Y = lambda_ * self.mu  
-        estimator = Landweber(Y, lambda_)
-        result = estimator.estimate(15)
+    def test_elementary_estimation(self):
+        X = np.eye(self.para_size)  
+        Y = X @ self.f  
+        iter = 30
+        alg = es.landweber(X, Y)
+        alg.landweber(iter)
+        beta = alg.landweber_estimate
     
-        for i in range(len(result)):
-            self.assertAlmostEqual(result[i], self.mu[i], places=7)
+        for i in range(len(beta)):
+            self.assertAlmostEqual(beta[i], self.f[i], places=7)
 
-
-# Running the tests
+ #Running the tests
 #if __name__ == '__main__':
 #    unittest.main()
-
