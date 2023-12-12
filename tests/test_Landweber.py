@@ -9,6 +9,8 @@ class Test_landweber(unittest.TestCase):
         self.para_size = 10
         self.f = np.random.normal(0, 1, self.para_size)  
         self.iteration = 30
+        self.tol = 10**(-7)
+
         
     def test_elementary_estimation(self):
         X = np.eye(self.para_size)  
@@ -18,7 +20,8 @@ class Test_landweber(unittest.TestCase):
         beta = alg.landweber_estimate
     
         for i in range(len(beta)):
-            self.assertAlmostEqual(beta[i], self.f[i], places=7)
+            deviation = np.abs(beta[i] - self.f[i])
+            self.assertTrue(deviation < self.tol)
 
 
     def test_monotonicity_residuals(self):
