@@ -36,8 +36,8 @@ class Landweber:
     iter: int
         Current Landweber iteration of the algorithm
 
-    early_stopping_iter: int
-        Early Stopping iteration index
+    early_stopping_index: int
+        Early Stopping iteration index (Is set to None if no early stopping is performed)
 
     landweber_estimate: array
         Landweber estimate at the current iteration for the data given in
@@ -106,6 +106,7 @@ class Landweber:
         # Estimation quantities
         self.iter = 0
         self.landweber_estimate = self.starting_value
+        self.early_stopping_index = None
 
         # Residual quantities
         self.__residual_vector = response_variable
@@ -116,6 +117,7 @@ class Landweber:
 
             # initialize matrices required for computing the strong/weak bias and variance
             self.congruency_matrix = np.transpose(self.input_matrix) @ self.input_matrix
+            self.inverse_congruency_matrix = np.linalg.inv(self.congruency_matrix)
             self.perturbation_congruency_matrix = (np.eye(self.para_size) - self.learning_rate * self.congruency_matrix)
             self.weak_perturbation_congruency_matrix = (self.input_matrix @ self.perturbation_congruency_matrix)
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
@@ -181,7 +183,7 @@ class Landweber:
         :math: `\\sigma**2 \\mathrm{tr}(h^{-1}(A^{\\top}A)^{-1}(I-(I-hA^{\\top}A)^{m}))`
         """
         new_strong_variance = (self.true_noise_level**2 *
-            np.trace(self.learning_rate**(-1) * np.linalg.inv(self.congruency_matrix) #inverse?
+            np.trace(self.learning_rate**(-1) * self.inverse_congruency_matrix
             @ np.square(np.eye(self.para_size) - self.perturbation_congruency_matrix_power)))
         self.strong_variance = np.append(self.strong_variance, new_strong_variance)
         
@@ -233,5 +235,12 @@ class Landweber:
         max_iter: int
             The maximum number of iterations to perform.
         """
-        while self.residuals[self.iter] > crit and self.iter <= max_iter:
+        while self.residuals[self.iter] > crit and self.iter < max_iter:
             self.__landweber_one_iteration()
+        self.early_stopping_index = self.iter
+
+    def landweber_gather_all(self, crit, max_iter):
+        """Gather all relevant simulation data (Runs the algorithm till max_iter) but tracks the early stopping index."""
+        self.landweber_to_early_stop(crit, max_iter)
+        if max_iter > self.early_stopping_index:
+            self.landweber(max_iter - self.early_stopping_index)
