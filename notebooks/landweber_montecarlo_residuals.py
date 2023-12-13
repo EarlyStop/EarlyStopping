@@ -36,17 +36,17 @@ observation_smooth = noise + np.matmul(design_matrix, signal_smooth)[:, None]
 observation_rough = noise + np.matmul(design_matrix, signal_rough)[:, None]
 
 # Create models
-models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i]) for i in range(NUMBER_RUNS)]
-models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i]) for i in range(NUMBER_RUNS)]
-models_rough = [es.Landweber(design_matrix, observation_rough[:, i]) for i in range(NUMBER_RUNS)]
+models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+models_rough = [es.Landweber(design_matrix, observation_rough[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
 
 # Calculate Landweber estimates after 1000 iterations
 NUMBER_ITERATIONS = 1000
 for i in range(NUMBER_RUNS):
     start_time = time.time()
-    models_supersmooth[i].landweber_gather_all(NOISE_LEVEL**2 * D, NUMBER_ITERATIONS)
-    models_smooth[i].landweber_gather_all(NOISE_LEVEL**2 * D, NUMBER_ITERATIONS)
-    models_rough[i].landweber_gather_all(NOISE_LEVEL**2 * D, NUMBER_ITERATIONS)
+    models_supersmooth[i].landweber_gather_all(NUMBER_ITERATIONS)
+    models_smooth[i].landweber_gather_all(NUMBER_ITERATIONS)
+    models_rough[i].landweber_gather_all(NUMBER_ITERATIONS)
     end_time = time.time()
     print(f"The {i}-th Montecarlo step took {end_time - start_time} seconds!")
 

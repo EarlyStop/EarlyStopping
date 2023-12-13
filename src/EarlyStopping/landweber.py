@@ -84,6 +84,7 @@ class Landweber:
     def __init__(self, input_matrix,
                  response_variable,
                  learning_rate = 1,
+                 critical_value = None,
                  starting_value = None,
                  true_signal = None,
                  true_noise_level = None):
@@ -92,6 +93,7 @@ class Landweber:
         self.learning_rate = learning_rate
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level #sigma
+        self.critical_value = critical_value
 
         # Parameters of the model
         self.sample_size = np.shape(input_matrix)[0]
@@ -107,14 +109,18 @@ class Landweber:
         self.iter = 0
         self.landweber_estimate = self.starting_value
         self.early_stopping_index = None
+        
+        if self.critical_value is None and self.true_noise_level is None:
+            self.critical_value = np.var(response_variable) * self.sample_size
+        elif self.true_noise_level is not None:
+            # if the true noise level is given, it does not need to be estimated
+            self.critical_value = self.true_noise_level**2 * self.sample_size
 
         # Residual quantities
         self.__residual_vector = response_variable
-        self.residuals         = np.array([np.sum(self.__residual_vector**2)])
+        self.residuals = np.array([np.sum(self.__residual_vector**2)])
 
-        if (self.true_signal is not None) and (self.true_noise_level is not None):
-            self.expectation_estimator = self.starting_value
-
+        if (self.true_signal is not None) and (self.true_noise_level is not None):            
             # initialize matrices required for computing the strong/weak bias and variance
             self.congruency_matrix = np.transpose(self.input_matrix) @ self.input_matrix
             self.inverse_congruency_matrix = np.linalg.inv(self.congruency_matrix)
@@ -123,6 +129,7 @@ class Landweber:
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
             
             # initialize strong/weak bias and variance
+            self.expectation_estimator = self.starting_value
             self.strong_bias2 = np.array([np.sum(self.true_signal**2)])
             self.weak_bias2 = np.array([np.sum((self.input_matrix @ self.true_signal)**2)])
 
@@ -221,7 +228,7 @@ class Landweber:
             self.strong_error = self.strong_bias2 + self.strong_variance
             self.weak_error = self.weak_bias2 + self.weak_variance
 
-    def landweber_to_early_stop(self, crit, max_iter):
+    def landweber_to_early_stop(self, max_iter):
         """Early stopping for the Landweber procedure
 
             Procedure is stopped when the residuals go below crit or iteration
@@ -235,12 +242,12 @@ class Landweber:
         max_iter: int
             The maximum number of iterations to perform.
         """
-        while self.residuals[self.iter] > crit and self.iter < max_iter:
+        while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
             self.__landweber_one_iteration()
         self.early_stopping_index = self.iter
 
-    def landweber_gather_all(self, crit, max_iter):
+    def landweber_gather_all(self, max_iter):
         """Gather all relevant simulation data (Runs the algorithm till max_iter) but tracks the early stopping index."""
-        self.landweber_to_early_stop(crit, max_iter)
+        self.landweber_to_early_stop(max_iter)
         if max_iter > self.early_stopping_index:
             self.landweber(max_iter - self.early_stopping_index)
