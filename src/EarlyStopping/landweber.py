@@ -11,11 +11,19 @@ class Landweber:
     response_variable: array
         n-dim vector of the observed data in the linear model.
 
-    true_signal: array or None, default = None 
+    starting_value: array, default: None
+        Determines the zeroth step of the iterative procedure. (Defaults to zero).
+
+    true_signal: array, default = None 
         d-dim vector
         For simulation purposes only. For simulated data the true signal can be
         included to compute theoretical quantities such as the bias and the mse
         alongside the iterative procedure.
+
+    true_noise_level: float, default = None
+        For simulation purposes only. Corresponds to the standard deviation 
+        of normally distributed noise contributing to the response variable.
+        Allows the analytic computation of the strong and weak variance.
 
     Attributes
     ----------
