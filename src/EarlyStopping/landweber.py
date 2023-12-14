@@ -1,4 +1,6 @@
 import numpy as np
+import scipy
+from scipy import sparse
 
 class Landweber:
     """ A class to perform estimation using the Landweber iterative method.
@@ -109,9 +111,15 @@ class Landweber:
         self.iter = 0
         self.landweber_estimate = self.starting_value
         self.early_stopping_index = None
+
+        self.congruency_matrix = np.transpose(self.input_matrix) @ self.input_matrix
         
         if self.critical_value is None and self.true_noise_level is None:
-            self.critical_value = np.var(response_variable) * self.sample_size
+            # maximum likelihood estimator
+            # least_squares_estimator = np.linalg.solve(self.congruency_matrix, np.transpose(self.input_matrix) @ self.response_variable)
+            sparse_least_squares_estimator, istop = sparse.linalg.lsqr(self.congruency_matrix, np.transpose(self.input_matrix) @ self.response_variable)[:2]
+            noise_level_estimate = np.sum((self.response_variable - self.input_matrix @ sparse_least_squares_estimator)**2)/self.sample_size
+            self.critical_value = noise_level_estimate * self.sample_size
         elif self.true_noise_level is not None:
             # if the true noise level is given, it does not need to be estimated
             self.critical_value = self.true_noise_level**2 * self.sample_size
@@ -122,7 +130,7 @@ class Landweber:
 
         if (self.true_signal is not None) and (self.true_noise_level is not None):            
             # initialize matrices required for computing the strong/weak bias and variance
-            self.congruency_matrix = np.transpose(self.input_matrix) @ self.input_matrix
+
             self.inverse_congruency_matrix = np.linalg.inv(self.congruency_matrix)
             self.perturbation_congruency_matrix = (np.eye(self.para_size) - self.learning_rate * self.congruency_matrix)
             self.weak_perturbation_congruency_matrix = (self.input_matrix @ self.perturbation_congruency_matrix)

@@ -12,6 +12,8 @@ print(f"The design matrix is given by {design_matrix}")
 
 # Create signals from Stankewitz (2020)
 signal_supersmooth = 5*np.exp(-0.1*indices)
+print(f"Print signal supersmooth {signal_supersmooth}")
+
 signal_smooth = 5000*np.abs(np.sin(0.01*indices))*indices**(-1.6)
 signal_rough = 250*np.abs(np.sin(0.002*indices))*indices**(-0.8)
 
@@ -26,7 +28,7 @@ plt.legend()
 plt.show()
 
 # Specify number of Monte-Carlo runs
-NUMBER_RUNS = 100
+NUMBER_RUNS = 1
 
 # Create observations
 NOISE_LEVEL = 0.01
@@ -36,9 +38,13 @@ observation_smooth = noise + np.matmul(design_matrix, signal_smooth)[:, None]
 observation_rough = noise + np.matmul(design_matrix, signal_rough)[:, None]
 
 # Create models
-models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-models_rough = [es.Landweber(design_matrix, observation_rough[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+# models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+# models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+# models_rough = [es.Landweber(design_matrix, observation_rough[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+
+models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i]) for i in range(NUMBER_RUNS)]
+models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i]) for i in range(NUMBER_RUNS)]
+models_rough = [es.Landweber(design_matrix, observation_rough[:, i]) for i in range(NUMBER_RUNS)]
 
 # Calculate Landweber estimates after 1000 iterations
 NUMBER_ITERATIONS = 1000
