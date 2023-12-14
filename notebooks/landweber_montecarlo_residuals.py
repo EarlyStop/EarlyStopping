@@ -8,12 +8,9 @@ random.seed(42)
 D = 1000
 indices = np.arange(D)+1
 design_matrix = np.diag(1/(np.sqrt(indices)))
-print(f"The design matrix is given by {design_matrix}")
 
 # Create signals from Stankewitz (2020)
 signal_supersmooth = 5*np.exp(-0.1*indices)
-print(f"Print signal supersmooth {signal_supersmooth}")
-
 signal_smooth = 5000*np.abs(np.sin(0.01*indices))*indices**(-1.6)
 signal_rough = 250*np.abs(np.sin(0.002*indices))*indices**(-0.8)
 
@@ -22,7 +19,7 @@ plt.plot(indices, signal_smooth, label="smooth signal")
 plt.plot(indices, signal_rough, label="rough signal")
 plt.ylabel("Signal")
 plt.xlabel("Index")
-plt.xlim([0,2000])
+plt.xlim([0,1000])
 plt.ylim([0,1.6])
 plt.legend()
 plt.show()
@@ -38,13 +35,9 @@ observation_smooth = noise + np.matmul(design_matrix, signal_smooth)[:, None]
 observation_rough = noise + np.matmul(design_matrix, signal_rough)[:, None]
 
 # Create models
-# models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-# models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-# models_rough = [es.Landweber(design_matrix, observation_rough[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-
-models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i]) for i in range(NUMBER_RUNS)]
-models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i]) for i in range(NUMBER_RUNS)]
-models_rough = [es.Landweber(design_matrix, observation_rough[:, i]) for i in range(NUMBER_RUNS)]
+models_supersmooth = [es.Landweber(design_matrix, observation_supersmooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+models_smooth = [es.Landweber(design_matrix, observation_smooth[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+models_rough = [es.Landweber(design_matrix, observation_rough[:, i], true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
 
 # Calculate Landweber estimates after 1000 iterations
 NUMBER_ITERATIONS = 1000
@@ -57,9 +50,9 @@ for i in range(NUMBER_RUNS):
     print(f"The {i}-th Montecarlo step took {end_time - start_time} seconds!")
 
 for i in range(NUMBER_RUNS):
-    print(models_supersmooth[i].early_stopping_index)
-    print(models_smooth[i].early_stopping_index)
-    print(models_rough[i].early_stopping_index)
+    print(f"Supersmooth stopping index: {models_supersmooth[i].early_stopping_index}")
+    print(f"Smooth stopping index: {models_smooth[i].early_stopping_index}")
+    print(f"Rough stopping index: {models_rough[i].early_stopping_index}")
 
 montecarlo_residuals_supersmooth = [models_supersmooth[i].residuals for i in range(NUMBER_RUNS)]
 montecarlo_residuals_smooth = [models_smooth[i].residuals for i in range(NUMBER_RUNS)]

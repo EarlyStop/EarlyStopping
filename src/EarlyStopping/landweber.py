@@ -90,6 +90,9 @@ class Landweber:
                  starting_value = None,
                  true_signal = None,
                  true_noise_level = None):
+
+        #self.input_matrix = sparse.csr_matrix(input_matrix)
+        #self.response_variable = np.transpose(sparse.csr_matrix(response_variable))
         self.input_matrix = input_matrix
         self.response_variable = response_variable
         self.learning_rate = learning_rate
@@ -103,6 +106,7 @@ class Landweber:
         
         # Determine starting value for the procedure
         if starting_value is None:
+            #self.starting_value = np.transpose(sparse.csr_matrix(np.zeros(self.para_size)))
             self.starting_value = np.zeros(self.para_size)
         else:
             self.starting_value = starting_value
@@ -112,12 +116,12 @@ class Landweber:
         self.landweber_estimate = self.starting_value
         self.early_stopping_index = None
 
-        self.congruency_matrix = np.transpose(self.input_matrix) @ self.input_matrix
+        self.gram_matrix = np.transpose(self.input_matrix) @ self.input_matrix
         
         if self.critical_value is None and self.true_noise_level is None:
             # maximum likelihood estimator
             # least_squares_estimator = np.linalg.solve(self.congruency_matrix, np.transpose(self.input_matrix) @ self.response_variable)
-            sparse_least_squares_estimator, istop = sparse.linalg.lsqr(self.congruency_matrix, np.transpose(self.input_matrix) @ self.response_variable)[:2]
+            sparse_least_squares_estimator, istop = sparse.linalg.lsqr(self.gram_matrix, np.transpose(self.input_matrix) @ self.response_variable)[:2]
             noise_level_estimate = np.sum((self.response_variable - self.input_matrix @ sparse_least_squares_estimator)**2)/self.sample_size
             self.critical_value = noise_level_estimate * self.sample_size
         elif self.true_noise_level is not None:
@@ -130,9 +134,8 @@ class Landweber:
 
         if (self.true_signal is not None) and (self.true_noise_level is not None):            
             # initialize matrices required for computing the strong/weak bias and variance
-
-            self.inverse_congruency_matrix = np.linalg.inv(self.congruency_matrix)
-            self.perturbation_congruency_matrix = (np.eye(self.para_size) - self.learning_rate * self.congruency_matrix)
+            self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
+            self.perturbation_congruency_matrix = (np.eye(self.para_size) - self.learning_rate * self.gram_matrix)
             self.weak_perturbation_congruency_matrix = (self.input_matrix @ self.perturbation_congruency_matrix)
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
             
@@ -167,7 +170,7 @@ class Landweber:
         :math: `(I-hA^{\\top}A)^{k+1}=(I-hA^{\\top}A)^{k} * (I-hA^{\\top}A)`
         """
         self.expectation_estimator = (self.expectation_estimator
-            + self.learning_rate * (self.congruency_matrix)
+            + self.learning_rate * (self.gram_matrix)
             @ (self.true_signal - self.expectation_estimator))
         
         self.perturbation_congruency_matrix_power = (self.perturbation_congruency_matrix_power
@@ -214,8 +217,12 @@ class Landweber:
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         self.landweber_estimate = (self.landweber_estimate
-            + self.learning_rate * np.matmul(np.transpose(self.input_matrix),
-            self.response_variable - np.matmul(self.input_matrix,self.landweber_estimate)))
+            + self.learning_rate * np.transpose(self.input_matrix)
+            @ (self.response_variable - self.input_matrix @ self.landweber_estimate))
+
+        # self.landweber_estimate = (self.landweber_estimate
+        #     + self.learning_rate * np.transpose(self.input_matrix)
+        #     * (self.response_variable - self.input_matrix * self.landweber_estimate))
 
         # Update estimation quantities
         self.__residual_vector  = (self.response_variable
