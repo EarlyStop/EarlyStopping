@@ -46,25 +46,28 @@ axs[0].set_ylim([0, 100])
 axs[0].set_xlabel('Iteration')
 axs[0].set_ylabel('Residuals')
 
-axs[1].plot(range(0, iter+1), models_supersmooth.strong_error)  
-axs[1].plot(range(0, iter+1), models_supersmooth.strong_bias2)  
-axs[1].plot(range(0, iter+1), models_supersmooth.strong_variance)  
+
+axs[1].plot(range(0, iter+1), models_supersmooth.strong_error, color='orange', label='Error')  
+axs[1].plot(range(0, iter+1), models_supersmooth.strong_bias2, label='$Bias^2$', color='grey')  
+axs[1].plot(range(0, iter+1), models_supersmooth.strong_variance, label='Variance', color='blue')  
 axs[1].axvline(x=supersmooth_m, color='red', linestyle='--')
 axs[1].set_xlim([0, 400])  
 axs[1].set_ylim([0, 100])  
 axs[1].set_xlabel('Iteration')
 axs[1].set_ylabel('Strong Quantities')
 
-axs[2].plot(range(0, iter+1), models_supersmooth.weak_error)  
-axs[2].plot(range(0, iter+1), models_supersmooth.weak_bias2)  
-axs[2].plot(range(0, iter+1), models_supersmooth.weak_variance)  
+axs[2].plot(range(0, iter+1), models_supersmooth.weak_error, color='orange', label='Error')  
+axs[2].plot(range(0, iter+1), models_supersmooth.weak_bias2, label='$Bias^2$', color='grey')  
+axs[2].plot(range(0, iter+1), models_supersmooth.weak_variance, label='Variance', color='blue')  
 axs[2].axvline(x=supersmooth_m, color='red', linestyle='--')
 axs[2].set_xlim([0, 400])  
 axs[2].set_ylim([0, 0.02])  
 axs[2].set_xlabel('Iteration')
 axs[2].set_ylabel('Weak Quantities')
+axs[2].legend()
 
 plt.tight_layout()
+
 plt.show()
 
 
@@ -77,25 +80,29 @@ axs[0].set_ylim([0, 100])
 axs[0].set_xlabel('Iteration')
 axs[0].set_ylabel('Residuals')
 
-axs[1].plot(range(0, iter+1), models_smooth.strong_error)  
-axs[1].plot(range(0, iter+1), models_smooth.strong_bias2)  
-axs[1].plot(range(0, iter+1), models_smooth.strong_variance)  
+axs[1].plot(range(0, iter+1), models_smooth.strong_error, color='orange', label='Error')  
+axs[1].plot(range(0, iter+1), models_smooth.strong_bias2, label='$Bias^2$', color='grey')  
+axs[1].plot(range(0, iter+1), models_smooth.strong_variance, label='Variance', color='blue')  
 axs[1].axvline(x=smooth_m, color='red', linestyle='--')
 axs[1].set_xlim([0, 500])  
 axs[1].set_ylim([0, 100])  
 axs[1].set_xlabel('Iteration')
 axs[1].set_ylabel('Strong Quantities')
 
-axs[2].plot(range(0, iter+1), models_smooth.weak_error)  
-axs[2].plot(range(0, iter+1), models_smooth.weak_bias2)  
-axs[2].plot(range(0, iter+1), models_smooth.weak_variance)  
+axs[2].plot(range(0, iter+1), models_smooth.weak_error, color='orange', label='Error')  
+axs[2].plot(range(0, iter+1), models_smooth.weak_bias2, label='$Bias^2$', color='grey')  
+axs[2].plot(range(0, iter+1), models_smooth.weak_variance, label='Variance', color='blue')  
 axs[2].axvline(x=smooth_m, color='red', linestyle='--')
 axs[2].set_xlim([0, 500])  
 axs[2].set_ylim([0, 0.5])  
 axs[2].set_xlabel('Iteration')
 axs[2].set_ylabel('Weak Quantities')
+axs[2].legend()
 
 plt.tight_layout()
+
+fig.suptitle('Smooth Signal', fontsize=16)
+
 plt.show()
 
 
@@ -106,24 +113,28 @@ axs[0].axvline(x=rough_m, color='red', linestyle='--')
 axs[0].set_xlabel('Iteration')
 axs[0].set_ylabel('Residuals')
 
-axs[1].plot(range(0, iter+1), models_rough.strong_error)  
-axs[1].plot(range(0, iter+1), models_rough.strong_bias2)  
-axs[1].plot(range(0, iter+1), models_rough.strong_variance)  
+axs[1].plot(range(0, iter+1), models_rough.strong_error, color='orange', label='Error')  
+axs[1].plot(range(0, iter+1), models_rough.strong_bias2, label='$Bias^2$', color='grey')  
+axs[1].plot(range(0, iter+1), models_rough.strong_variance, label='Variance', color='blue')  
 axs[1].axvline(x=rough_m, color='red', linestyle='--')
 axs[1].set_xlabel('Iteration')
 axs[1].set_ylabel('Strong Quantities')
 
-axs[2].plot(range(0, iter+1), models_rough.weak_error)  
-axs[2].plot(range(0, iter+1), models_rough.weak_bias2)  
-axs[2].plot(range(0, iter+1), models_rough.weak_variance)  
+axs[2].plot(range(0, iter+1), models_rough.weak_error, color='orange', label='Error')  
+axs[2].plot(range(0, iter+1), models_rough.weak_bias2, label='$Bias^2$', color='grey')  
+axs[2].plot(range(0, iter+1), models_rough.weak_variance, label='Variance', color='blue')  
 axs[2].axvline(x=rough_m, color='red', linestyle='--')
 axs[2].set_xlim([0, iter+1])  
 axs[2].set_ylim([0, 1])  
 axs[2].set_xlabel('Iteration')
 axs[2].set_ylabel('Weak Quantities')
+axs[2].legend()
 
 plt.tight_layout()
+
+fig.suptitle('Rough Signal', fontsize=16)
+
 plt.show()
 
 
-#To Do: Add legends for weak and strong quantities, give plots names etc.
+#To Do: Give plots names: supersmooth, smooth, rough
