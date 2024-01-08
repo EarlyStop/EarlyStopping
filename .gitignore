@@ -123,6 +123,7 @@ celerybeat.pid
 .env
 .venv
 env/
+myenv/
 venv/
 ENV/
 env.bak/
@@ -151,6 +152,10 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# System files
+.DS_Store
+src/.DS_Store
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
