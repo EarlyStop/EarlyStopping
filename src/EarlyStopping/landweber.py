@@ -13,11 +13,11 @@ class Landweber:
     response_variable: array
         n-dim vector of the observed data in the linear model.
 
-    starting_value: array, default: None
+    starting_value: array, default = None
         Determines the zeroth step of the iterative procedure. (Defaults to zero).
 
     true_signal: array, default = None 
-        d-dim vector
+        p-dim vector
         For simulation purposes only. For simulated data the true signal can be
         included to compute theoretical quantities such as the bias and the mse
         alongside the iterative procedure.
