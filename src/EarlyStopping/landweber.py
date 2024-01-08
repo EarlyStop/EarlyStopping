@@ -43,36 +43,36 @@ class Landweber:
 
     landweber_estimate: array
         Landweber estimate at the current iteration for the data given in
-        inputMatrix
+        input_matrix
 
     residuals: array
         Lists the sequence of the squared residuals between the observed data and
         the Landweber estimator.
 
     strong_bias2: array
-        Only exists if trueSignal was given. Lists the values of the strong squared
-        bias up to current Landweber iteration.
+        Only exists if true_signal was given. Lists the values of the strong squared
+        bias up to the current Landweber iteration.
 
     strong_variance: array
-        Only exists if trueSignal was given. Lists the values of the strong variance 
-        up to current Landweber iteration.
+        Only exists if true_signal was given. Lists the values of the strong variance 
+        up to the current Landweber iteration.
 
     strong_error: array
-        Only exists if trueSignal was given. Lists the values of the strong norm error 
-        between the Landweber estimator and the true signal up to
+        Only exists if true_signal was given. Lists the values of the strong norm error 
+        between the Landweber estimator and the true signal up to the
         current Landweber iteration.
     
     weak_bias2: array
-        Only exists if trueSignal was given. Lists the values of the weak squared
-        bias up to current Landweber iteration.
+        Only exists if true_signal was given. Lists the values of the weak squared
+        bias up to the current Landweber iteration.
 
     weak_variance: array
-        Only exists if trueSignal was given. Lists the values of the weak variance 
-        up to current Landweber iteration.
+        Only exists if true_signal was given. Lists the values of the weak variance 
+        up to the current Landweber iteration.
 
     weak_error: array
-        Only exists if trueSignal was given. Lists the values of the weak norm error 
-        between the Landweber estimator and the true signal up to
+        Only exists if true_signal was given. Lists the values of the weak norm error 
+        between the Landweber estimator and the true signal up to the
         current Landweber iteration.
 
     Methods
