@@ -10,6 +10,7 @@ Welcome to EarlyStopping's documentation!
 
 .. toctree::
    usage
+   auto_examples/index
    :maxdepth: 2
    :caption: Contents:
 
