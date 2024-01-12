@@ -111,6 +111,7 @@ class Landweber:
         self.design_matrix = design_matrix
         self.response_variable = response_variable
         self.learning_rate = learning_rate
+        self.starting_value = starting_value
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level  # sigma
         self.critical_value = critical_value
@@ -134,19 +135,20 @@ class Landweber:
         self.gram_matrix = np.transpose(self.design_matrix) @ self.design_matrix
 
         if self.critical_value is None and self.true_noise_level is None:
-            # maximum likelihood estimator
+            #maximum likelihood estimator
             # least_squares_estimator = np.linalg.solve(self.congruency_matrix, np.transpose(self.design_matrix) @ self.response_variable)
             sparse_least_squares_estimator, istop = sparse.linalg.lsqr(self.gram_matrix, np.transpose(
                 self.design_matrix) @ self.response_variable)[:2]
             noise_level_estimate = np.sum(
                 (self.response_variable - self.design_matrix @ sparse_least_squares_estimator) ** 2) / self.sample_size
             self.critical_value = noise_level_estimate * self.sample_size
-        elif self.true_noise_level is not None:
+
+        elif self.critical_value is None and self.true_noise_level is not None:
             # if the true noise level is given, it does not need to be estimated
             self.critical_value = self.true_noise_level ** 2 * self.sample_size
-
+        
         # Residual quantities
-        self.__residual_vector = response_variable
+        self.__residual_vector = self.response_variable - self.design_matrix @ self.starting_value
         self.residuals = np.array([np.sum(self.__residual_vector ** 2)])
 
         if (self.true_signal is not None) and (self.true_noise_level is not None):
