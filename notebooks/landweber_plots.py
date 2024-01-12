@@ -1,10 +1,21 @@
+"""
+This is a simulation example of the Landweber class. 
+===========================
+
+It is based on the generated supersmooth, smooth and rough signal of Blanchard et al. (2018). 
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import EarlyStopping as es
-import random, time
-random.seed(42)
+#import seaborn as sns
+#sns.set_theme()
 
-# Create diagonal design matrices
+# %%
+# Section 1 
+# ------------------------
+# Create diagonal design matrix and supersmooth, smooth and rough signal. Plot the signal.
+
 D = 1000
 indices = np.arange(D)+1
 design_matrix = np.diag(1/(np.sqrt(indices)))
@@ -24,6 +35,11 @@ plt.xlim([0,1000])
 plt.ylim([0,1.6])
 plt.legend()
 plt.show()
+
+# %%
+# Section 2 
+# ------------------------
+# Run the Landweber algorithm and get the early stopping index as well as as the weak/strong balanced oracle.
 
 
 NOISE_LEVEL = 0.01
@@ -57,6 +73,12 @@ rough_weak_oracle = models_rough.weak_balanced_oracle
 supersmooth_strong_oracle = models_supersmooth.strong_balanced_oracle
 smooth_strong_oracle = models_smooth.strong_balanced_oracle
 rough_strong_oracle = models_rough.strong_balanced_oracle
+
+
+# %%
+# Section 3 
+# ------------------------
+# Plot the residuals, weak and strong quantities for the supersmooth signal.
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 8))
 
@@ -93,6 +115,10 @@ plt.tight_layout()
 
 plt.show()
 
+# %%
+# Section 4 
+# ------------------------
+# Plot the residuals, weak and strong quantities for the smooth signal.
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 8))
 
@@ -130,6 +156,11 @@ fig.suptitle('Smooth Signal', fontsize=16)
 
 plt.show()
 
+
+# %%
+# Section 5 
+# ------------------------
+# Plot the residuals, weak and strong quantities for the rough signal.
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 8))
 
