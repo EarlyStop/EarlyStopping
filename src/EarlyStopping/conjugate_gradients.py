@@ -26,6 +26,10 @@ class ConjugateGradients:
         For simulation purposes only. Corresponds to the standard deviation 
         of normally distributed noise contributing to the response variable.
 
+    interpolation: boolean, default = False
+        If interpolation is set to True, the early stopping iteration index can be
+        non-integer valued. (Defaults to False.)
+
     Attributes
     ----------
     sample_size: int
@@ -71,13 +75,15 @@ class ConjugateGradients:
                  critical_value = None,
                  starting_value = None,
                  true_signal = None,
-                 true_noise_level = None):
+                 true_noise_level = None,
+                 interpolation = False):
 
         self.input_matrix = input_matrix
         self.response_variable = response_variable
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
         self.critical_value = critical_value
+        self.interpolation = interpolation
 
         # Parameters of the model
         self.sample_size = np.shape(input_matrix)[0]
@@ -166,10 +172,17 @@ class ConjugateGradients:
         """
         while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
             self.__conjugate_gradients_one_iteration()
-        self.early_stopping_index = self.iter
+        if self.interpolation is True:
+            self.early_stopping_index = (self.iter 
+                                         - np.sqrt(1-(self.residuals[self.iter - 1] -
+                                                      self.critical_value) /
+                                                   (self.residuals[self.iter - 1]
+                                                    - self.residuals[self.iter])))
+        else:
+            self.early_stopping_index = self.iter
 
     def conjugate_gradients_gather_all(self, max_iter):
         """Gather all relevant simulation data (Runs the algorithm till max_iter) but tracks the early stopping index."""
         self.conjugate_gradients_to_early_stop(max_iter)
-        if max_iter > self.early_stopping_index:
-            self.conjugate_gradients(max_iter - self.early_stopping_index)
+        if max_iter > int(np.ceil(self.early_stopping_index)):
+            self.conjugate_gradients(max_iter - int(np.ceil(self.early_stopping_index)))

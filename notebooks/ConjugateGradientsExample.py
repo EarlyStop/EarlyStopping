@@ -35,10 +35,13 @@ observation_supersmooth = noise + np.matmul(input_matrix, signal_supersmooth)[:,
 observation_smooth = noise + np.matmul(input_matrix, signal_smooth)[:, None]
 observation_rough = noise + np.matmul(input_matrix, signal_rough)[:, None]
 
+# Decide if interpolation is applied
+interpolation_boolean = True
+
 # Create models
-models_supersmooth = [es.ConjugateGradients(input_matrix, observation_supersmooth[:, i], true_signal=signal_supersmooth, true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-models_smooth = [es.ConjugateGradients(input_matrix, observation_smooth[:, i], true_signal=signal_smooth, true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
-models_rough = [es.ConjugateGradients(input_matrix, observation_rough[:, i], true_signal=signal_rough, true_noise_level=NOISE_LEVEL) for i in range(NUMBER_RUNS)]
+models_supersmooth = [es.ConjugateGradients(input_matrix, observation_supersmooth[:, i], true_signal=signal_supersmooth, true_noise_level=NOISE_LEVEL, interpolation=interpolation_boolean) for i in range(NUMBER_RUNS)]
+models_smooth = [es.ConjugateGradients(input_matrix, observation_smooth[:, i], true_signal=signal_smooth, true_noise_level=NOISE_LEVEL, interpolation=interpolation_boolean) for i in range(NUMBER_RUNS)]
+models_rough = [es.ConjugateGradients(input_matrix, observation_rough[:, i], true_signal=signal_rough, true_noise_level=NOISE_LEVEL, interpolation=interpolation_boolean) for i in range(NUMBER_RUNS)]
 
 # Calculate conjugate gradients estimates after 1000 iterations
 NUMBER_ITERATIONS = 1000
@@ -111,3 +114,14 @@ axs[2].plot(range(NUMBER_ITERATIONS+1), means_montecarlo_strong_empirical_error_
 axs[2].plot(range(NUMBER_ITERATIONS+1), means_montecarlo_strong_empirical_error_rough, label="rough")
 axs[2].legend()
 plt.show()
+
+def calculate_interpolated_residual(residuals, early_stopping_index):
+    early_stopping_index_ceil = int(np.ceil(early_stopping_index))
+    early_stopping_index_floor = int(np.floor(early_stopping_index))
+    alpha = early_stopping_index - early_stopping_index_floor
+    interpolated_residual = (1-alpha)**2 * residuals[early_stopping_index_floor] + (1-(1-alpha)**2) * residuals[early_stopping_index_ceil]
+    return interpolated_residual
+
+interpolated_residual_rough = calculate_interpolated_residual(models_rough[0].residuals, models_rough[0].early_stopping_index)
+print(interpolated_residual_rough)
+print(models_supersmooth[0].critical_value)
