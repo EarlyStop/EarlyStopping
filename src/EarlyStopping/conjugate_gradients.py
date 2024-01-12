@@ -171,13 +171,18 @@ class ConjugateGradients:
             The maximum number of iterations to perform.
         """
         while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
+            if self.interpolation is True:
+                old_conjugate_gradient_estimate = self.conjugate_gradient_estimate
             self.__conjugate_gradients_one_iteration()
         if self.interpolation is True:
             self.early_stopping_index = (self.iter 
-                                         - np.sqrt(1-(self.residuals[self.iter - 1] -
+                                         - np.sqrt(1 - (self.residuals[self.iter - 1] -
                                                       self.critical_value) /
                                                    (self.residuals[self.iter - 1]
                                                     - self.residuals[self.iter])))
+            alpha = self.early_stopping_index - np.floor(self.early_stopping_index)
+            self.conjugate_gradient_estimate = ((1 - alpha) * old_conjugate_gradient_estimate
+                                                + alpha * self.conjugate_gradient_estimate)
         else:
             self.early_stopping_index = self.iter
 
