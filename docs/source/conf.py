@@ -16,7 +16,14 @@ release = '0.1'
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx_gallery.gen_gallery',
 ]        
+
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+}
+
 
 templates_path = ['_templates']
 exclude_patterns = []
