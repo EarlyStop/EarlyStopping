@@ -56,3 +56,21 @@ python3 -m ipykernel install --user --name=myenv
 From the notebooks directory open the Jupyter notebook example.ipynb with the kernel myenv and run the code!
 
 
+# Instructions to create documentation locally
+General instructions for documenting projects with [sphinx](https://www.sphinx-doc.org/en/master/index.html).
+
+To generate the documentation locally run
+```bash
+sphinx-build -M html docs/source docs/build
+```
+in the EarlyStopping directory. The documentation will be generated in docs/build/html. To view them locally open index.html with firefox or another browser.
+
+Under Linux, it was necessary to include
+```python
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../src'))
+```
+in docs/source/conf.py. Please only include this locally and never push the change.
+
+
