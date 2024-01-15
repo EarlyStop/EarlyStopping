@@ -1,7 +1,8 @@
 import numpy as np
 
+
 class ConjugateGradients:
-    """ A class to perform estimation using the conjugate gradients iterative method.
+    """A class to perform estimation using the conjugate gradients iterative method.
 
     Parameters
     ----------
@@ -10,20 +11,20 @@ class ConjugateGradients:
 
     response_variable: array
         n-dim vector of the observed data in the linear model.
-    
+
     critical_value: array, default = None
         Critical value for the early stopping rule.
 
     starting_value: array, default = None
         Determines the zeroth step of the iterative procedure. (Defaults to zero).
 
-    true_signal: array, default = None 
+    true_signal: array, default = None
         p-dim vector
         For simulation purposes only. For simulated data the true signal can be
         included to compute additional quantities.
 
     true_noise_level: float, default = None
-        For simulation purposes only. Corresponds to the standard deviation 
+        For simulation purposes only. Corresponds to the standard deviation
         of normally distributed noise contributing to the response variable.
 
     interpolation: boolean, default = False
@@ -34,7 +35,7 @@ class ConjugateGradients:
     ----------
     sample_size: int
         Sample size of the linear model
-    
+
     para_size: int
         Parameter size of the linear model
 
@@ -53,12 +54,12 @@ class ConjugateGradients:
         the conjugate gradient estimator.
 
     strong_empirical_error: array
-        Only exists if true_signal was given. Lists the values of the strong empirical error 
+        Only exists if true_signal was given. Lists the values of the strong empirical error
         between the conjugate gradient estimator and the true signal up to the
         current conjugate gradient iteration.
 
     weak_empirical_error: array
-        Only exists if true_signal was given. Lists the values of the weak empirical error 
+        Only exists if true_signal was given. Lists the values of the weak empirical error
         between the conjugate gradient estimator and the true signal up to the
         current conjugate gradient iteration.
 
@@ -70,14 +71,17 @@ class ConjugateGradients:
     conjugate_gradients_to_early_stop(crit, max_iter)
         Applies early stopping to the conjugate gradients iterative procedure.
     """
-    def __init__(self, input_matrix,
-                 response_variable,
-                 critical_value = None,
-                 starting_value = None,
-                 true_signal = None,
-                 true_noise_level = None,
-                 interpolation = False):
 
+    def __init__(
+        self,
+        input_matrix,
+        response_variable,
+        critical_value=None,
+        starting_value=None,
+        true_signal=None,
+        true_noise_level=None,
+        interpolation=False,
+    ):
         self.input_matrix = input_matrix
         self.response_variable = response_variable
         self.true_signal = true_signal
@@ -87,7 +91,7 @@ class ConjugateGradients:
 
         # Parameters of the model
         self.sample_size = np.shape(input_matrix)[0]
-        self.para_size   = np.shape(input_matrix)[1]
+        self.para_size = np.shape(input_matrix)[1]
 
         # Determine starting value for the procedure
         if starting_value is None:
@@ -116,12 +120,16 @@ class ConjugateGradients:
 
         if self.true_signal is not None:
             self.transformed_true_signal = self.input_matrix @ self.true_signal
-            self.strong_empirical_error = np.array([np.sum((self.conjugate_gradient_estimate - self.true_signal)**2)])
-            self.weak_empirical_error = np.array([np.sum((self.input_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal)**2)])
+            self.strong_empirical_error = np.array(
+                [np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)]
+            )
+            self.weak_empirical_error = np.array(
+                [np.sum((self.input_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
+            )
 
-    def conjugate_gradients(self, iterations = 1):
+    def conjugate_gradients(self, iterations=1):
         """Performs iterations of the conjugate gradients algorithm
-        
+
         Parameters
         ----------
         iterations: int, default = 1
@@ -130,7 +138,7 @@ class ConjugateGradients:
         for _ in range(iterations):
             if np.sum(self.transformed_residual_vector**2) == 0:
                 print("Transformed residual vector is zero. Algorithm terminates.")
-                break;
+                break
             self.__conjugate_gradients_one_iteration()
 
     def __conjugate_gradients_one_iteration(self):
@@ -138,26 +146,26 @@ class ConjugateGradients:
         old_transformed_residual_vector = self.transformed_residual_vector
         squared_norm_old_transformed_residual_vector = np.sum(old_transformed_residual_vector**2)
         transformed_search_direction = self.input_matrix @ self.search_direction
-        learning_rate = (squared_norm_old_transformed_residual_vector /
-                         np.sum(transformed_search_direction**2))
-        self.conjugate_gradient_estimate = (self.conjugate_gradient_estimate +
-                                            learning_rate * self.search_direction)
+        learning_rate = squared_norm_old_transformed_residual_vector / np.sum(transformed_search_direction**2)
+        self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + learning_rate * self.search_direction
         self.residual_vector = self.residual_vector - learning_rate * transformed_search_direction
         self.transformed_residual_vector = self.transposed_input_matrix @ self.residual_vector
-        transformed_residual_ratio = (np.sum(self.transformed_residual_vector**2) /
-                                      squared_norm_old_transformed_residual_vector)
-        self.search_direction = (self.transformed_residual_vector +
-                                 transformed_residual_ratio * self.search_direction)
+        transformed_residual_ratio = (
+            np.sum(self.transformed_residual_vector**2) / squared_norm_old_transformed_residual_vector
+        )
+        self.search_direction = self.transformed_residual_vector + transformed_residual_ratio * self.search_direction
         self.residuals = np.append(self.residuals, np.sum(self.residual_vector**2))
 
         self.iter = self.iter + 1
 
         if self.true_signal is not None:
-            self.strong_empirical_error = np.append(self.strong_empirical_error,
-                np.sum((self.conjugate_gradient_estimate - self.true_signal)**2))
-            self.weak_empirical_error = np.append(self.weak_empirical_error,
-                np.sum((self.input_matrix
-                        @ self.conjugate_gradient_estimate - self.transformed_true_signal)**2))
+            self.strong_empirical_error = np.append(
+                self.strong_empirical_error, np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)
+            )
+            self.weak_empirical_error = np.append(
+                self.weak_empirical_error,
+                np.sum((self.input_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2),
+            )
 
     def conjugate_gradients_to_early_stop(self, max_iter):
         """Early stopping for the conjugate gradient procedure
@@ -175,14 +183,15 @@ class ConjugateGradients:
                 old_conjugate_gradient_estimate = self.conjugate_gradient_estimate
             self.__conjugate_gradients_one_iteration()
         if self.interpolation is True:
-            self.early_stopping_index = (self.iter 
-                                         - np.sqrt(1 - (self.residuals[self.iter - 1] -
-                                                      self.critical_value) /
-                                                   (self.residuals[self.iter - 1]
-                                                    - self.residuals[self.iter])))
-            alpha = self.early_stopping_index - np.floor(self.early_stopping_index)
-            self.conjugate_gradient_estimate = ((1 - alpha) * old_conjugate_gradient_estimate
-                                                + alpha * self.conjugate_gradient_estimate)
+            alpha = 1 - np.sqrt(
+                1
+                - (self.residuals[self.iter - 1] - self.critical_value)
+                / (self.residuals[self.iter - 1] - self.residuals[self.iter])
+            )
+            self.early_stopping_index = self.iter - 1 + alpha
+            self.conjugate_gradient_estimate = (
+                1 - alpha
+            ) * old_conjugate_gradient_estimate + alpha * self.conjugate_gradient_estimate
         else:
             self.early_stopping_index = self.iter
 
