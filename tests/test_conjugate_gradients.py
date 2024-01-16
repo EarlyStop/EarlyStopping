@@ -30,8 +30,8 @@ class TestConjugateGradients(unittest.TestCase):
         self.observation_smooth = noise + np.matmul(self.design_matrix, self.signal_smooth)[:, None]
         self.observation_rough = noise + np.matmul(self.design_matrix, self.signal_rough)[:, None]
 
-    def calculate_residual(self, response_variable, input_matrix, conjugate_gradient_estimate):
-        return np.sum((response_variable - input_matrix @ conjugate_gradient_estimate) ** 2)
+    def calculate_residual(self, response_variable, design_matrix, conjugate_gradient_estimate):
+        return np.sum((response_variable - design_matrix @ conjugate_gradient_estimate) ** 2)
 
     def test_residuals(self):
         models_supersmooth = [
@@ -71,17 +71,17 @@ class TestConjugateGradients(unittest.TestCase):
             models_rough[run].conjugate_gradients_to_early_stop(self.NUMBER_RUNS)
             residual_supersmooth = self.calculate_residual(
                 models_supersmooth[run].response_variable,
-                models_supersmooth[run].input_matrix,
+                models_supersmooth[run].design_matrix,
                 models_supersmooth[run].conjugate_gradient_estimate,
             )
             residual_smooth = self.calculate_residual(
                 models_smooth[run].response_variable,
-                models_smooth[run].input_matrix,
+                models_smooth[run].design_matrix,
                 models_smooth[run].conjugate_gradient_estimate,
             )
             residual_rough = self.calculate_residual(
                 models_rough[run].response_variable,
-                models_rough[run].input_matrix,
+                models_rough[run].design_matrix,
                 models_rough[run].conjugate_gradient_estimate,
             )
             self.assertAlmostEqual(
@@ -155,17 +155,17 @@ class TestConjugateGradients(unittest.TestCase):
             self.assertAlmostEqual(interpolated_residual_rough, models_rough[run].critical_value, places=5)
             interpolated_residual_supersmooth_via_estimator = self.calculate_residual(
                 models_supersmooth[run].response_variable,
-                models_supersmooth[run].input_matrix,
+                models_supersmooth[run].design_matrix,
                 models_supersmooth[run].conjugate_gradient_estimate,
             )
             interpolated_residual_smooth_via_estimator = self.calculate_residual(
                 models_smooth[run].response_variable,
-                models_smooth[run].input_matrix,
+                models_smooth[run].design_matrix,
                 models_smooth[run].conjugate_gradient_estimate,
             )
             interpolated_residual_rough_via_estimator = self.calculate_residual(
                 models_rough[run].response_variable,
-                models_rough[run].input_matrix,
+                models_rough[run].design_matrix,
                 models_rough[run].conjugate_gradient_estimate,
             )
             self.assertAlmostEqual(

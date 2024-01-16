@@ -6,7 +6,7 @@ class ConjugateGradients:
 
     Parameters
     ----------
-    input_matrix: array
+    design_matrix: array
         nxp design matrix of the linear model.
 
     response_variable: array
@@ -47,7 +47,7 @@ class ConjugateGradients:
 
     conjugate_gradient_estimate: array
         Conjugate gradient estimate at the current iteration for the data given in
-        input_matrix
+        design_matrix
 
     residuals: array
         Lists the sequence of the squared residuals between the observed data and
@@ -74,7 +74,7 @@ class ConjugateGradients:
 
     def __init__(
         self,
-        input_matrix,
+        design_matrix,
         response_variable,
         critical_value=None,
         starting_value=None,
@@ -82,7 +82,7 @@ class ConjugateGradients:
         true_noise_level=None,
         interpolation=False,
     ):
-        self.input_matrix = input_matrix
+        self.design_matrix = design_matrix
         self.response_variable = response_variable
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
@@ -90,8 +90,8 @@ class ConjugateGradients:
         self.interpolation = interpolation
 
         # Parameters of the model
-        self.sample_size = np.shape(input_matrix)[0]
-        self.para_size = np.shape(input_matrix)[1]
+        self.sample_size = np.shape(design_matrix)[0]
+        self.para_size = np.shape(design_matrix)[1]
 
         # Determine starting value for the procedure
         if starting_value is None:
@@ -105,11 +105,11 @@ class ConjugateGradients:
         self.early_stopping_index = None
 
         # Residual quantities
-        self.residual_vector = response_variable - input_matrix @ self.conjugate_gradient_estimate
+        self.residual_vector = response_variable - design_matrix @ self.conjugate_gradient_estimate
         self.residuals = np.array([np.sum(self.residual_vector**2)])
 
-        self.transposed_input_matrix = np.transpose(input_matrix)
-        self.transformed_residual_vector = self.transposed_input_matrix @ self.residual_vector
+        self.transposed_design_matrix = np.transpose(design_matrix)
+        self.transformed_residual_vector = self.transposed_design_matrix @ self.residual_vector
         self.search_direction = self.transformed_residual_vector
 
         if self.critical_value is None and self.true_noise_level is None:
@@ -119,12 +119,12 @@ class ConjugateGradients:
             self.critical_value = self.true_noise_level**2 * self.sample_size
 
         if self.true_signal is not None:
-            self.transformed_true_signal = self.input_matrix @ self.true_signal
+            self.transformed_true_signal = self.design_matrix @ self.true_signal
             self.strong_empirical_error = np.array(
                 [np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)]
             )
             self.weak_empirical_error = np.array(
-                [np.sum((self.input_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
+                [np.sum((self.design_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
             )
 
     def conjugate_gradients(self, iterations=1):
@@ -145,11 +145,11 @@ class ConjugateGradients:
         """Performs one iteration of the conjugate gradients algorithm"""
         old_transformed_residual_vector = self.transformed_residual_vector
         squared_norm_old_transformed_residual_vector = np.sum(old_transformed_residual_vector**2)
-        transformed_search_direction = self.input_matrix @ self.search_direction
+        transformed_search_direction = self.design_matrix @ self.search_direction
         learning_rate = squared_norm_old_transformed_residual_vector / np.sum(transformed_search_direction**2)
         self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + learning_rate * self.search_direction
         self.residual_vector = self.residual_vector - learning_rate * transformed_search_direction
-        self.transformed_residual_vector = self.transposed_input_matrix @ self.residual_vector
+        self.transformed_residual_vector = self.transposed_design_matrix @ self.residual_vector
         transformed_residual_ratio = (
             np.sum(self.transformed_residual_vector**2) / squared_norm_old_transformed_residual_vector
         )
@@ -164,7 +164,7 @@ class ConjugateGradients:
             )
             self.weak_empirical_error = np.append(
                 self.weak_empirical_error,
-                np.sum((self.input_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2),
+                np.sum((self.design_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2),
             )
 
     def conjugate_gradients_to_early_stop(self, max_iter):
