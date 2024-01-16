@@ -32,9 +32,9 @@ NUMBER_RUNS = 1
 # Create observations
 NOISE_LEVEL = 0.01
 noise = np.random.normal(0, NOISE_LEVEL, (sample_size, NUMBER_RUNS))
-observation_supersmooth = noise + np.matmul(design_matrix, signal_supersmooth)[:, None]
-observation_smooth = noise + np.matmul(design_matrix, signal_smooth)[:, None]
-observation_rough = noise + np.matmul(design_matrix, signal_rough)[:, None]
+observation_supersmooth = noise + (design_matrix @ signal_supersmooth)[:, None]
+observation_smooth = noise + (design_matrix @ signal_smooth)[:, None]
+observation_rough = noise + (design_matrix @ signal_rough)[:, None]
 
 # Decide if interpolation is applied
 interpolation_boolean = True

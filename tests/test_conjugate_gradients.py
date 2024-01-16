@@ -26,9 +26,9 @@ class TestConjugateGradients(unittest.TestCase):
         # Create observations
         self.NOISE_LEVEL = 0.01
         noise = np.random.normal(0, self.NOISE_LEVEL, (self.sample_size, self.NUMBER_RUNS))
-        self.observation_supersmooth = noise + np.matmul(self.design_matrix, self.signal_supersmooth)[:, None]
-        self.observation_smooth = noise + np.matmul(self.design_matrix, self.signal_smooth)[:, None]
-        self.observation_rough = noise + np.matmul(self.design_matrix, self.signal_rough)[:, None]
+        self.observation_supersmooth = noise + (self.design_matrix @ self.signal_supersmooth)[:, None]
+        self.observation_smooth = noise + (self.design_matrix @ self.signal_smooth)[:, None]
+        self.observation_rough = noise + (self.design_matrix @ self.signal_rough)[:, None]
 
     def calculate_residual(self, response_variable, design_matrix, conjugate_gradient_estimate):
         return np.sum((response_variable - design_matrix @ conjugate_gradient_estimate) ** 2)
