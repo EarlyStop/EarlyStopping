@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from scipy.sparse import dia_matrix
 import EarlyStopping as es
 
 
@@ -11,12 +12,12 @@ class TestConjugateGradients(unittest.TestCase):
         # Simulate data
 
         # Number of Monte-Carlo simulations
-        self.NUMBER_RUNS = 100
+        self.NUMBER_RUNS = 20
 
         # Create diagonal design matrices
-        self.sample_size = 1000
+        self.sample_size = 10000
         indices = np.arange(self.sample_size) + 1
-        self.design_matrix = np.diag(1 / (np.sqrt(indices)))
+        self.design_matrix = dia_matrix(np.diag(1 / (np.sqrt(indices))))
 
         # Create signals from Stankewitz (2020)
         self.signal_supersmooth = 5 * np.exp(-0.1 * indices)
