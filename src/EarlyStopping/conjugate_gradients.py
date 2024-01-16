@@ -196,7 +196,9 @@ class ConjugateGradients:
             self.early_stopping_index = self.iter
 
     def conjugate_gradients_gather_all(self, max_iter):
-        """Gather all relevant simulation data (Runs the algorithm till max_iter) but tracks the early stopping index."""
+        """Gathers all relevant simulation data (runs the algorithm till max_iter) but tracks the early stopping index and the associated conjugate gradient estimate."""
         self.conjugate_gradients_to_early_stop(max_iter)
+        conjugate_gradient_estimate = self.conjugate_gradient_estimate
         if max_iter > int(np.ceil(self.early_stopping_index)):
             self.conjugate_gradients(max_iter - int(np.ceil(self.early_stopping_index)))
+            self.conjugate_gradient_estimate = conjugate_gradient_estimate
