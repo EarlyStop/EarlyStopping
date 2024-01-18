@@ -157,6 +157,11 @@ cython_debug/
 .DS_Store
 src/.DS_Store
 
+# Local documentation
+build
+docs/source/auto_examples
+docs/source/sg_execution_times.rst
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
