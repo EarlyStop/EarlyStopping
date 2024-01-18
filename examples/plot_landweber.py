@@ -1,6 +1,6 @@
 """
 This is a simulation example of the Landweber class. 
-===========================
+====================================================
 
 It is based on the generated supersmooth, smooth and rough signal of Blanchard et al. (2018). 
 """
@@ -8,6 +8,7 @@ It is based on the generated supersmooth, smooth and rough signal of Blanchard e
 import matplotlib.pyplot as plt
 import numpy as np
 import EarlyStopping as es
+from scipy.sparse import dia_matrix
 #import seaborn as sns
 #sns.set_theme()
 
@@ -18,7 +19,7 @@ import EarlyStopping as es
 
 D = 1000
 indices = np.arange(D)+1
-design_matrix = np.diag(1/(np.sqrt(indices)))
+design_matrix = dia_matrix(np.diag(1/(np.sqrt(indices))))
 
 # Create signals from Stankewitz (2020)
 signal_supersmooth = 5*np.exp(-0.1*indices)
@@ -45,9 +46,9 @@ plt.show()
 NOISE_LEVEL = 0.01
 noise = np.random.normal(0, NOISE_LEVEL, D)
 
-observation_supersmooth = noise + np.matmul(design_matrix, signal_supersmooth)
-observation_smooth = noise + np.matmul(design_matrix, signal_smooth)
-observation_rough = noise + np.matmul(design_matrix, signal_rough)
+observation_supersmooth = noise + design_matrix @ signal_supersmooth
+observation_smooth = noise + design_matrix @ signal_smooth
+observation_rough = noise + design_matrix @ signal_rough
 
 
 models_supersmooth = es.Landweber(design_matrix, observation_supersmooth, true_noise_level=NOISE_LEVEL, true_signal=signal_supersmooth)

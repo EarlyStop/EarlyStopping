@@ -153,7 +153,14 @@ class Landweber:
 
         if (self.true_signal is not None) and (self.true_noise_level is not None):
             # initialize matrices required for computing the strong/weak bias and variance
-            self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
+
+
+            ###HIER CHECK für sparse matrix:
+            if (scipy.sparse.issparse(self.gram_matrix)):
+               self.inverse_congruency_matrix = scipy.sparse.linalg.inv(self.gram_matrix)
+            else:
+                self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
+
             self.perturbation_congruency_matrix = (np.eye(self.para_size) - self.learning_rate * self.gram_matrix)
             self.weak_perturbation_congruency_matrix = (self.design_matrix @ self.perturbation_congruency_matrix)
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
@@ -203,8 +210,8 @@ class Landweber:
 
         Given the expectation of the estimator the squared bias is given by :math: `b_k^{2} = \\Vert (I-hA^{\\top}A)(\\mu-m_{k-1}) \\Vert^{2}`
         """
-        new_strong_bias2 = np.sum((self.perturbation_congruency_matrix
-                                   @ (self.true_signal - self.expectation_estimator)) ** 2)
+        new_strong_bias2 = np.sum( np.square(self.perturbation_congruency_matrix
+                                   @ (self.true_signal - self.expectation_estimator)) )
         self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
 
     def __update_weak_bias2(self):
@@ -212,8 +219,8 @@ class Landweber:
 
         Given the expectation of the estimator the (weak)-squared bias is given by :math: `b_k^{2} = \\Vert A(I-hA^{\\top}A)(\\mu-m_{k-1}) \\Vert^{2}`
         """
-        new_weak_bias2 = np.sum((self.weak_perturbation_congruency_matrix
-                                 @ (self.true_signal - self.expectation_estimator)) ** 2)
+        new_weak_bias2 = np.sum( np.square(self.weak_perturbation_congruency_matrix
+                                 @ (self.true_signal - self.expectation_estimator)) )
         self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
 
     def __update_strong_variance(self):
@@ -250,7 +257,7 @@ class Landweber:
 
         # Update estimation quantities
         self.__residual_vector = (self.response_variable
-                                  - np.matmul(self.design_matrix, self.landweber_estimate))
+                                  - self.design_matrix @ self.landweber_estimate)
         new_residuals = np.sum(self.__residual_vector ** 2)
         self.residuals = np.append(self.residuals, new_residuals)
         self.iter = self.iter + 1
