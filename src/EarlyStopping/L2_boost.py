@@ -19,17 +19,17 @@ class L2_boost():
     Attributes
     ----------
     sample_size: int
-        Sample size of the linear model
+        Sample size of the linear model.
     
     para_size: int
-        Parameter size of the linear model
+        Parameter size of the linear model.
 
     iter: int
-        Current boosting iteration of the algorithm
+        Current boosting iteration of the algorithm.
 
     boost_estimate: array
         Boosting estimate at the current iteration for the data given in
-        input_matrix
+        input_matrix.
 
     residuals: array
         Lists the sequence of the residual mean of squares betwean the data and
@@ -47,6 +47,18 @@ class L2_boost():
         Only exists if true_signal was given. Lists the values of the mean
         squared error betwean the boosting estimator and the true signal up to
         current boosting iteration.
+
+    Methods
+    -------
+    +-------------------------------------+-------------------------------------------------------------------+
+    | boost(iter_num = 1)                 | Performs iter_num iterations of the boosting algorithm.           |
+    +-------------------------------------+-------------------------------------------------------------------+
+    | boost_to_early_stop(crit, max_iter) | Early stops the boosting algorithm.                               | 
+    +--------------------------------+----+-------------------------------------------------------------------+
+    | boost_to_balanced_oracle(self)      | Iterates the boosting algorithm up to the balanced oracle.        |
+    +------+------------------------------+-------------------------------------------------------------------+
+    | predict(input_variable)             | Predicts the output based on the current boosting estimate.       |
+    +------+------------------------------+-------------------------------------------------------------------+
     """
 
     def __init__(self, input_matrix, output_variable, true_signal = None):
@@ -79,22 +91,35 @@ class L2_boost():
             self.mse        = np.array([np.mean(self.true_signal**2)])
 
     def boost(self, iter_num = 1):
-        """Performs iter_num iterations of the orthogonal boosting algorithm"""
+        """ Performs iter_num iterations of the orthogonal boosting algorithm.
+
+            Parameters
+            ----------
+            iter_num: int
+                Number of boosting iterations to be performed.
+                
+        """
         for index in range(iter_num):
             self.__boost_one_iteration()
 
     def boost_to_early_stop(self, crit, max_iter):
-        """Early stopping for the boosting procedure
-
+        """ Early stopping for the boosting procedure.
             Procedure is stopped when the residuals go below crit or iteration
             max_iter is reached.
+
+            Parameters
+            ----------
+            crit: float
+                Critical value for the early stopping procedure.
+            max_iter: int
+                Maximal number of iterations to be performed.
+                
         """
         while self.residuals[self.iter] > crit and self.iter <= max_iter:
             self.__boost_one_iteration()
 
     def boost_to_balanced_oracle(self):
-        """
-            Performs iterations of the orthogonal boosting algorithm until the
+        """ Performs iterations of the orthogonal boosting algorithm until the
             balanced oracle index at which the squared bias is smaller than the
             stochastic error is reached.
         """
@@ -105,7 +130,13 @@ class L2_boost():
                 self.__boost_one_iteration()
 
     def predict(self, input_variable):
-        """Predicts the output variable based on the current boosting estimate"""
+        """ Predicts the output variable based on the current boosting estimate
+
+            Parameters
+            ----------
+            input_variable: array
+                The size of input_variable has to match para_size.
+        """
         return np.dot(input_variable, self.coefficients)
 
     def __boost_one_iteration(self):
