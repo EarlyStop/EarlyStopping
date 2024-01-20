@@ -24,11 +24,7 @@ Check out the [documentation](https://esfiep.github.io/EarlyStopping/) for more 
 ## Development notes
 
 ### Installation for development
-Required Installations
-- git
-- Python3
-- JupyterNotebooks
-
+Required dependencies: git, Python3, JupyterNotebooks
 
 Manual setup:
 ```bash
@@ -44,13 +40,14 @@ python3 -m ipykernel install --user --name=myenv      # Create Jupyter kernel fr
 From the notebooks directory open the Jupyter notebook example.ipynb with the kernel myenv and run the code!
 
 ### Creating documentation locally
-General instructions for documenting projects with [sphinx](https://www.sphinx-doc.org/en/master/index.html).
-
-To generate the documentation locally run
+The online documentation is not built until it has been merged into main. To build documentation locally and check how things look run
 ```bash
 sphinx-build -M html docs/source docs/build
 ```
-in the EarlyStopping directory. The documentation will be generated in docs/build/html. To view them locally open index.html with firefox or another browser.
+in the EarlyStopping directory.
+The documentation will be generated in docs/build/html.
+To view them locally open index.html with firefox or another browser.
+Information about about documenting projects with [sphinx](https://www.sphinx-doc.org/en/master/index.html).
 
 Under Linux, it was necessary to include
 ```python
@@ -58,6 +55,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src'))
 ```
-in docs/source/conf.py. Please only include this locally and never push the change.
+in docs/source/conf.py.
+ Please only include this locally and never push the change.
 
 
