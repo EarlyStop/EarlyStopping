@@ -24,7 +24,7 @@ Check out the [documentation](https://esfiep.github.io/EarlyStopping/) for more 
 ## Development notes
 
 ### Installation for development
-Required dependencies: git, Python3, JupyterNotebooks
+Required dependencies: git, Python3, JupyterNotebooks.
 
 Manual setup:
 ```bash
