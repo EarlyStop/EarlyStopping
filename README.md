@@ -6,6 +6,7 @@ Early stopping is a python library implementing computationally efficient model 
   <a href="https://arxiv.org/abs/2210.07850v1">
     "Early stopping for L2-boosting in high-dimensional linear models".
   </a>
+  arXiv:2210.07850 [math.ST](2022).
 
 - B. Stankewitz. 
   ["Smoothed residual stopping for statistical inverse problems via truncated SVD estimation".](https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-14/issue-2/Smoothed-residual-stopping-for-statistical-inverse-problems-via-truncated-SVD/10.1214/20-EJS1747.full?tab=ArticleLinkCited)
