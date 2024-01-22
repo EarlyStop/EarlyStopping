@@ -53,12 +53,12 @@ class ConjugateGradients:
         Lists the sequence of the squared residuals between the observed data and
         the conjugate gradient estimator.
 
-    strong_empirical_error: array
+    strong_empirical_errors: array
         Only exists if true_signal was given. Lists the values of the strong empirical error
         between the conjugate gradient estimator and the true signal up to the
         current conjugate gradient iteration.
 
-    weak_empirical_error: array
+    weak_empirical_errors: array
         Only exists if true_signal was given. Lists the values of the weak empirical error
         between the conjugate gradient estimator and the true signal up to the
         current conjugate gradient iteration.
@@ -120,10 +120,10 @@ class ConjugateGradients:
 
         if self.true_signal is not None:
             self.transformed_true_signal = self.design_matrix @ self.true_signal
-            self.strong_empirical_error = np.array(
+            self.strong_empirical_errors = np.array(
                 [np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)]
             )
-            self.weak_empirical_error = np.array(
+            self.weak_empirical_errors = np.array(
                 [np.sum((self.design_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
             )
             if interpolation:
@@ -161,7 +161,7 @@ class ConjugateGradients:
         learning_rate = squared_norm_old_transformed_residual_vector / np.sum(transformed_search_direction**2)
         if self.true_signal is not None and self.interpolation:
             strong_empirical_error_inner_product = (
-                self.strong_empirical_error[-1]
+                self.strong_empirical_errors[-1]
                 + learning_rate
                 * np.transpose(self.conjugate_gradient_estimate - self.true_signal)
                 @ self.search_direction
@@ -169,7 +169,7 @@ class ConjugateGradients:
             self.strong_empirical_error_inner_products = np.append(
                 self.strong_empirical_error_inner_products, strong_empirical_error_inner_product
             )
-            weak_empirical_error_inner_product = self.weak_empirical_error[-1] + learning_rate * np.transpose(
+            weak_empirical_error_inner_product = self.weak_empirical_errors[-1] + learning_rate * np.transpose(
                 self.design_matrix @ (self.conjugate_gradient_estimate - self.true_signal)
             ) @ (self.design_matrix @ self.search_direction)
             self.weak_empirical_error_inner_products = np.append(
@@ -188,11 +188,11 @@ class ConjugateGradients:
         self.iter = self.iter + 1
 
         if self.true_signal is not None:
-            self.strong_empirical_error = np.append(
-                self.strong_empirical_error, np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)
+            self.strong_empirical_errors = np.append(
+                self.strong_empirical_errors, np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)
             )
-            self.weak_empirical_error = np.append(
-                self.weak_empirical_error,
+            self.weak_empirical_errors = np.append(
+                self.weak_empirical_errors,
                 np.sum((self.design_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2),
             )
 
@@ -248,11 +248,11 @@ class ConjugateGradients:
         index_floor = int(np.floor(index))
         alpha = index - index_floor
         if index == 0:
-            interpolated_strong_empirical_error = self.strong_empirical_error[0]
+            interpolated_strong_empirical_error = self.strong_empirical_errors[0]
         else:
             interpolated_strong_empirical_error = (
-                (1 - alpha) ** 2 * self.strong_empirical_error[index_floor]
-                + alpha**2 * self.strong_empirical_error[index_ceil]
+                (1 - alpha) ** 2 * self.strong_empirical_errors[index_floor]
+                + alpha**2 * self.strong_empirical_errors[index_ceil]
                 + 2 * (1 - alpha) * alpha * self.strong_empirical_error_inner_products[index_ceil]
             )
         return interpolated_strong_empirical_error
@@ -263,11 +263,11 @@ class ConjugateGradients:
         index_floor = int(np.floor(index))
         alpha = index - index_floor
         if index == 0:
-            interpolated_weak_empirical_error = self.weak_empirical_error[0]
+            interpolated_weak_empirical_error = self.weak_empirical_errors[0]
         else:
             interpolated_weak_empirical_error = (
-                (1 - alpha) ** 2 * self.weak_empirical_error[index_floor]
-                + alpha**2 * self.weak_empirical_error[index_ceil]
+                (1 - alpha) ** 2 * self.weak_empirical_errors[index_floor]
+                + alpha**2 * self.weak_empirical_errors[index_ceil]
                 + 2 * (1 - alpha) * alpha * self.weak_empirical_error_inner_products[index_ceil]
             )
         return interpolated_weak_empirical_error

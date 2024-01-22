@@ -53,7 +53,7 @@ plt.show()
 # We simulate NUMBER_RUNS realisations of the Gaussian sequence space model.
 
 # Specify number of Monte Carlo runs
-NUMBER_RUNS = 1  # set to 1000 for final simulations
+NUMBER_RUNS = 20  # set to 1000 for final simulations
 
 # Create observations for the three different signals
 noise = np.random.normal(0, NOISE_LEVEL, (SAMPLE_SIZE, NUMBER_RUNS))
@@ -108,7 +108,7 @@ for run in range(NUMBER_RUNS):
     models_smooth[run].conjugate_gradients_gather_all(MAXIMAL_ITERATION)
     models_rough[run].conjugate_gradients_gather_all(MAXIMAL_ITERATION)
     end_time = time.time()
-    print(f"The {run}-th Monte Carlo step took {end_time - start_time} seconds.")
+    print(f"The {run+1}-th Monte Carlo step took {end_time - start_time} seconds.")
     print(f"Supersmooth early stopping index: {models_supersmooth[run].early_stopping_index}")
     print(f"Smooth early stopping index: {models_smooth[run].early_stopping_index}")
     print(f"Rough early stopping index: {models_rough[run].early_stopping_index}")
@@ -124,7 +124,7 @@ for run in range(NUMBER_RUNS):
 # Set gridsize for the x-axis of the plots
 GRIDSIZE = 0.01
 
-# Calculate interpolated squared residual norms
+# Calculate interpolated squared residual norms and interpolated strong and weak empirical errors for the first Monte Carlo run
 if INTERPOLATION_BOOLEAN:
     grid = np.arange(0, MAXIMAL_ITERATION + GRIDSIZE, GRIDSIZE)
     residuals_supersmooth = models_supersmooth[0].calculate_interpolated_residual(index=grid)
@@ -135,6 +135,8 @@ if INTERPOLATION_BOOLEAN:
 else:
     grid = np.arange(0, MAXIMAL_ITERATION + 1)
     residuals_supersmooth = models_supersmooth[0].residuals
+    strong_empirical_errors_supersmooth = models_supersmooth[0].strong_empirical_errors
+    weak_empirical_errors_supersmooth = models_supersmooth[0].weak_empirical_errors
 
 # Plot
 plt.plot(grid, residuals_supersmooth, label="squared residual norm", color="green")
@@ -150,4 +152,77 @@ plt.yticks(
     list(plt.yticks()[0]) + [models_supersmooth[0].critical_value], list(plt.yticks()[1]) + ["$\\kappa = D \\delta^2$"]
 )
 plt.legend()
+plt.show()
+
+# %%
+# Boxplots of the strong and weak empirical losses
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# We make boxplots comparing the performance of the conjugate gradient estimator at the early stopping index for the three different signals in terms of its strong and weak empirical error.
+
+if INTERPOLATION_BOOLEAN:
+    strong_empirical_errors_supersmooth_Monte_Carlo = [
+        model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index)
+        for model in models_supersmooth
+    ]
+    strong_empirical_errors_smooth_Monte_Carlo = [
+        model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index)
+        for model in models_smooth
+    ]
+    strong_empirical_errors_rough_Monte_Carlo = [
+        model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index) for model in models_rough
+    ]
+    weak_empirical_errors_supersmooth_Monte_Carlo = [
+        model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index)
+        for model in models_supersmooth
+    ]
+    weak_empirical_errors_smooth_Monte_Carlo = [
+        model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index) for model in models_smooth
+    ]
+    weak_empirical_errors_rough_Monte_Carlo = [
+        model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index) for model in models_rough
+    ]
+else:
+    strong_empirical_errors_supersmooth_Monte_Carlo = [
+        models_supersmooth[i].strong_empirical_errors[models_supersmooth[i].early_stopping_index]
+        for i in range(NUMBER_RUNS)
+    ]
+    strong_empirical_errors_smooth_Monte_Carlo = [
+        models_smooth[i].strong_empirical_errors[models_smooth[i].early_stopping_index] for i in range(NUMBER_RUNS)
+    ]
+    strong_empirical_errors_rough_Monte_Carlo = [
+        models_rough[i].strong_empirical_errors[models_rough[i].early_stopping_index] for i in range(NUMBER_RUNS)
+    ]
+    weak_empirical_errors_supersmooth_Monte_Carlo = [
+        models_supersmooth[i].weak_empirical_errors[models_supersmooth[i].early_stopping_index]
+        for i in range(NUMBER_RUNS)
+    ]
+    weak_empirical_errors_smooth_Monte_Carlo = [
+        models_smooth[i].weak_empirical_errors[models_smooth[i].early_stopping_index] for i in range(NUMBER_RUNS)
+    ]
+    weak_empirical_errors_rough_Monte_Carlo = [
+        models_rough[i].weak_empirical_errors[models_rough[i].early_stopping_index] for i in range(NUMBER_RUNS)
+    ]
+
+# Plot of the strong empirical errors
+fig, ax = plt.subplots()
+strong_empirical_errors_Monte_Carlo = {
+    "supersmooth": strong_empirical_errors_supersmooth_Monte_Carlo,
+    "smooth": strong_empirical_errors_smooth_Monte_Carlo,
+    "rough": strong_empirical_errors_rough_Monte_Carlo,
+}
+ax.boxplot(strong_empirical_errors_Monte_Carlo.values(), labels=strong_empirical_errors_Monte_Carlo.keys())
+ax.set_xlabel("Signals")
+ax.set_ylabel("Strong empirical errors")
+plt.show()
+
+# Plot of the weak empirical errors
+fig, ax = plt.subplots()
+weak_empirical_errors_Monte_Carlo = {
+    "supersmooth": weak_empirical_errors_supersmooth_Monte_Carlo,
+    "smooth": weak_empirical_errors_smooth_Monte_Carlo,
+    "rough": weak_empirical_errors_rough_Monte_Carlo,
+}
+ax.boxplot(weak_empirical_errors_Monte_Carlo.values(), labels=weak_empirical_errors_Monte_Carlo.keys())
+ax.set_xlabel("Signals")
+ax.set_ylabel("Weak empirical errors")
 plt.show()
