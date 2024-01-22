@@ -120,27 +120,13 @@ for run in range(NUMBER_RUNS):
 # i.e. the empirical prediction and reconstruction errors, for the three different signals. If we chose to interpolate, i.e. INTERPOLSTION_BOOLEAN is set to
 # true, we need to interpolate between the squared residual norms at the integer iteration indices.
 
-
-# Calculate interpolated squared residual norm for a given vector containing the squared
-# residual norms at integer iteration indices and a possibliy non-integer index
-def calculate_interpolated_residual(residuals, index):
-    index_ceil = int(np.ceil(index))
-    index_floor = int(np.floor(index))
-    alpha = index - index_floor
-    interpolated_residual = (1 - alpha) ** 2 * residuals[index_floor] + (1 - (1 - alpha) ** 2) * residuals[index_ceil]
-    return interpolated_residual
-
-
-# Vectorize interpolating function
-calculate_interpolated_residual = np.vectorize(calculate_interpolated_residual, excluded=["residuals"])
-
 # Set gridsize for the x-axis of the plots
 GRIDSIZE = 0.01
 
 # Calculate interpolated squared residual norms
 if INTERPOLATION_BOOLEAN:
     grid = np.arange(0, MAXIMAL_ITERATION + GRIDSIZE, GRIDSIZE)
-    residuals_supersmooth = calculate_interpolated_residual(residuals=models_supersmooth[0].residuals, index=grid)
+    residuals_supersmooth = models_supersmooth[0].calculate_interpolated_residual(index=grid)
 else:
     grid = np.arange(0, MAXIMAL_ITERATION + 1)
     residuals_supersmooth = models_supersmooth[0].residuals

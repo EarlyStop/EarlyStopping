@@ -97,15 +97,6 @@ class TestConjugateGradients(unittest.TestCase):
                 residual_rough, models_rough[run].residuals[int(models_rough[run].early_stopping_index)], places=5
             )
 
-    def calculate_interpolated_residual(self, residuals, early_stopping_index):
-        early_stopping_index_ceil = int(np.ceil(early_stopping_index))
-        early_stopping_index_floor = int(np.floor(early_stopping_index))
-        alpha = early_stopping_index - early_stopping_index_floor
-        interpolated_residual = (1 - alpha) ** 2 * residuals[early_stopping_index_floor] + (
-            1 - (1 - alpha) ** 2
-        ) * residuals[early_stopping_index_ceil]
-        return interpolated_residual
-
     def test_interpolation(self):
         models_supersmooth = [
             es.ConjugateGradients(
@@ -142,14 +133,14 @@ class TestConjugateGradients(unittest.TestCase):
             models_supersmooth[run].conjugate_gradients_to_early_stop(self.NUMBER_RUNS)
             models_smooth[run].conjugate_gradients_to_early_stop(self.NUMBER_RUNS)
             models_rough[run].conjugate_gradients_to_early_stop(self.NUMBER_RUNS)
-            interpolated_residual_supersmooth = self.calculate_interpolated_residual(
-                models_supersmooth[run].residuals, models_supersmooth[run].early_stopping_index
+            interpolated_residual_supersmooth = models_supersmooth[run].calculate_interpolated_residual(
+                models_supersmooth[run].early_stopping_index
             )
-            interpolated_residual_smooth = self.calculate_interpolated_residual(
-                models_supersmooth[run].residuals, models_supersmooth[run].early_stopping_index
+            interpolated_residual_smooth = models_supersmooth[run].calculate_interpolated_residual(
+                models_supersmooth[run].early_stopping_index
             )
-            interpolated_residual_rough = self.calculate_interpolated_residual(
-                models_supersmooth[run].residuals, models_supersmooth[run].early_stopping_index
+            interpolated_residual_rough = models_supersmooth[run].calculate_interpolated_residual(
+                models_supersmooth[run].early_stopping_index
             )
             self.assertAlmostEqual(interpolated_residual_supersmooth, models_supersmooth[run].critical_value, places=5)
             self.assertAlmostEqual(interpolated_residual_smooth, models_smooth[run].critical_value, places=5)

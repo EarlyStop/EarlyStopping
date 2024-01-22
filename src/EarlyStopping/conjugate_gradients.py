@@ -29,7 +29,7 @@ class ConjugateGradients:
 
     interpolation: boolean, default = False
         If interpolation is set to True, the early stopping iteration index can be
-        non-integer valued. (Defaults to False.)
+        noninteger valued. (Defaults to False.)
 
     Attributes
     ----------
@@ -127,6 +127,9 @@ class ConjugateGradients:
                 [np.sum((self.design_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
             )
 
+        # Vecgtorize the function calculate_interpolated_residual
+        self.calculate_interpolated_residual = np.vectorize(self.calculate_interpolated_residual, excluded="self")
+
     def conjugate_gradients(self, iterations=1):
         """Performs iterations of the conjugate gradients algorithm
 
@@ -202,3 +205,13 @@ class ConjugateGradients:
         if max_iter > int(np.ceil(self.early_stopping_index)):
             self.conjugate_gradients(max_iter - int(np.ceil(self.early_stopping_index)))
             self.conjugate_gradient_estimate = conjugate_gradient_estimate
+
+    def calculate_interpolated_residual(self, index):
+        """Calculates the interpolated squared residual at a possibly noninteger iteration index. The function is vectorized such that arrays of indices can be inserted."""
+        index_ceil = int(np.ceil(index))
+        index_floor = int(np.floor(index))
+        alpha = index - index_floor
+        interpolated_residual = (1 - alpha) ** 2 * self.residuals[index_floor] + (
+            1 - (1 - alpha) ** 2
+        ) * self.residuals[index_ceil]
+        return interpolated_residual
