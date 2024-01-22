@@ -117,8 +117,9 @@ for run in range(NUMBER_RUNS):
 # Plot of squared residual norms and empirical error terms
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We plot for the first Monte Carlo run the squared residual norms along the whole iteration path and the corresponding weak and strong empirical error terms,
-# i.e. the empirical prediction and reconstruction errors, for the three different signals. If we chose to interpolate, i.e. INTERPOLSTION_BOOLEAN is set to
-# true, we need to interpolate between the squared residual norms at the integer iteration indices.
+# i.e. the empirical prediction and reconstruction errors, for the supersmooth signal. The critical value is denoted by :math:`\kappa` and the early stopping index by :math:`\tau`.
+# If we choose to interpolate, i.e. INTERPOLSTION_BOOLEAN is set to
+# true, we need to interpolate between the residual polynomials and therefore between the estimators.
 
 # Set gridsize for the x-axis of the plots
 GRIDSIZE = 0.01
@@ -127,16 +128,22 @@ GRIDSIZE = 0.01
 if INTERPOLATION_BOOLEAN:
     grid = np.arange(0, MAXIMAL_ITERATION + GRIDSIZE, GRIDSIZE)
     residuals_supersmooth = models_supersmooth[0].calculate_interpolated_residual(index=grid)
+    strong_empirical_errors_supersmooth = models_supersmooth[0].calculate_interpolated_strong_empirical_error(
+        index=grid
+    )
+    weak_empirical_errors_supersmooth = models_supersmooth[0].calculate_interpolated_weak_empirical_error(index=grid)
 else:
     grid = np.arange(0, MAXIMAL_ITERATION + 1)
     residuals_supersmooth = models_supersmooth[0].residuals
 
 # Plot
 plt.plot(grid, residuals_supersmooth, label="squared residual norm", color="green")
+plt.plot(grid, strong_empirical_errors_supersmooth, label="strong empirical error", color="blue")
+plt.plot(grid, weak_empirical_errors_supersmooth, label="weak empirical error", color="orange")
 plt.axvline(x=models_supersmooth[0].early_stopping_index, color="grey", linestyle="--")
 plt.axhline(y=models_supersmooth[0].critical_value, color="grey", linestyle="--")
-plt.xlim([0, 12])
-plt.ylim([0, 11])
+plt.xlim([0, 14])
+plt.ylim([0, 2])
 plt.xlabel("Iteration index")
 plt.xticks(list(plt.xticks()[0]) + [models_supersmooth[0].early_stopping_index], list(plt.xticks()[1]) + ["$\\tau$"])
 plt.yticks(

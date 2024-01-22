@@ -126,9 +126,18 @@ class ConjugateGradients:
             self.weak_empirical_error = np.array(
                 [np.sum((self.design_matrix @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
             )
+            if interpolation:
+                self.strong_empirical_error_inner_products = np.array([None])
+                self.weak_empirical_error_inner_products = np.array([None])
 
-        # Vecgtorize the function calculate_interpolated_residual
+        # Vectorize functions
         self.calculate_interpolated_residual = np.vectorize(self.calculate_interpolated_residual, excluded="self")
+        self.calculate_interpolated_strong_empirical_error = np.vectorize(
+            self.calculate_interpolated_strong_empirical_error, excluded="self"
+        )
+        self.calculate_interpolated_weak_empirical_error = np.vectorize(
+            self.calculate_interpolated_weak_empirical_error, excluded="self"
+        )
 
     def conjugate_gradients(self, iterations=1):
         """Performs iterations of the conjugate gradients algorithm
@@ -150,6 +159,23 @@ class ConjugateGradients:
         squared_norm_old_transformed_residual_vector = np.sum(old_transformed_residual_vector**2)
         transformed_search_direction = self.design_matrix @ self.search_direction
         learning_rate = squared_norm_old_transformed_residual_vector / np.sum(transformed_search_direction**2)
+        if self.true_signal is not None and self.interpolation:
+            strong_empirical_error_inner_product = (
+                self.strong_empirical_error[-1]
+                + learning_rate
+                * np.transpose(self.conjugate_gradient_estimate - self.true_signal)
+                @ self.search_direction
+            )
+            self.strong_empirical_error_inner_products = np.append(
+                self.strong_empirical_error_inner_products, strong_empirical_error_inner_product
+            )
+            weak_empirical_error_inner_product = self.weak_empirical_error[-1] + learning_rate * np.transpose(
+                self.design_matrix @ (self.conjugate_gradient_estimate - self.true_signal)
+            ) @ (self.design_matrix @ self.search_direction)
+            self.weak_empirical_error_inner_products = np.append(
+                self.weak_empirical_error_inner_products, weak_empirical_error_inner_product
+            )
+
         self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + learning_rate * self.search_direction
         self.residual_vector = self.residual_vector - learning_rate * transformed_search_direction
         self.transformed_residual_vector = self.transposed_design_matrix @ self.residual_vector
@@ -215,3 +241,33 @@ class ConjugateGradients:
             1 - (1 - alpha) ** 2
         ) * self.residuals[index_ceil]
         return interpolated_residual
+
+    def calculate_interpolated_strong_empirical_error(self, index):
+        """Calculates the interpolated strong empirical error at a possibly noninteger iteration index. The function is vectorized such that arrays of indices can be inserted."""
+        index_ceil = int(np.ceil(index))
+        index_floor = int(np.floor(index))
+        alpha = index - index_floor
+        if index == 0:
+            interpolated_strong_empirical_error = self.strong_empirical_error[0]
+        else:
+            interpolated_strong_empirical_error = (
+                (1 - alpha) ** 2 * self.strong_empirical_error[index_floor]
+                + alpha**2 * self.strong_empirical_error[index_ceil]
+                + 2 * (1 - alpha) * alpha * self.strong_empirical_error_inner_products[index_ceil]
+            )
+        return interpolated_strong_empirical_error
+
+    def calculate_interpolated_weak_empirical_error(self, index):
+        """Calculates the interpolated weak empirical error at a possibly noninteger iteration index. The function is vectorized such that arrays of indices can be inserted."""
+        index_ceil = int(np.ceil(index))
+        index_floor = int(np.floor(index))
+        alpha = index - index_floor
+        if index == 0:
+            interpolated_weak_empirical_error = self.weak_empirical_error[0]
+        else:
+            interpolated_weak_empirical_error = (
+                (1 - alpha) ** 2 * self.weak_empirical_error[index_floor]
+                + alpha**2 * self.weak_empirical_error[index_ceil]
+                + 2 * (1 - alpha) * alpha * self.weak_empirical_error_inner_products[index_ceil]
+            )
+        return interpolated_weak_empirical_error

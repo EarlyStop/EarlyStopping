@@ -165,3 +165,81 @@ class TestConjugateGradients(unittest.TestCase):
             )
             self.assertAlmostEqual(interpolated_residual_smooth_via_estimator, interpolated_residual_smooth, places=5)
             self.assertAlmostEqual(interpolated_residual_rough_via_estimator, interpolated_residual_rough, places=5)
+            interpolated_strong_empirical_error_supersmooth = models_supersmooth[
+                run
+            ].calculate_interpolated_strong_empirical_error(models_supersmooth[run].early_stopping_index)
+            interpolated_strong_empirical_error_smooth = models_smooth[
+                run
+            ].calculate_interpolated_strong_empirical_error(models_smooth[run].early_stopping_index)
+            interpolated_strong_empirical_error_rough = models_rough[
+                run
+            ].calculate_interpolated_strong_empirical_error(models_rough[run].early_stopping_index)
+            interpolated_strong_empirical_error_supersmooth_via_estimator = np.sum(
+                (models_supersmooth[run].conjugate_gradient_estimate - models_supersmooth[run].true_signal) ** 2
+            )
+            interpolated_strong_empirical_error_smooth_via_estimator = np.sum(
+                (models_smooth[run].conjugate_gradient_estimate - models_smooth[run].true_signal) ** 2
+            )
+            interpolated_strong_empirical_error_rough_via_estimator = np.sum(
+                (models_rough[run].conjugate_gradient_estimate - models_rough[run].true_signal) ** 2
+            )
+            self.assertAlmostEqual(
+                interpolated_strong_empirical_error_supersmooth_via_estimator,
+                interpolated_strong_empirical_error_supersmooth,
+                places=5,
+            )
+            self.assertAlmostEqual(
+                interpolated_strong_empirical_error_smooth_via_estimator,
+                interpolated_strong_empirical_error_smooth,
+                places=5,
+            )
+            self.assertAlmostEqual(
+                interpolated_strong_empirical_error_rough_via_estimator,
+                interpolated_strong_empirical_error_rough,
+                places=5,
+            )
+            interpolated_weak_empirical_error_supersmooth = models_supersmooth[
+                run
+            ].calculate_interpolated_weak_empirical_error(models_supersmooth[run].early_stopping_index)
+            interpolated_weak_empirical_error_smooth = models_smooth[run].calculate_interpolated_weak_empirical_error(
+                models_smooth[run].early_stopping_index
+            )
+            interpolated_weak_empirical_error_rough = models_rough[run].calculate_interpolated_weak_empirical_error(
+                models_rough[run].early_stopping_index
+            )
+            interpolated_weak_empirical_error_supersmooth_via_estimator = np.sum(
+                (
+                    models_supersmooth[run].design_matrix
+                    @ (models_supersmooth[run].conjugate_gradient_estimate - models_supersmooth[run].true_signal)
+                )
+                ** 2
+            )
+            interpolated_weak_empirical_error_smooth_via_estimator = np.sum(
+                (
+                    models_smooth[run].design_matrix
+                    @ (models_smooth[run].conjugate_gradient_estimate - models_smooth[run].true_signal)
+                )
+                ** 2
+            )
+            interpolated_weak_empirical_error_rough_via_estimator = np.sum(
+                (
+                    models_rough[run].design_matrix
+                    @ (models_rough[run].conjugate_gradient_estimate - models_rough[run].true_signal)
+                )
+                ** 2
+            )
+            self.assertAlmostEqual(
+                interpolated_weak_empirical_error_supersmooth_via_estimator,
+                interpolated_weak_empirical_error_supersmooth,
+                places=5,
+            )
+            self.assertAlmostEqual(
+                interpolated_weak_empirical_error_smooth_via_estimator,
+                interpolated_weak_empirical_error_smooth,
+                places=5,
+            )
+            self.assertAlmostEqual(
+                interpolated_weak_empirical_error_rough_via_estimator,
+                interpolated_weak_empirical_error_rough,
+                places=5,
+            )
