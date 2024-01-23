@@ -2,7 +2,8 @@ import numpy as np
 
 
 class ConjugateGradients:
-    """A class to perform estimation using the conjugate gradients iterative method.
+    """
+    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/conjugate_gradients.py>`_ A class to perform estimation using the conjugate gradients iterative method.
 
     Parameters
     ----------
