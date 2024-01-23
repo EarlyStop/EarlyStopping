@@ -1,6 +1,6 @@
 Landweber iteration
 ====================
 
-.. autoclass:: EarlyStopping.landweber
-.. automethod:: EarlyStopping.landweber.landweber_to_early_stop
-.. automethod:: EarlyStopping.landweber.landweber_gather_all
+.. autoclass:: EarlyStopping.Landweber
+.. automethod:: EarlyStopping.Landweber.landweber_to_early_stop
+.. automethod:: EarlyStopping.Landweber.landweber_gather_all
