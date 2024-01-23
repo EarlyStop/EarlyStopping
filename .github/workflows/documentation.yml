@@ -1,6 +1,6 @@
 name: documentation
 
-on: [push, pull_request, workflow_dispatch]
+on: [workflow_dispatch]
 
 permissions:
   contents: write
@@ -13,13 +13,13 @@ jobs:
       - uses: actions/setup-python@v3
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme sphinx-gallery myst_parser numpy matplotlib seaborn .
+          pip install sphinx sphinx_rtd_theme sphinx-gallery myst_parser numpy matplotlib scipy seaborn .
       - name: Sphinx build
         run: |
           sphinx-build docs/source _build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}

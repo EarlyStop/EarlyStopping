@@ -9,7 +9,9 @@ Welcome to EarlyStopping's documentation!
 **EarlyStopping** is a Python library.
 
 .. toctree::
-   usage
+   installation
+   L2-boosting 
+   landweber
    auto_examples/index
    :maxdepth: 2
    :caption: Contents:
