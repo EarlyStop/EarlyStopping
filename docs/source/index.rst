@@ -12,6 +12,7 @@ Welcome to EarlyStopping's documentation!
    installation
    L2-boosting 
    landweber
+   conjugate_gradients
    auto_examples/index
    :maxdepth: 2
    :caption: Contents:
