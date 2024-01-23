@@ -11,6 +11,7 @@ Welcome to EarlyStopping's documentation!
 .. toctree::
    installation
    L2-boosting 
+   landweber
    auto_examples/index
    :maxdepth: 2
    :caption: Contents:
