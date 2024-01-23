@@ -65,6 +65,22 @@ class ConjugateGradients:
 
     Methods
     -------
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+    | conjugate_gradients(iterations = 1)                  | Performs iterations of the conjugate gradients algorithm.                |
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+    | conjugate_gradients_to_early_stop(max_iter)          | Early stops the conjugate gradients algorithm.                           |
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+    | conjugate_gradients_gather_all(max_iter)             | Gathers all relevant simulation data.                                    |
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+    | calculate_interpolated_residual(index)               | Calculates the interpolated residual at a noninteger index.              |
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+    | calculate_interpolated_strong_empirical_error(index) | Calculates the interpolated strong empirical error at a noninteger index.|
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+    | calculate_interpolated_weak_empirical_error(index)   | Calculates the interpolated weak empirical error at a noninteger index.  |
+    +------------------------------------------------------+--------------------------------------------------------------------------+
+
+    Methods
+    -------
     conjugate_gradients(iterations=1)
         Performs a specified number of iterations of the conjugate gradients algorithm.
 
