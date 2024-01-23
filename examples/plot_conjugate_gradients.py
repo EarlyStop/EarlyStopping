@@ -8,10 +8,13 @@ We conduct in the following a simulation study illustrating the conjugate gradie
 import random
 import time
 import numpy as np
+import pandas as pd
 from scipy.sparse import dia_matrix
 import matplotlib.pyplot as plt
+import seaborn as sns
 import EarlyStopping as es
 
+sns.set_theme(style="ticks")
 random.seed(42)
 
 # %%
@@ -161,25 +164,28 @@ plt.show()
 
 if INTERPOLATION_BOOLEAN:
     strong_empirical_errors_supersmooth_Monte_Carlo = [
-        model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index)
+        float(model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index).item())
         for model in models_supersmooth
     ]
     strong_empirical_errors_smooth_Monte_Carlo = [
-        model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index)
+        float(model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index).item())
         for model in models_smooth
     ]
     strong_empirical_errors_rough_Monte_Carlo = [
-        model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index) for model in models_rough
+        float(model.calculate_interpolated_strong_empirical_error(index=model.early_stopping_index).item())
+        for model in models_rough
     ]
     weak_empirical_errors_supersmooth_Monte_Carlo = [
-        model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index)
+        float(model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index).item())
         for model in models_supersmooth
     ]
     weak_empirical_errors_smooth_Monte_Carlo = [
-        model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index) for model in models_smooth
+        float(model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index).item())
+        for model in models_smooth
     ]
     weak_empirical_errors_rough_Monte_Carlo = [
-        model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index) for model in models_rough
+        float(model.calculate_interpolated_weak_empirical_error(index=model.early_stopping_index).item())
+        for model in models_rough
     ]
 else:
     strong_empirical_errors_supersmooth_Monte_Carlo = [
@@ -204,25 +210,35 @@ else:
     ]
 
 # Plot of the strong empirical errors
-fig, ax = plt.subplots()
-strong_empirical_errors_Monte_Carlo = {
-    "supersmooth": strong_empirical_errors_supersmooth_Monte_Carlo,
-    "smooth": strong_empirical_errors_smooth_Monte_Carlo,
-    "rough": strong_empirical_errors_rough_Monte_Carlo,
-}
-ax.boxplot(strong_empirical_errors_Monte_Carlo.values(), labels=strong_empirical_errors_Monte_Carlo.keys())
-ax.set_xlabel("Signals")
-ax.set_ylabel("Strong empirical errors")
+strong_empirical_errors_Monte_Carlo = pd.DataFrame(
+    {
+        "algorithm": ["conjugate gradients"] * NUMBER_RUNS,
+        "supersmooth": strong_empirical_errors_supersmooth_Monte_Carlo,
+        "smooth": strong_empirical_errors_smooth_Monte_Carlo,
+        "rough": strong_empirical_errors_rough_Monte_Carlo,
+    }
+)
+strong_empirical_errors_Monte_Carlo = pd.melt(
+    strong_empirical_errors_Monte_Carlo, id_vars="algorithm", value_vars=["supersmooth", "smooth", "rough"]
+)
+strong_empirical_errors_boxplot = sns.boxplot(
+    x="variable", y="value", data=strong_empirical_errors_Monte_Carlo, width=0.4
+)
+strong_empirical_errors_boxplot.set(xlabel="Signal", ylabel="Strong empirical error at $\\tau$")
 plt.show()
 
 # Plot of the weak empirical errors
-fig, ax = plt.subplots()
-weak_empirical_errors_Monte_Carlo = {
-    "supersmooth": weak_empirical_errors_supersmooth_Monte_Carlo,
-    "smooth": weak_empirical_errors_smooth_Monte_Carlo,
-    "rough": weak_empirical_errors_rough_Monte_Carlo,
-}
-ax.boxplot(weak_empirical_errors_Monte_Carlo.values(), labels=weak_empirical_errors_Monte_Carlo.keys())
-ax.set_xlabel("Signals")
-ax.set_ylabel("Weak empirical errors")
+weak_empirical_errors_Monte_Carlo = pd.DataFrame(
+    {
+        "algorithm": ["conjugate gradients"] * NUMBER_RUNS,
+        "supersmooth": weak_empirical_errors_supersmooth_Monte_Carlo,
+        "smooth": weak_empirical_errors_smooth_Monte_Carlo,
+        "rough": weak_empirical_errors_rough_Monte_Carlo,
+    }
+)
+weak_empirical_errors_Monte_Carlo = pd.melt(
+    weak_empirical_errors_Monte_Carlo, id_vars="algorithm", value_vars=["supersmooth", "smooth", "rough"]
+)
+weak_empirical_errors_boxplot = sns.boxplot(x="variable", y="value", data=weak_empirical_errors_Monte_Carlo, width=0.4)
+weak_empirical_errors_boxplot.set(xlabel="Signal", ylabel="Weak empirical error at $\\tau$")
 plt.show()
