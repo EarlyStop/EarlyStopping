@@ -4,7 +4,9 @@ from scipy import sparse
 
 
 class Landweber:
-    """ A class to perform estimation using the Landweber iterative method.
+    """
+     `[Source] <https://github.com/ESFIEP/EarlyStopping/blob/L2_boost/src/EarlyStopping/landweber.py>`_
+    A class to perform estimation using the Landweber iterative method.
 
     Parameters
     ----------
