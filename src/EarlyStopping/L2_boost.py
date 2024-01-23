@@ -1,7 +1,9 @@
 import numpy as np
 
 class L2_boost():
-    """ L2-boosting algorithm for high dimensional linear models.
+    """
+    `[Source] <https://github.com/ESFIEP/EarlyStopping/blob/L2_boost/src/EarlyStopping/L2_boost.py>`_
+    L2-boosting algorithm for high dimensional linear models.
 
     Parameters
     ----------
