@@ -50,12 +50,14 @@ plt.ylim(0, 0.2)
 plt.plot(beta_3[0:100])
 plt.plot(beta_2[0:100])
 plt.plot(beta_1[0:100])
+plt.show()
 
 fig = plt.figure(figsize = (10,7))
 plt.ylim(0, 1)
 plt.plot(beta_15[0:100])
 plt.plot(beta_60[0:100])
 plt.plot(beta_90[0:100])
+plt.show()
 
 # %%
 # We simulate data from a high-dimensional linear model according to one of the signals.
@@ -89,7 +91,7 @@ alg.discrepancy_stop(crit = noise_estimate, max_iter = 200)
 print("The discrepancy based early stopping time is given by", alg.iter)
 
 # %%
-# Another method is based on stopping when the ratio of consecutive residuals goes above a thertain threshhold.
+# Another method is based on stopping when the ratio of consecutive residuals goes above a certain threshhold.
 alg = es.L2_boost(X, Y)
 alg.residual_ratio_stop(max_iter = 200, K = 1.2)
 print("The residual ratio based early stopping time is given by", alg.iter)
