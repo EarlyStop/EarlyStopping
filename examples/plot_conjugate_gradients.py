@@ -5,7 +5,6 @@ Simulation study for conjugate gradients
 We conduct in the following a simulation study illustrating the conjugate gradients algorithm.
 """
 
-import random
 import time
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ import seaborn as sns
 import EarlyStopping as es
 
 sns.set_theme(style="ticks")
-random.seed(42)
+np.random.seed(42)
 
 # %%
 # Simulation Setting
@@ -142,6 +141,7 @@ else:
     weak_empirical_errors_supersmooth = models_supersmooth[0].weak_empirical_errors
 
 # Plot
+plot_residuals_empirical_errors = plt.figure()
 plt.plot(grid, residuals_supersmooth, label="squared residual norm", color="green")
 plt.plot(grid, strong_empirical_errors_supersmooth, label="strong empirical error", color="blue")
 plt.plot(grid, weak_empirical_errors_supersmooth, label="weak empirical error", color="orange")
