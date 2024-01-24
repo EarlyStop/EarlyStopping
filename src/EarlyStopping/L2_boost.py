@@ -1,8 +1,9 @@
 import numpy as np
+from sklearn import linear_model
 
 class L2_boost():
     """
-    `[Source] <https://github.com/ESFIEP/EarlyStopping/blob/L2_boost/src/EarlyStopping/L2_boost.py>`_
+    `[Source] <https://github.com/ESFIEP/EarlyStopping/blob/main/src/EarlyStopping/L2_boost.py>`_
     L2-boosting algorithm for high dimensional linear models.
 
     Parameters
@@ -52,15 +53,21 @@ class L2_boost():
 
     Methods
     -------
-    +-------------------------------------+-------------------------------------------------------------------+
-    | boost(iter_num = 1)                 | Performs iter_num iterations of the boosting algorithm.           |
-    +-------------------------------------+-------------------------------------------------------------------+
-    | boost_to_early_stop(crit, max_iter) | Early stops the boosting algorithm.                               | 
-    +--------------------------------+----+-------------------------------------------------------------------+
-    | boost_to_balanced_oracle(self)      | Iterates the boosting algorithm up to the balanced oracle.        |
-    +------+------------------------------+-------------------------------------------------------------------+
-    | predict(input_variable)             | Predicts the output based on the current boosting estimate.       |
-    +------+------------------------------+-------------------------------------------------------------------+
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | boost(iter_num = 1)                              | Performs iter_num iterations of the boosting algorithm.           |
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | predict(input_variable)                          | Predicts the output based on the current boosting estimate.       |
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | discrepancy_stop(crit, max_iter)                 | Stops the boosting algorithm based on the discrepancy principle.  | 
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | residual_ratio_stop(max_iter, alpha=0.05, K=1.2) | Stops the boosting algorithm based on the residual ratios.        | 
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | get_noise_estimate(K=1)                          | Computes a noise estimate for the model via the scaled lasso.     |
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | get_aic_iteration(K=2)                           | Computes the minimizer of a high dimensional Akaike criterion.    |
+    +--------------------------------------------------+-------------------------------------------------------------------+
+    | boost_to_balanced_oracle(self)                   | Iterates the boosting algorithm up to the balanced oracle.        |
+    +--------------------------------------------------+-------------------------------------------------------------------+
     """
 
     def __init__(self, input_matrix, output_variable, true_signal = None):
@@ -104,8 +111,8 @@ class L2_boost():
         for index in range(iter_num):
             self.__boost_one_iteration()
 
-    def boost_to_early_stop(self, crit, max_iter):
-        """ Early stopping for the boosting procedure.
+    def discrepancy_stop(self, crit, max_iter):
+        """ Early stopping for the boosting procedure based on the discrepancy principle.
             Procedure is stopped when the residuals go below crit or iteration
             max_iter is reached.
 
@@ -115,10 +122,27 @@ class L2_boost():
                 Critical value for the early stopping procedure.
             max_iter: int
                 Maximal number of iterations to be performed.
-                
         """
-        while self.residuals[self.iter] > crit and self.iter <= max_iter:
+        while self.residuals[self.iter] > crit and self.iter < max_iter:
             self.__boost_one_iteration()
+
+    def residual_ratio_stop(self, max_iter, alpha = 0.05, K = 1.2):
+        """ Stops the algorithm based on a residual ration criterion.
+
+            Parameters
+            ----------
+            alpha: float
+                accuracy level
+            K: float
+                Constant for the definition.
+            max_iter: int
+                Maximal number of iterations to be performed.
+        """ 
+        residual_ratio = 0
+        crit = 1 - 4 * K * np.log(self.para_size / alpha) / self.sample_size
+        while residual_ratio < crit and self.iter < max_iter:
+            self.__boost_one_iteration()
+            residual_ratio = self.residuals[self.iter] / self.residuals[self.iter - 1]
 
     def boost_to_balanced_oracle(self):
         """ Performs iterations of the orthogonal boosting algorithm until the
@@ -130,6 +154,51 @@ class L2_boost():
         else:
             while self.bias2[self.iter] > self.stoch_error[self.iter]:
                 self.__boost_one_iteration()
+
+    def get_noise_estimate(self, K = 1):
+        """ Computes an estimator for the noise level sigma^2 of the model via the scaled Lasso.
+
+            Parameters
+            ----------
+            K: float
+                Constant in the definition. Defaults to 1, which is the choice from the scaled Lasso paper.
+        """
+        iter = 0
+        max_iter = 50
+        tolerance = 1 / self.sample_size
+        estimation_difference = 2 * tolerance
+        alpha_0 = np.sqrt(K * np.log(self.para_size) / self.sample_size)
+
+        lasso = linear_model.Lasso(alpha_0, fit_intercept = False)
+        lasso.fit(self.input_matrix, self.output_variable)
+        noise_estimate = np.mean((self.output_variable - lasso.predict(self.input_matrix))**2)
+
+        while estimation_difference > tolerance and iter <= max_iter:
+            alpha = np.sqrt(noise_estimate) * alpha_0
+            lasso = linear_model.Lasso(alpha, fit_intercept = False)
+            lasso.fit(self.input_matrix, self.output_variable)
+
+            new_noise_estimate = np.mean((self.output_variable - lasso.predict(self.input_matrix))**2)
+            estimation_difference = np.abs(new_noise_estimate - noise_estimate)
+            noise_estimate = new_noise_estimate
+
+            iter = iter + 1
+
+        return noise_estimate
+
+    def get_aic_iteration(self, K = 2):
+        """ Computes the iteration index minimizing a high dimensional Akaike criterion.
+
+            Parameters
+            ----------
+            K: float
+                Constant in the definition. Defaults to 2, which is common in the literature.
+        """
+        noise_estimate = self.get_noise_estimate()
+        dim_penalty = np.arange(0, self.iter + 1) * K * noise_estimate * np.log(self.para_size) / self.sample_size
+        aic = self.residuals + dim_penalty
+        return np.argmin(aic)
+
 
     def predict(self, input_variable):
         """ Predicts the output variable based on the current boosting estimate
