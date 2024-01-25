@@ -9,11 +9,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import EarlyStopping as es
 from scipy.sparse import dia_matrix
+np.random.seed(42)
 plt.rcParams.update({'font.size': 20})  
 
 # %%
 # Plot different signals
-# ------------------------
+# ----------------------
 # Create diagonal design matrix and supersmooth, smooth and rough signal. Plot the signal.
 
 D = 1000
@@ -37,7 +38,7 @@ plt.show()
 
 # %%
 # Generate data and run Landweber
-# ------------------------
+# -------------------------------
 # Run the Landweber algorithm and get the early stopping index as well as as the weak/strong balanced oracle.
 
 
@@ -76,7 +77,7 @@ rough_strong_oracle = models_rough.strong_balanced_oracle
 
 # %%
 # Bias/variance decomposition for supersmooth signal
-# ------------------------
+# --------------------------------------------------
 # Plot the residuals, weak and strong quantities for the supersmooth signal.
 
 #plt.rcParams.update({'font.size': 18})  # Update the font size
@@ -119,7 +120,7 @@ plt.show()
 
 # %%
 # Bias/variance decomposition for smooth signal
-# ------------------------
+# ---------------------------------------------
 # Plot the residuals, weak and strong quantities for the smooth signal.
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 12))
@@ -159,7 +160,7 @@ plt.show()
 
 # %%
 # Bias/variance decomposition for rough signal
-# ------------------------
+# --------------------------------------------
 # Plot the residuals, weak and strong quantities for the rough signal.
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 12))
