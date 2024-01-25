@@ -55,7 +55,7 @@ plt.show()
 # We simulate NUMBER_RUNS realisations of the Gaussian sequence space model.
 
 # Specify number of Monte Carlo runs
-NUMBER_RUNS = 100  # set to 1000 for final simulations
+NUMBER_RUNS = 10  # set to 1000 for final simulations
 
 # Create observations for the three different signals
 noise = np.random.normal(0, NOISE_LEVEL, (SAMPLE_SIZE, NUMBER_RUNS))
