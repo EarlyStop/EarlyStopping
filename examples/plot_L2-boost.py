@@ -8,9 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import EarlyStopping as es
-import random
 
-random.seed(42)
+np.random.seed(42)
 sns.set_theme()
 
 # %%
