@@ -86,8 +86,8 @@ fig, axs = plt.subplots(3, 1, figsize=(14, 12))
 
 axs[0].plot(range(0, iter+1), models_supersmooth.residuals)
 axs[0].axvline(x=supersmooth_m, color='red', linestyle='--')
-axs[0].set_xlim([0, 400])
-axs[0].set_ylim([0, 100])
+axs[0].set_xlim([0, 50])
+axs[0].set_ylim([0, 20])
 axs[0].set_xlabel('Iteration')
 axs[0].set_ylabel('Residuals')
 
@@ -97,8 +97,8 @@ axs[1].plot(range(0, iter+1), models_supersmooth.strong_bias2, label='$Bias^2$',
 axs[1].plot(range(0, iter+1), models_supersmooth.strong_variance, label='Variance', color='blue')
 axs[1].axvline(x=supersmooth_m, color='red', linestyle='--')
 axs[1].axvline(x=supersmooth_strong_oracle, color='green', linestyle='--')
-axs[1].set_xlim([0, 400])
-axs[1].set_ylim([0, 100])
+axs[1].set_xlim([0, 50])
+axs[1].set_ylim([0, 1])
 axs[1].set_xlabel('Iteration')
 axs[1].set_ylabel('Strong Quantities')
 
@@ -106,7 +106,7 @@ axs[2].plot(range(0, iter+1), models_supersmooth.weak_error, color='orange', lab
 axs[2].plot(range(0, iter+1), models_supersmooth.weak_bias2, label='$Bias^2$', color='grey')
 axs[2].plot(range(0, iter+1), models_supersmooth.weak_variance, label='Variance', color='blue')
 axs[2].axvline(x=supersmooth_m, color='red', linestyle='--', label=r'$\tau$')
-axs[2].axvline(x=supersmooth_weak_oracle, color='green', linestyle='--', label='$t$')
+axs[2].axvline(x=supersmooth_weak_oracle, color='green', linestyle='--', label='$t$ (oracle)')
 axs[2].set_xlim([0, 400])
 axs[2].set_ylim([0, 0.02])
 axs[2].set_xlabel('Iteration')
@@ -120,7 +120,7 @@ plt.show()
 # %%
 # Bias/variance decomposition for smooth signal
 # ------------------------
-# Plot the residuals, weak and strong quantities for the smooth signal.
+# Plot the residuals, weak and strong quantities for the smooth signal. 
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 12))
 
@@ -137,7 +137,7 @@ axs[1].plot(range(0, iter+1), models_smooth.strong_variance, label='Variance', c
 axs[1].axvline(x=smooth_m, color='red', linestyle='--')
 axs[1].axvline(x=smooth_strong_oracle, color='green', linestyle='--')
 axs[1].set_xlim([0, 500])
-axs[1].set_ylim([0, 100])
+axs[1].set_ylim([0, 30])
 axs[1].set_xlabel('Iteration')
 axs[1].set_ylabel('Strong Quantities')
 
@@ -145,7 +145,7 @@ axs[2].plot(range(0, iter+1), models_smooth.weak_error, color='orange', label='E
 axs[2].plot(range(0, iter+1), models_smooth.weak_bias2, label='$Bias^2$', color='grey')
 axs[2].plot(range(0, iter+1), models_smooth.weak_variance, label='Variance', color='blue')
 axs[2].axvline(x=smooth_m, color='red', linestyle='--', label=r'$\tau$')
-axs[2].axvline(x=smooth_weak_oracle, color='green', linestyle='--', label='$t$')
+axs[2].axvline(x=smooth_weak_oracle, color='green', linestyle='--', label='$t$ (oracle)')
 axs[2].set_xlim([0, 500])
 axs[2].set_ylim([0, 0.5])
 axs[2].set_xlabel('Iteration')
@@ -174,6 +174,7 @@ axs[1].plot(range(0, iter+1), models_rough.strong_bias2, label='$Bias^2$', color
 axs[1].plot(range(0, iter+1), models_rough.strong_variance, label='Variance', color='blue')
 axs[1].axvline(x=rough_m, color='red', linestyle='--')
 axs[1].axvline(x=rough_strong_oracle, color='green', linestyle='--')
+axs[1].set_ylim([0, 500])
 axs[1].set_xlabel('Iteration')
 axs[1].set_ylabel('Strong Quantities')
 
@@ -181,7 +182,7 @@ axs[2].plot(range(0, iter+1), models_rough.weak_error, color='orange', label='Er
 axs[2].plot(range(0, iter+1), models_rough.weak_bias2, label='$Bias^2$', color='grey')
 axs[2].plot(range(0, iter+1), models_rough.weak_variance, label='Variance', color='blue')
 axs[2].axvline(x=rough_m, color='red', linestyle='--', label=r'$\tau$' )
-axs[2].axvline(x=rough_weak_oracle, color='green', linestyle='--', label='$t$')
+axs[2].axvline(x=rough_weak_oracle, color='green', linestyle='--', label='$t$ (oracle)')
 axs[2].set_xlim([0, 1200+1])
 axs[2].set_ylim([0, 1])
 axs[2].set_xlabel('Iteration')
