@@ -155,8 +155,6 @@ class Landweber:
         if (self.true_signal is not None) and (self.true_noise_level is not None):
             # initialize matrices required for computing the strong/weak bias and variance
 
-
-            ###HIER CHECK für sparse matrix:
             if (scipy.sparse.issparse(self.gram_matrix)):
                self.inverse_congruency_matrix = scipy.sparse.linalg.inv(self.gram_matrix)
             else:
