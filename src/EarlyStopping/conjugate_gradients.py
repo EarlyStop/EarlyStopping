@@ -80,13 +80,6 @@ class ConjugateGradients:
     | calculate_interpolated_weak_empirical_error(index)   | Calculates the interpolated weak empirical error at a noninteger index.  |
     +------------------------------------------------------+--------------------------------------------------------------------------+
 
-    Methods
-    -------
-    conjugate_gradients(iterations=1)
-        Performs a specified number of iterations of the conjugate gradients algorithm.
-
-    conjugate_gradients_to_early_stop(crit, max_iter)
-        Applies early stopping to the conjugate gradients iterative procedure.
     """
 
     def __init__(

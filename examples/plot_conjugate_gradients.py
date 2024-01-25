@@ -5,7 +5,6 @@ Simulation study for conjugate gradients
 We conduct in the following a simulation study illustrating the conjugate gradients algorithm.
 """
 
-import random
 import time
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ import seaborn as sns
 import EarlyStopping as es
 
 sns.set_theme(style="ticks")
-random.seed(42)
+np.random.seed(42)
 
 # %%
 # Simulation Setting
@@ -56,7 +55,7 @@ plt.show()
 # We simulate NUMBER_RUNS realisations of the Gaussian sequence space model.
 
 # Specify number of Monte Carlo runs
-NUMBER_RUNS = 20  # set to 1000 for final simulations
+NUMBER_RUNS = 100  # set to 1000 for final simulations
 
 # Create observations for the three different signals
 noise = np.random.normal(0, NOISE_LEVEL, (SAMPLE_SIZE, NUMBER_RUNS))
@@ -142,6 +141,7 @@ else:
     weak_empirical_errors_supersmooth = models_supersmooth[0].weak_empirical_errors
 
 # Plot
+plot_residuals_empirical_errors = plt.figure()
 plt.plot(grid, residuals_supersmooth, label="squared residual norm", color="green")
 plt.plot(grid, strong_empirical_errors_supersmooth, label="strong empirical error", color="blue")
 plt.plot(grid, weak_empirical_errors_supersmooth, label="weak empirical error", color="orange")
@@ -221,6 +221,7 @@ strong_empirical_errors_Monte_Carlo = pd.DataFrame(
 strong_empirical_errors_Monte_Carlo = pd.melt(
     strong_empirical_errors_Monte_Carlo, id_vars="algorithm", value_vars=["supersmooth", "smooth", "rough"]
 )
+plt.figure()
 strong_empirical_errors_boxplot = sns.boxplot(
     x="variable", y="value", data=strong_empirical_errors_Monte_Carlo, width=0.4
 )
@@ -239,6 +240,7 @@ weak_empirical_errors_Monte_Carlo = pd.DataFrame(
 weak_empirical_errors_Monte_Carlo = pd.melt(
     weak_empirical_errors_Monte_Carlo, id_vars="algorithm", value_vars=["supersmooth", "smooth", "rough"]
 )
+plt.figure()
 weak_empirical_errors_boxplot = sns.boxplot(x="variable", y="value", data=weak_empirical_errors_Monte_Carlo, width=0.4)
 weak_empirical_errors_boxplot.set(xlabel="Signal", ylabel="Weak empirical error at $\\tau$")
 plt.show()
