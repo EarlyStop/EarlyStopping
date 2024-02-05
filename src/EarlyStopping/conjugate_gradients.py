@@ -285,6 +285,8 @@ class ConjugateGradients:
         return interpolated_weak_empirical_error
 
     def calculate_empirical_oracles(self, max_iter):
+        """Calculates the strong and weak empirical oracles. Returns a vector, where the first (third) entry is the strong (weak) empirical oracle and the second (fourth) entry
+        is the corresponding strong (weak) empirical error."""
         empirical_errors_list = [self.strong_empirical_errors, self.weak_empirical_errors]
         empirical_error_inner_products_list = [
             self.strong_empirical_error_inner_products,
