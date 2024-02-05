@@ -55,7 +55,7 @@ plt.show()
 # We simulate NUMBER_RUNS realisations of the Gaussian sequence space model.
 
 # Specify number of Monte Carlo runs
-NUMBER_RUNS = 100  # set to 1000 for final simulations
+NUMBER_RUNS = 3  # set to 1000 for final simulations
 
 # Create observations for the three different signals
 noise = np.random.normal(0, NOISE_LEVEL, (SAMPLE_SIZE, NUMBER_RUNS))
@@ -120,7 +120,7 @@ for run in range(NUMBER_RUNS):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # We plot for the first Monte Carlo run the squared residual norms along the whole iteration path and the corresponding weak and strong empirical error terms,
 # i.e. the empirical prediction and reconstruction errors, for the supersmooth signal. The critical value is denoted by :math:`\kappa` and the early stopping index by :math:`\tau`.
-# If we choose to interpolate, i.e. INTERPOLSTION_BOOLEAN is set to
+# If we choose to interpolate, i.e. INTERPOLATION_BOOLEAN is set to
 # true, we need to interpolate between the residual polynomials and therefore between the estimators.
 
 # Set gridsize for the x-axis of the plots
@@ -155,6 +155,38 @@ plt.yticks(
     list(plt.yticks()[0]) + [models_supersmooth[0].critical_value], list(plt.yticks()[1]) + ["$\\kappa = D \\delta^2$"]
 )
 plt.legend()
+plt.grid()
+plt.show()
+
+# %%
+# Strong and weak empirical oracles
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# We add the strong and weak empirical oracles to the plot.
+
+# Calculate the empirical oracles
+empirical_oracles_supersmooth = models_supersmooth[0].calculate_empirical_oracles(MAXIMAL_ITERATION)
+
+# Update the plot
+plt.figure(plot_residuals_empirical_errors)
+plt.axvline(
+    x=empirical_oracles_supersmooth[0],
+    color="grey",
+    linestyle="--",
+)
+plt.xticks(
+    list(plt.xticks()[0]) + [empirical_oracles_supersmooth[0]],
+    list(plt.xticks()[1]) + ["$\\tau_{emp,\\mathfrak{s}}$"],
+)
+plt.axvline(
+    x=empirical_oracles_supersmooth[2],
+    color="grey",
+    linestyle="--",
+)
+plt.xticks(
+    list(plt.xticks()[0]) + [empirical_oracles_supersmooth[2]],
+    list(plt.xticks()[1]) + ["$\\tau_{emp,\\mathfrak{w}}$"],
+)
+plt.xlim([2, 8])
 plt.show()
 
 # %%
