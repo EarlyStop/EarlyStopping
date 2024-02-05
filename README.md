@@ -19,6 +19,12 @@ Early stopping is a python library implementing computationally efficient model 
   </a>.
   arXiv:2210.07850 [math.ST] (2022).
 
+- J. Kueck, Y. Luo, M. Spindler, Z. Wang. 
+  <a href="https://www.sciencedirect.com/science/article/abs/pii/S0304407622000471">
+    "Estimation and inference of treatment effects with L2-boosting in high-dimensional settings"
+  </a>.
+  In: <em>Journal of Econometrics</em> 234(2), 714-731 (2023).
+
 Check out the [documentation](https://esfiep.github.io/EarlyStopping/) for more information.
 
 ## Development notes
