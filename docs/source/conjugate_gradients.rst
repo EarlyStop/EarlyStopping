@@ -8,3 +8,4 @@ Conjugate gradient iteration
 .. automethod:: EarlyStopping.ConjugateGradients.calculate_interpolated_residual
 .. automethod:: EarlyStopping.ConjugateGradients.calculate_interpolated_strong_empirical_error
 .. automethod:: EarlyStopping.ConjugateGradients.calculate_interpolated_weak_empirical_error
+.. automethod:: EarlyStopping.ConjugateGradients.calculate_empirical_oracles
