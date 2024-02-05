@@ -79,6 +79,8 @@ class ConjugateGradients:
     +------------------------------------------------------+--------------------------------------------------------------------------+
     | calculate_interpolated_weak_empirical_error(index)   | Calculates the interpolated weak empirical error at a noninteger index.  |
     +------------------------------------------------------+--------------------------------------------------------------------------+
+    | calculate_empirical_oracles(max_iter)                | Calculates the strong and weak empirical oracles.                        |
+    +------------------------------------------------------+--------------------------------------------------------------------------+
 
     """
 
@@ -281,3 +283,42 @@ class ConjugateGradients:
                 + 2 * (1 - alpha) * alpha * self.weak_empirical_error_inner_products[index_ceil]
             )
         return interpolated_weak_empirical_error
+
+    def calculate_empirical_oracles(self, max_iter):
+        empirical_errors_list = [self.strong_empirical_errors, self.weak_empirical_errors]
+        empirical_error_inner_products_list = [
+            self.strong_empirical_error_inner_products,
+            self.weak_empirical_error_inner_products,
+        ]
+        empirical_oracles = []
+        for error_type in np.arange(2):
+            optimal_index_list = []
+            empirical_errors = empirical_errors_list[error_type]
+            empirical_error_inner_products = empirical_error_inner_products_list[error_type]
+            for index in np.arange(max_iter):
+                if abs(empirical_errors[index + 1] - empirical_errors[index]) > 10 ** (-5):
+                    alpha = (empirical_errors[index] - empirical_error_inner_products[index + 1]) / (
+                        empirical_errors[index]
+                        + empirical_errors[index + 1]
+                        - 2 * empirical_error_inner_products[index + 1]
+                    )
+                    if alpha < 0:
+                        optimal_index_list = np.append(optimal_index_list, index)
+                    elif alpha > 1:
+                        optimal_index_list = np.append(optimal_index_list, index + 1)
+                    else:
+                        optimal_index_list = np.append(optimal_index_list, index + alpha)
+                else:
+                    optimal_index_list = np.append(optimal_index_list, index)
+            if error_type == 0:
+                empirical_errors_at_optimal_index_list = self.calculate_interpolated_strong_empirical_error(
+                    optimal_index_list
+                )
+            else:
+                empirical_errors_at_optimal_index_list = self.calculate_interpolated_weak_empirical_error(
+                    optimal_index_list
+                )
+            empirical_oracle_error = np.min(empirical_errors_at_optimal_index_list)
+            empirical_oracle_index = optimal_index_list[np.argmin(empirical_errors_at_optimal_index_list)]
+            empirical_oracles = np.append(empirical_oracles, [empirical_oracle_index, empirical_oracle_error])
+        return empirical_oracles
