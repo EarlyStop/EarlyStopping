@@ -18,12 +18,12 @@ class Test_L2_boost(unittest.TestCase):
 
     def test_termination_of_the_algorithm(self):
         self.alg = L2_boost(self.X, self.Y)
-        self.alg.boost(self.alg.sample_size + 1)
+        self.alg.iterate(self.alg.sample_size + 1)
         self.assertTrue(self.alg.iter < self.alg.sample_size + 1)
 
     def test_orthonormalization(self):
         self.alg = L2_boost(self.X, self.Y)
-        self.alg.boost(self.alg.sample_size)
+        self.alg.iterate(self.alg.sample_size)
         for m in range(self.alg.iter):
             direction_m = self.alg.orth_directions[m]
             deviation_vector = np.zeros(self.alg.sample_size)
@@ -39,7 +39,7 @@ class Test_L2_boost(unittest.TestCase):
 
     def test_monotonicity_of_bias_and_variance(self):
         self.alg = L2_boost(self.X, self.Y, true_signal = self.f)
-        self.alg.boost(self.sample_size)
+        self.alg.iterate(self.sample_size)
         for m in range((self.alg.iter - 1)):
             if self.alg.bias2[m] >= self.tol:
                 self.assertTrue(self.alg.bias2[m] >= self.alg.bias2[(m + 1)])
@@ -47,7 +47,7 @@ class Test_L2_boost(unittest.TestCase):
 
     def test_consistency_of_bias_variance_computation(self):
         self.alg = L2_boost(self.X, self.Y, true_signal = self.f)
-        self.alg.boost(self.alg.sample_size)
+        self.alg.iterate(self.alg.sample_size)
         alternative_computation_mse = self.alg.bias2 + self.alg.stoch_error
         deviation_vector = np.abs(alternative_computation_mse - self.alg.mse)
         for m in range(self.alg.iter):
@@ -55,7 +55,7 @@ class Test_L2_boost(unittest.TestCase):
 
     def test_limit_of_the_stochastic_error(self):
         self.alg = L2_boost(self.X, self.Y, true_signal = self.f)
-        self.alg.boost(self.alg.sample_size)
+        self.alg.iterate(self.alg.sample_size)
         avg_squared_error = np.mean(self.eps**2)
         last_index = self.alg.iter
         deviation = np.abs(avg_squared_error - self.alg.stoch_error[last_index])
