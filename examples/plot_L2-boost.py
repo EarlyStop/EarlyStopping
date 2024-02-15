@@ -76,7 +76,7 @@ Y     = f + eps
 alg = es.L2_boost(X, Y, f)
 alg.boost_to_balanced_oracle()
 print("The balanced oracle is given by", alg.iter, "with mse =", alg.mse[alg.iter])
-alg.boost(300 - alg.iter)
+alg.iterate(300 - alg.iter)
 classical_oracle = np.argmin(alg.mse)
 print("The classical oracle is given by", classical_oracle, "with mse =", alg.mse[classical_oracle])
 
@@ -124,7 +124,7 @@ print("The residual ratio based early stopping time is given by", stopping_time,
 # ---------------------------------
 # The class also has a method to compute a high dimensional Akaike criterion over the boosting path up to the current iteration. 
 alg = es.L2_boost(X, Y, f)
-alg.boost(200)
+alg.iterate(200)
 aic_minimizer = alg.get_aic_iteration(K = 2)
 print("The aic-minimizer over the whole path is given by", aic_minimizer, "with mse =", alg.mse[aic_minimizer])
 
