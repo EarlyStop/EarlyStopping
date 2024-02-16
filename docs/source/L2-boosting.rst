@@ -2,7 +2,7 @@ L2-boosting for high-dimensional linear models
 ==============================================
 
 .. autoclass:: EarlyStopping.L2_boost
-.. automethod:: EarlyStopping.L2_boost.boost
+.. automethod:: EarlyStopping.L2_boost.iterate
 .. automethod:: EarlyStopping.L2_boost.predict
 .. automethod:: EarlyStopping.L2_boost.discrepancy_stop
 .. automethod:: EarlyStopping.L2_boost.residual_ratio_stop
