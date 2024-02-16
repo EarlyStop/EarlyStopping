@@ -223,7 +223,7 @@ class ConjugateGradients:
             if self.interpolation is True:
                 old_conjugate_gradient_estimate = self.conjugate_gradient_estimate
             self.__conjugate_gradients_one_iteration()
-        if self.interpolation is True:
+        if (self.interpolation is True) and (self.residuals[self.iter] <= self.critical_value):
             alpha = 1 - np.sqrt(
                 1
                 - (self.residuals[self.iter - 1] - self.critical_value)
