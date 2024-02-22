@@ -15,7 +15,7 @@ class TestConjugateGradients(unittest.TestCase):
         self.NUMBER_RUNS = 20
 
         # Create diagonal design matrices
-        self.sample_size = 10000
+        self.sample_size = 1000
         indices = np.arange(self.sample_size) + 1
         self.design = dia_matrix(np.diag(1 / (np.sqrt(indices))))
 
@@ -30,6 +30,43 @@ class TestConjugateGradients(unittest.TestCase):
         self.observation_supersmooth = noise + (self.design @ self.signal_supersmooth)[:, None]
         self.observation_smooth = noise + (self.design @ self.signal_smooth)[:, None]
         self.observation_rough = noise + (self.design @ self.signal_rough)[:, None]
+
+        # Create noise free model
+        self.sample_size_noise_free = self.sample_size
+        self.design_noise_free = np.random.rand(self.sample_size_noise_free, self.sample_size_noise_free)
+        design_noise_free_diagonal = np.sum(np.abs(self.design_noise_free), axis=1)
+        np.fill_diagonal(self.design_noise_free, design_noise_free_diagonal)
+
+    def test_noise_free_model(self):
+        model_supersmooth = es.ConjugateGradients(
+            self.design_noise_free,
+            self.design_noise_free @ self.signal_supersmooth,
+            true_signal=self.signal_supersmooth,
+            true_noise_level=0,
+            interpolation=False,
+        )
+        model_smooth = es.ConjugateGradients(
+            self.design_noise_free,
+            self.design_noise_free @ self.signal_smooth,
+            true_signal=self.signal_smooth,
+            true_noise_level=0,
+            interpolation=False,
+        )
+        model_rough = es.ConjugateGradients(
+            self.design_noise_free,
+            self.design_noise_free @ self.signal_rough,
+            true_signal=self.signal_rough,
+            true_noise_level=0,
+            interpolation=False,
+        )
+        model_supersmooth.iterate(2 * self.sample_size_noise_free)
+        model_smooth.iterate(2 * self.sample_size_noise_free)
+        model_rough.iterate(2 * self.sample_size_noise_free)
+        self.assertAlmostEqual(
+            sum((model_supersmooth.conjugate_gradient_estimate - self.signal_supersmooth) ** 2), 0, places=5
+        )
+        self.assertAlmostEqual(sum((model_smooth.conjugate_gradient_estimate - self.signal_smooth) ** 2), 0, places=5)
+        self.assertAlmostEqual(sum((model_rough.conjugate_gradient_estimate - self.signal_rough) ** 2), 0, places=5)
 
     def calculate_residual(self, response, design, conjugate_gradient_estimate):
         return np.sum((response - design @ conjugate_gradient_estimate) ** 2)

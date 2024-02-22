@@ -136,7 +136,7 @@ class ConjugateGradients:
         """
         for _ in range(number_of_iterations):
             if np.sum(self.transformed_residual_vector**2) == 0:
-                print("Transformed residual vector is zero. Algorithm terminates.")
+                print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()
 
