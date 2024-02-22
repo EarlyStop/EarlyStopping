@@ -131,6 +131,9 @@ class Landweber:
         # Estimation quantities
         self.iter = 0
         self.landweber_estimate = self.starting_value
+        # Collect coefficients:
+        self.landweber_estimate_collect = []
+
         self.early_stopping_index = None
 
         self.gram_matrix = np.transpose(self.design_matrix) @ self.design_matrix
@@ -249,6 +252,8 @@ class Landweber:
         self.landweber_estimate = (self.landweber_estimate
                                    + self.learning_rate * np.transpose(self.design_matrix)
                                    @ (self.response_variable - self.design_matrix @ self.landweber_estimate))
+        #Collect coefficients:
+        self.landweber_estimate_collect.append(self.landweber_estimate)
 
         # self.landweber_estimate = (self.landweber_estimate
         #     + self.learning_rate * np.transpose(self.design_matrix)

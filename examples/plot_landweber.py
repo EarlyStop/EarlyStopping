@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import EarlyStopping as es
 from scipy.sparse import dia_matrix
+import timeit
 np.random.seed(42)
 plt.rcParams.update({'font.size': 20})  
 
@@ -17,7 +18,7 @@ plt.rcParams.update({'font.size': 20})
 # ----------------------
 # Create diagonal design matrix and supersmooth, smooth and rough signal. Plot the signal.
 
-D = 1000
+D = 10000
 indices = np.arange(D)+1
 design_matrix = dia_matrix(np.diag(1/(np.sqrt(indices))))
 
@@ -55,9 +56,24 @@ models_smooth = es.Landweber(design_matrix, observation_smooth, true_noise_level
 models_rough = es.Landweber(design_matrix, observation_rough, true_noise_level=NOISE_LEVEL, true_signal=signal_rough)
 
 iter = 1500
+start = timeit.default_timer()
 models_supersmooth.landweber_gather_all(iter)
+stop = timeit.default_timer()
+print('Time supersmooth: ', stop - start)
+
+models_supersmooth.landweber_estimate_collect
+
+start = timeit.default_timer()
 models_smooth.landweber_gather_all(iter)
+stop = timeit.default_timer()
+print('Time smooth: ', stop - start)
+
+start = timeit.default_timer()
 models_rough.landweber_gather_all(iter)
+stop = timeit.default_timer()
+print('Time rough: ', stop - start)
+
+
 
 # Stopping index
 supersmooth_m = models_supersmooth.early_stopping_index
