@@ -103,9 +103,8 @@ class ConjugateGradients:
             self.weak_empirical_errors = np.array(
                 [np.sum((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
             )
-            if interpolation:
-                self.strong_empirical_error_inner_products = np.array([None])
-                self.weak_empirical_error_inner_products = np.array([None])
+            self.strong_estimator_distances = np.array([None])
+            self.weak_estimator_distances = np.array([None])
 
         # Starting values for the algorithm
         self.transposed_design = np.transpose(design)
@@ -146,25 +145,10 @@ class ConjugateGradients:
         squared_norm_old_transformed_residual_vector = np.sum(old_transformed_residual_vector**2)
         transformed_search_direction = self.design @ self.search_direction
         learning_rate = squared_norm_old_transformed_residual_vector / np.sum(transformed_search_direction**2)
-        if self.true_signal is not None and self.interpolation:
-            strong_empirical_error_inner_product = (
-                self.strong_empirical_errors[-1]
-                + learning_rate
-                * np.transpose(self.conjugate_gradient_estimate - self.true_signal)
-                @ self.search_direction
-            )
-            self.strong_empirical_error_inner_products = np.append(
-                self.strong_empirical_error_inner_products, strong_empirical_error_inner_product
-            )
-            weak_empirical_error_inner_product = self.weak_empirical_errors[-1] + learning_rate * np.transpose(
-                self.design @ (self.conjugate_gradient_estimate - self.true_signal)
-            ) @ (self.design @ self.search_direction)
-            self.weak_empirical_error_inner_products = np.append(
-                self.weak_empirical_error_inner_products, weak_empirical_error_inner_product
-            )
-
-        self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + learning_rate * self.search_direction
-        self.residual_vector = self.residual_vector - learning_rate * transformed_search_direction
+        conjugate_gradient_estimates_distance = learning_rate * self.search_direction
+        transformed_conjugate_gradient_estimates_distance = learning_rate * transformed_search_direction
+        self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + conjugate_gradient_estimates_distance
+        self.residual_vector = self.residual_vector - transformed_conjugate_gradient_estimates_distance
         self.transformed_residual_vector = self.transposed_design @ self.residual_vector
         transformed_residual_ratio = (
             np.sum(self.transformed_residual_vector**2) / squared_norm_old_transformed_residual_vector
@@ -182,6 +166,12 @@ class ConjugateGradients:
                 self.weak_empirical_errors,
                 np.sum((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2),
             )
+            self.strong_estimator_distances = np.append(
+                self.strong_estimator_distances, np.sum((conjugate_gradient_estimates_distance) ** 2)
+            )
+            self.weak_estimator_distances = np.append(
+                self.weak_estimator_distances, np.sum((transformed_conjugate_gradient_estimates_distance) ** 2)
+            )
 
     def discrepancy_stop(self, max_iter):
         """Early stopping for the conjugate gradient procedure based on the discrepancy principle. Procedure is stopped when the squared residuals go below critical_value or iteration max_iter is reached.
@@ -194,7 +184,7 @@ class ConjugateGradients:
             if self.interpolation is True:
                 old_conjugate_gradient_estimate = self.conjugate_gradient_estimate
             self.__conjugate_gradients_one_iteration()
-        if (self.interpolation is True) and (self.residuals[self.iter] <= self.critical_value):
+        if (self.interpolation is True) and (self.iter > 0) and (self.residuals[self.iter] <= self.critical_value):
             alpha = 1 - np.sqrt(
                 1
                 - (self.residuals[self.iter - 1] - self.critical_value)
@@ -242,16 +232,16 @@ class ConjugateGradients:
 
         *index*: ``array or float``. Index or array of indices where the interpolated error(s) should be calculated.
         """
-        index_ceil = int(np.ceil(index))
-        index_floor = int(np.floor(index))
-        alpha = index - index_floor
         if index == 0:
             interpolated_strong_empirical_error = self.strong_empirical_errors[0]
         else:
+            index_ceil = int(np.ceil(index))
+            index_floor = int(np.floor(index))
+            alpha = index - index_floor
             interpolated_strong_empirical_error = (
-                (1 - alpha) ** 2 * self.strong_empirical_errors[index_floor]
-                + alpha**2 * self.strong_empirical_errors[index_ceil]
-                + 2 * (1 - alpha) * alpha * self.strong_empirical_error_inner_products[index_ceil]
+                (1 - alpha) * self.strong_empirical_errors[index_floor]
+                + alpha * self.strong_empirical_errors[index_ceil]
+                - (1 - alpha) * alpha * self.strong_estimator_distances[index_ceil]
             )
         return interpolated_strong_empirical_error
 
@@ -262,16 +252,16 @@ class ConjugateGradients:
 
         *index*: ``array or float``. Index or array of indices where the interpolated error(s) should be calculated.
         """
-        index_ceil = int(np.ceil(index))
-        index_floor = int(np.floor(index))
-        alpha = index - index_floor
         if index == 0:
             interpolated_weak_empirical_error = self.weak_empirical_errors[0]
         else:
+            index_ceil = int(np.ceil(index))
+            index_floor = int(np.floor(index))
+            alpha = index - index_floor
             interpolated_weak_empirical_error = (
-                (1 - alpha) ** 2 * self.weak_empirical_errors[index_floor]
-                + alpha**2 * self.weak_empirical_errors[index_ceil]
-                + 2 * (1 - alpha) * alpha * self.weak_empirical_error_inner_products[index_ceil]
+                (1 - alpha) * self.weak_empirical_errors[index_floor]
+                + alpha * self.weak_empirical_errors[index_ceil]
+                - (1 - alpha) * alpha * self.weak_estimator_distances[index_ceil]
             )
         return interpolated_weak_empirical_error
 
@@ -285,22 +275,20 @@ class ConjugateGradients:
         """
         if self.interpolation is True:
             empirical_errors_list = [self.strong_empirical_errors, self.weak_empirical_errors]
-            empirical_error_inner_products_list = [
-                self.strong_empirical_error_inner_products,
-                self.weak_empirical_error_inner_products,
+            estimator_distances_list = [
+                self.strong_estimator_distances,
+                self.weak_estimator_distances,
             ]
             empirical_oracles = []
             for error_type in np.arange(2):
                 optimal_index_list = []
                 empirical_errors = empirical_errors_list[error_type]
-                empirical_error_inner_products = empirical_error_inner_products_list[error_type]
+                estimator_distances = estimator_distances_list[error_type]
                 for index in np.arange(max_iter):
-                    if abs(empirical_errors[index + 1] - empirical_errors[index]) > 10 ** (-5):
-                        alpha = (empirical_errors[index] - empirical_error_inner_products[index + 1]) / (
-                            empirical_errors[index]
-                            + empirical_errors[index + 1]
-                            - 2 * empirical_error_inner_products[index + 1]
-                        )
+                    if estimator_distances[index + 1] > 10 ** (-7):
+                        alpha = (
+                            empirical_errors[index] - empirical_errors[index + 1] + estimator_distances[index + 1]
+                        ) / (2 * estimator_distances[index + 1])
                         if alpha < 0:
                             optimal_index_list = np.append(optimal_index_list, index)
                         elif alpha > 1:
