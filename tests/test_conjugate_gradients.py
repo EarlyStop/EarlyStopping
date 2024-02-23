@@ -12,7 +12,7 @@ class TestConjugateGradients(unittest.TestCase):
         # Simulate data
 
         # Number of Monte-Carlo simulations
-        self.NUMBER_RUNS = 20
+        self.NUMBER_RUNS = 100
 
         # Create diagonal design matrices
         self.sample_size = 1000
@@ -292,5 +292,99 @@ class TestConjugateGradients(unittest.TestCase):
             self.assertAlmostEqual(
                 interpolated_weak_empirical_error_rough_via_estimator,
                 interpolated_weak_empirical_error_rough,
+                places=5,
+            )
+
+    def test_early_stopping_index(self):
+        # Test if the discrepancy stopping index for the model without interpolation agrees with the rounded up discrepancy stopping index for the interpolated model
+        models_supersmooth_interpolated = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation_supersmooth[:, i],
+                true_signal=self.signal_supersmooth,
+                true_noise_level=self.noise_level,
+                interpolation=True,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+        models_smooth_interpolated = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation_smooth[:, i],
+                true_signal=self.signal_smooth,
+                true_noise_level=self.noise_level,
+                interpolation=True,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+        models_rough_interpolated = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation_rough[:, i],
+                true_signal=self.signal_rough,
+                true_noise_level=self.noise_level,
+                interpolation=True,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+        models_supersmooth_noninterpolated = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation_supersmooth[:, i],
+                true_signal=self.signal_supersmooth,
+                true_noise_level=self.noise_level,
+                interpolation=False,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+        models_smooth_noninterpolated = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation_smooth[:, i],
+                true_signal=self.signal_smooth,
+                true_noise_level=self.noise_level,
+                interpolation=False,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+        models_rough_noninterpolated = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation_rough[:, i],
+                true_signal=self.signal_rough,
+                true_noise_level=self.noise_level,
+                interpolation=False,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+
+        for run in range(self.NUMBER_RUNS):
+            models_supersmooth_interpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_smooth_interpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_rough_interpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_supersmooth_noninterpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_smooth_noninterpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_rough_noninterpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            early_stopping_index_supersmooth_interpolated = models_supersmooth_interpolated[run].early_stopping_index
+            early_stopping_index_smooth_interpolated = models_smooth_interpolated[run].early_stopping_index
+            early_stopping_index_rough_interpolated = models_rough_interpolated[run].early_stopping_index
+            early_stopping_index_supersmooth_noninterpolated = models_supersmooth_noninterpolated[
+                run
+            ].early_stopping_index
+            early_stopping_index_smooth_noninterpolated = models_smooth_noninterpolated[run].early_stopping_index
+            early_stopping_index_rough_noninterpolated = models_rough_noninterpolated[run].early_stopping_index
+            self.assertAlmostEqual(
+                np.ceil(early_stopping_index_supersmooth_interpolated),
+                early_stopping_index_supersmooth_noninterpolated,
+                places=5,
+            )
+            self.assertAlmostEqual(
+                np.ceil(early_stopping_index_smooth_interpolated),
+                early_stopping_index_smooth_noninterpolated,
+                places=5,
+            )
+            self.assertAlmostEqual(
+                np.ceil(early_stopping_index_rough_interpolated),
+                early_stopping_index_rough_noninterpolated,
                 places=5,
             )
