@@ -38,6 +38,7 @@ class TestConjugateGradients(unittest.TestCase):
         np.fill_diagonal(self.design_noise_free, design_noise_free_diagonal)
 
     def test_noise_free_model(self):
+        # Test if conjugate gradient estimate converges to true signal in the noise free model
         model_supersmooth = es.ConjugateGradients(
             self.design_noise_free,
             self.design_noise_free @ self.signal_supersmooth,
@@ -72,6 +73,7 @@ class TestConjugateGradients(unittest.TestCase):
         return np.sum((response - design @ conjugate_gradient_estimate) ** 2)
 
     def test_residuals(self):
+        # Test if the entry in the residuals vector at the discrepancy stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
         models_supersmooth = [
             es.ConjugateGradients(
                 self.design,
@@ -135,6 +137,7 @@ class TestConjugateGradients(unittest.TestCase):
             )
 
     def test_interpolation(self):
+        # Test several properties of the interpolated conjugate gradients algorithm
         models_supersmooth = [
             es.ConjugateGradients(
                 self.design,
@@ -179,9 +182,12 @@ class TestConjugateGradients(unittest.TestCase):
             interpolated_residual_rough = models_supersmooth[run].calculate_interpolated_residual(
                 models_supersmooth[run].early_stopping_index
             )
+
+            # Test if the interpolated squared residual at the discrepancy stopping index agrees with the critical value
             self.assertAlmostEqual(interpolated_residual_supersmooth, models_supersmooth[run].critical_value, places=5)
             self.assertAlmostEqual(interpolated_residual_smooth, models_smooth[run].critical_value, places=5)
             self.assertAlmostEqual(interpolated_residual_rough, models_rough[run].critical_value, places=5)
+
             interpolated_residual_supersmooth_via_estimator = self.calculate_residual(
                 models_supersmooth[run].response,
                 models_supersmooth[run].design,
@@ -197,11 +203,14 @@ class TestConjugateGradients(unittest.TestCase):
                 models_rough[run].design,
                 models_rough[run].conjugate_gradient_estimate,
             )
+
+            # Test if the interpolated squared residual at the discrepancy stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
             self.assertAlmostEqual(
                 interpolated_residual_supersmooth_via_estimator, interpolated_residual_supersmooth, places=5
             )
             self.assertAlmostEqual(interpolated_residual_smooth_via_estimator, interpolated_residual_smooth, places=5)
             self.assertAlmostEqual(interpolated_residual_rough_via_estimator, interpolated_residual_rough, places=5)
+
             interpolated_strong_empirical_error_supersmooth = models_supersmooth[
                 run
             ].calculate_interpolated_strong_empirical_error(models_supersmooth[run].early_stopping_index)
@@ -220,6 +229,8 @@ class TestConjugateGradients(unittest.TestCase):
             interpolated_strong_empirical_error_rough_via_estimator = np.sum(
                 (models_rough[run].conjugate_gradient_estimate - models_rough[run].true_signal) ** 2
             )
+
+            # Test if the interpolated strong empirical error at the discrepancy stopping index agrees with the strong empirical error of the conjugate gradient estimate at the same index
             self.assertAlmostEqual(
                 interpolated_strong_empirical_error_supersmooth_via_estimator,
                 interpolated_strong_empirical_error_supersmooth,
@@ -235,6 +246,7 @@ class TestConjugateGradients(unittest.TestCase):
                 interpolated_strong_empirical_error_rough,
                 places=5,
             )
+
             interpolated_weak_empirical_error_supersmooth = models_supersmooth[
                 run
             ].calculate_interpolated_weak_empirical_error(models_supersmooth[run].early_stopping_index)
@@ -265,6 +277,8 @@ class TestConjugateGradients(unittest.TestCase):
                 )
                 ** 2
             )
+
+            # Test if the interpolated weak empirical error at the discrepancy stopping index agrees with the weak empirical error of the conjugate gradient estimate at the same index
             self.assertAlmostEqual(
                 interpolated_weak_empirical_error_supersmooth_via_estimator,
                 interpolated_weak_empirical_error_supersmooth,
