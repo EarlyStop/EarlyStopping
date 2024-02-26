@@ -93,15 +93,15 @@ class ConjugateGradients:
 
         # Residual quantities
         self.residual_vector = response - design @ self.conjugate_gradient_estimate
-        self.residuals = np.array([np.sum(self.residual_vector**2)])
+        self.residuals = np.array([(self.residual_vector**2).sum()])
 
         if self.true_signal is not None:
             self.transformed_true_signal = self.design @ self.true_signal
             self.strong_empirical_errors = np.array(
-                [np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)]
+                [((self.conjugate_gradient_estimate - self.true_signal) ** 2).sum()]
             )
             self.weak_empirical_errors = np.array(
-                [np.sum((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2)]
+                [((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2).sum()]
             )
             self.strong_estimator_distances = np.array([None])
             self.weak_estimator_distances = np.array([None])
@@ -134,7 +134,7 @@ class ConjugateGradients:
         *number_of_iterations*: ``int, default = 1``. Number of conjugate gradients iterations to be performed.
         """
         for _ in range(number_of_iterations):
-            if np.sum(self.transformed_residual_vector**2) == 0:
+            if (self.transformed_residual_vector**2).sum() == 0:
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()
@@ -142,35 +142,35 @@ class ConjugateGradients:
     def __conjugate_gradients_one_iteration(self):
         """Performs one iteration of the conjugate gradients algorithm"""
         old_transformed_residual_vector = self.transformed_residual_vector
-        squared_norm_old_transformed_residual_vector = np.sum(old_transformed_residual_vector**2)
+        squared_norm_old_transformed_residual_vector = (old_transformed_residual_vector**2).sum()
         transformed_search_direction = self.design @ self.search_direction
-        learning_rate = squared_norm_old_transformed_residual_vector / np.sum(transformed_search_direction**2)
+        learning_rate = squared_norm_old_transformed_residual_vector / (transformed_search_direction**2).sum()
         conjugate_gradient_estimates_distance = learning_rate * self.search_direction
         transformed_conjugate_gradient_estimates_distance = learning_rate * transformed_search_direction
         self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + conjugate_gradient_estimates_distance
         self.residual_vector = self.residual_vector - transformed_conjugate_gradient_estimates_distance
         self.transformed_residual_vector = self.transposed_design @ self.residual_vector
         transformed_residual_ratio = (
-            np.sum(self.transformed_residual_vector**2) / squared_norm_old_transformed_residual_vector
-        )
+            self.transformed_residual_vector**2
+        ).sum() / squared_norm_old_transformed_residual_vector
         self.search_direction = self.transformed_residual_vector + transformed_residual_ratio * self.search_direction
-        self.residuals = np.append(self.residuals, np.sum(self.residual_vector**2))
+        self.residuals = np.append(self.residuals, (self.residual_vector**2).sum())
 
         self.iter = self.iter + 1
 
         if self.true_signal is not None:
             self.strong_empirical_errors = np.append(
-                self.strong_empirical_errors, np.sum((self.conjugate_gradient_estimate - self.true_signal) ** 2)
+                self.strong_empirical_errors, ((self.conjugate_gradient_estimate - self.true_signal) ** 2).sum()
             )
             self.weak_empirical_errors = np.append(
                 self.weak_empirical_errors,
-                np.sum((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2),
+                ((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2).sum(),
             )
             self.strong_estimator_distances = np.append(
-                self.strong_estimator_distances, np.sum((conjugate_gradient_estimates_distance) ** 2)
+                self.strong_estimator_distances, ((conjugate_gradient_estimates_distance) ** 2).sum()
             )
             self.weak_estimator_distances = np.append(
-                self.weak_estimator_distances, np.sum((transformed_conjugate_gradient_estimates_distance) ** 2)
+                self.weak_estimator_distances, ((transformed_conjugate_gradient_estimates_distance) ** 2).sum()
             )
 
     def discrepancy_stop(self, max_iter):
