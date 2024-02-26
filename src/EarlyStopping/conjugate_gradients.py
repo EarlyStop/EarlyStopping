@@ -285,18 +285,15 @@ class ConjugateGradients:
                 empirical_errors = empirical_errors_list[error_type]
                 estimator_distances = estimator_distances_list[error_type]
                 for index in np.arange(max_iter):
-                    if estimator_distances[index + 1] > 10 ** (-7):
-                        alpha = (
-                            empirical_errors[index] - empirical_errors[index + 1] + estimator_distances[index + 1]
-                        ) / (2 * estimator_distances[index + 1])
-                        if alpha < 0:
-                            optimal_index_list = np.append(optimal_index_list, index)
-                        elif alpha > 1:
-                            optimal_index_list = np.append(optimal_index_list, index + 1)
-                        else:
-                            optimal_index_list = np.append(optimal_index_list, index + alpha)
-                    else:
+                    alpha = (
+                        empirical_errors[index] - empirical_errors[index + 1] + estimator_distances[index + 1]
+                    ) / (2 * estimator_distances[index + 1])
+                    if alpha < 0:
                         optimal_index_list = np.append(optimal_index_list, index)
+                    elif alpha > 1:
+                        optimal_index_list = np.append(optimal_index_list, index + 1)
+                    else:
+                        optimal_index_list = np.append(optimal_index_list, index + alpha)
                 if error_type == 0:
                     empirical_errors_at_optimal_index_list = self.calculate_interpolated_strong_empirical_error(
                         optimal_index_list
