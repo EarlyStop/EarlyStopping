@@ -32,7 +32,7 @@ class ConjugateGradients:
 
     *conjugate_gradient_estimate*: ``array``. Conjugate gradient estimate at the current iteration for the data given in design and response.
 
-    *early_stopping_index*: ``int or None``. Early Stopping iteration index. Is set to ``None`` if no early stopping is performed.
+    *early_stopping_index*: ``int or float or None``. Early Stopping iteration index. Is set to ``None`` if no early stopping is performed.
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the conjugate gradient estimator.
 
