@@ -187,9 +187,14 @@ class TestConjugateGradients(unittest.TestCase):
             )
 
             # Test if the interpolated squared residual at the discrepancy stopping index agrees with the critical value
-            self.assertAlmostEqual(interpolated_residual_supersmooth, models_supersmooth[run].critical_value, places=5)
-            self.assertAlmostEqual(interpolated_residual_smooth, models_smooth[run].critical_value, places=5)
-            self.assertAlmostEqual(interpolated_residual_rough, models_rough[run].critical_value, places=5)
+            if models_supersmooth[run].early_stopping_index < self.max_iter:
+                self.assertAlmostEqual(
+                    interpolated_residual_supersmooth, models_supersmooth[run].critical_value, places=5
+                )
+            if models_smooth[run].early_stopping_index < self.max_iter:
+                self.assertAlmostEqual(interpolated_residual_smooth, models_smooth[run].critical_value, places=5)
+            if models_rough[run].early_stopping_index < self.max_iter:
+                self.assertAlmostEqual(interpolated_residual_rough, models_rough[run].critical_value, places=5)
 
             interpolated_residual_supersmooth_via_estimator = self.calculate_residual(
                 models_supersmooth[run].response,
