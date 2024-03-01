@@ -57,6 +57,9 @@ plt.show()
 # Specify number of Monte Carlo runs
 NUMBER_RUNS = 100
 
+# Set computation threshold
+computation_threshold = 0
+
 # Create observations for the three different signals
 noise = np.random.normal(0, noise_level, (sample_size, NUMBER_RUNS))
 observation_supersmooth = noise + (design @ signal_supersmooth)[:, None]
@@ -77,6 +80,7 @@ models_supersmooth = [
         true_signal=signal_supersmooth,
         true_noise_level=noise_level,
         interpolation=interpolation_boolean,
+        computation_threshold=computation_threshold,
     )
     for i in range(NUMBER_RUNS)
 ]
@@ -87,6 +91,7 @@ models_smooth = [
         true_signal=signal_smooth,
         true_noise_level=noise_level,
         interpolation=interpolation_boolean,
+        computation_threshold=computation_threshold,
     )
     for i in range(NUMBER_RUNS)
 ]
@@ -97,6 +102,7 @@ models_rough = [
         true_signal=signal_rough,
         true_noise_level=noise_level,
         interpolation=interpolation_boolean,
+        computation_threshold=computation_threshold,
     )
     for i in range(NUMBER_RUNS)
 ]
