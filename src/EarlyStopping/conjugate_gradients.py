@@ -22,6 +22,8 @@ class ConjugateGradients:
 
     *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the early stopping iteration index can be noninteger valued.
 
+    *computation_threshold*: ``float, default = 10 ** (-8)``. Threshold used to terminate the conjugate gradients algorithm.
+
     **Attributes**
 
     *sample_size*: ``int``. Sample size of the linear model.
@@ -32,7 +34,7 @@ class ConjugateGradients:
 
     *conjugate_gradient_estimate*: ``array``. Conjugate gradient estimate at the current iteration for the data given in design and response.
 
-    *early_stopping_index*: ``int or None``. Early Stopping iteration index. Is set to ``None`` if no early stopping is performed.
+    *early_stopping_index*: ``int or float or None``. Early Stopping iteration index. Is set to ``None`` if no early stopping is performed.
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the conjugate gradient estimator.
 
@@ -68,6 +70,7 @@ class ConjugateGradients:
         true_signal=None,
         true_noise_level=None,
         interpolation=False,
+        computation_threshold=10 ** (-8),
     ):
         self.design = design
         self.response = response
@@ -75,6 +78,7 @@ class ConjugateGradients:
         self.true_noise_level = true_noise_level
         self.critical_value = critical_value
         self.interpolation = interpolation
+        self.computation_threshold = computation_threshold
 
         # Parameters of the model
         self.sample_size = np.shape(design)[0]
@@ -103,8 +107,12 @@ class ConjugateGradients:
             self.weak_empirical_errors = np.array(
                 [((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2).sum()]
             )
-            self.strong_estimator_distances = np.array([None])
-            self.weak_estimator_distances = np.array([None])
+            self.strong_estimator_distances = np.array(
+                [0]
+            )  # Set strong estimator distance at iteration zero to zero to avoid issues in calculate_interpolated_strong_empirical_error(index) for index = 0
+            self.weak_estimator_distances = np.array(
+                [0]
+            )  # Set weak estimator distance at iteration zero to zero to avoid issues in calculate_interpolated_weak_empirical_error(index) for index = 0
 
         # Starting values for the algorithm
         self.transposed_design = np.transpose(design)
@@ -117,15 +125,6 @@ class ConjugateGradients:
         elif self.critical_value is None and self.true_noise_level is not None:
             self.critical_value = self.true_noise_level**2 * self.sample_size
 
-        # Vectorized functions
-        self.calculate_interpolated_residual = np.vectorize(self.calculate_interpolated_residual, excluded="self")
-        self.calculate_interpolated_strong_empirical_error = np.vectorize(
-            self.calculate_interpolated_strong_empirical_error, excluded="self"
-        )
-        self.calculate_interpolated_weak_empirical_error = np.vectorize(
-            self.calculate_interpolated_weak_empirical_error, excluded="self"
-        )
-
     def iterate(self, number_of_iterations=1):
         """Performs number_of_iterations of the conjugate gradients algorithm.
 
@@ -134,7 +133,7 @@ class ConjugateGradients:
         *number_of_iterations*: ``int, default = 1``. Number of conjugate gradients iterations to be performed.
         """
         for _ in range(number_of_iterations):
-            if (self.transformed_residual_vector**2).sum() == 0:
+            if (self.transformed_residual_vector**2).sum() <= self.computation_threshold:
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()
@@ -217,8 +216,8 @@ class ConjugateGradients:
 
         *index*: ``array or float``. Index or array of indices where the interpolated squared residual(s) should be calculated.
         """
-        index_ceil = int(np.ceil(index))
-        index_floor = int(np.floor(index))
+        index_ceil = np.ceil(index).astype("int")
+        index_floor = np.floor(index).astype("int")
         alpha = index - index_floor
         interpolated_residual = (1 - alpha) ** 2 * self.residuals[index_floor] + (
             1 - (1 - alpha) ** 2
@@ -232,17 +231,14 @@ class ConjugateGradients:
 
         *index*: ``array or float``. Index or array of indices where the interpolated error(s) should be calculated.
         """
-        if index == 0:
-            interpolated_strong_empirical_error = self.strong_empirical_errors[0]
-        else:
-            index_ceil = int(np.ceil(index))
-            index_floor = int(np.floor(index))
-            alpha = index - index_floor
-            interpolated_strong_empirical_error = (
-                (1 - alpha) * self.strong_empirical_errors[index_floor]
-                + alpha * self.strong_empirical_errors[index_ceil]
-                - (1 - alpha) * alpha * self.strong_estimator_distances[index_ceil]
-            )
+        index_ceil = np.ceil(index).astype("int")
+        index_floor = np.floor(index).astype("int")
+        alpha = index - index_floor
+        interpolated_strong_empirical_error = (
+            (1 - alpha) * self.strong_empirical_errors[index_floor]
+            + alpha * self.strong_empirical_errors[index_ceil]
+            - (1 - alpha) * alpha * self.strong_estimator_distances[index_ceil]
+        )
         return interpolated_strong_empirical_error
 
     def calculate_interpolated_weak_empirical_error(self, index):
@@ -252,17 +248,14 @@ class ConjugateGradients:
 
         *index*: ``array or float``. Index or array of indices where the interpolated error(s) should be calculated.
         """
-        if index == 0:
-            interpolated_weak_empirical_error = self.weak_empirical_errors[0]
-        else:
-            index_ceil = int(np.ceil(index))
-            index_floor = int(np.floor(index))
-            alpha = index - index_floor
-            interpolated_weak_empirical_error = (
-                (1 - alpha) * self.weak_empirical_errors[index_floor]
-                + alpha * self.weak_empirical_errors[index_ceil]
-                - (1 - alpha) * alpha * self.weak_estimator_distances[index_ceil]
-            )
+        index_ceil = np.ceil(index).astype("int")
+        index_floor = np.floor(index).astype("int")
+        alpha = index - index_floor
+        interpolated_weak_empirical_error = (
+            (1 - alpha) * self.weak_empirical_errors[index_floor]
+            + alpha * self.weak_empirical_errors[index_ceil]
+            - (1 - alpha) * alpha * self.weak_estimator_distances[index_ceil]
+        )
         return interpolated_weak_empirical_error
 
     def calculate_empirical_oracles(self, max_iter):

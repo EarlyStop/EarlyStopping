@@ -19,6 +19,9 @@ class TestConjugateGradients(unittest.TestCase):
         indices = np.arange(self.sample_size) + 1
         self.design = dia_matrix(np.diag(1 / (np.sqrt(indices))))
 
+        # Set maximal iteration number
+        self.max_iter = self.sample_size
+
         # Create signals from Stankewitz (2020)
         self.signal_supersmooth = 5 * np.exp(-0.1 * indices)
         self.signal_smooth = 5000 * np.abs(np.sin(0.01 * indices)) * indices ** (-1.6)
@@ -106,9 +109,9 @@ class TestConjugateGradients(unittest.TestCase):
         ]
 
         for run in range(self.NUMBER_RUNS):
-            models_supersmooth[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_smooth[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_rough[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_supersmooth[run].discrepancy_stop(self.max_iter)
+            models_smooth[run].discrepancy_stop(self.max_iter)
+            models_rough[run].discrepancy_stop(self.max_iter)
             residual_supersmooth = self.calculate_residual(
                 models_supersmooth[run].response,
                 models_supersmooth[run].design,
@@ -170,9 +173,9 @@ class TestConjugateGradients(unittest.TestCase):
         ]
 
         for run in range(self.NUMBER_RUNS):
-            models_supersmooth[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_smooth[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_rough[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_supersmooth[run].discrepancy_stop(self.max_iter)
+            models_smooth[run].discrepancy_stop(self.max_iter)
+            models_rough[run].discrepancy_stop(self.max_iter)
             interpolated_residual_supersmooth = models_supersmooth[run].calculate_interpolated_residual(
                 models_supersmooth[run].early_stopping_index
             )
@@ -184,9 +187,14 @@ class TestConjugateGradients(unittest.TestCase):
             )
 
             # Test if the interpolated squared residual at the discrepancy stopping index agrees with the critical value
-            self.assertAlmostEqual(interpolated_residual_supersmooth, models_supersmooth[run].critical_value, places=5)
-            self.assertAlmostEqual(interpolated_residual_smooth, models_smooth[run].critical_value, places=5)
-            self.assertAlmostEqual(interpolated_residual_rough, models_rough[run].critical_value, places=5)
+            if models_supersmooth[run].early_stopping_index < self.max_iter:
+                self.assertAlmostEqual(
+                    interpolated_residual_supersmooth, models_supersmooth[run].critical_value, places=5
+                )
+            if models_smooth[run].early_stopping_index < self.max_iter:
+                self.assertAlmostEqual(interpolated_residual_smooth, models_smooth[run].critical_value, places=5)
+            if models_rough[run].early_stopping_index < self.max_iter:
+                self.assertAlmostEqual(interpolated_residual_rough, models_rough[run].critical_value, places=5)
 
             interpolated_residual_supersmooth_via_estimator = self.calculate_residual(
                 models_supersmooth[run].response,
@@ -359,12 +367,12 @@ class TestConjugateGradients(unittest.TestCase):
         ]
 
         for run in range(self.NUMBER_RUNS):
-            models_supersmooth_interpolated[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_smooth_interpolated[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_rough_interpolated[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_supersmooth_noninterpolated[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_smooth_noninterpolated[run].discrepancy_stop(self.NUMBER_RUNS)
-            models_rough_noninterpolated[run].discrepancy_stop(self.NUMBER_RUNS)
+            models_supersmooth_interpolated[run].discrepancy_stop(self.max_iter)
+            models_smooth_interpolated[run].discrepancy_stop(self.max_iter)
+            models_rough_interpolated[run].discrepancy_stop(self.max_iter)
+            models_supersmooth_noninterpolated[run].discrepancy_stop(self.max_iter)
+            models_smooth_noninterpolated[run].discrepancy_stop(self.max_iter)
+            models_rough_noninterpolated[run].discrepancy_stop(self.max_iter)
             early_stopping_index_supersmooth_interpolated = models_supersmooth_interpolated[run].early_stopping_index
             early_stopping_index_smooth_interpolated = models_smooth_interpolated[run].early_stopping_index
             early_stopping_index_rough_interpolated = models_rough_interpolated[run].early_stopping_index
