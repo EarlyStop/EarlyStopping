@@ -129,7 +129,7 @@ class ConjugateGradients:
         *number_of_iterations*: ``int, default = 1``. Number of conjugate gradients iterations to be performed.
         """
         for _ in range(number_of_iterations):
-            if (self.transformed_residual_vector**2).sum() == 0:
+            if (self.transformed_residual_vector**2).sum() < 10 ** (-8):
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()
