@@ -22,6 +22,8 @@ class ConjugateGradients:
 
     *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the early stopping iteration index can be noninteger valued.
 
+    *computation_threshold*: ``float, default = 10 ** (-8)``. Threshold used to terminate the conjugate gradients algorithm.
+
     **Attributes**
 
     *sample_size*: ``int``. Sample size of the linear model.
@@ -68,6 +70,7 @@ class ConjugateGradients:
         true_signal=None,
         true_noise_level=None,
         interpolation=False,
+        computation_threshold=10 ** (-8),
     ):
         self.design = design
         self.response = response
@@ -75,6 +78,7 @@ class ConjugateGradients:
         self.true_noise_level = true_noise_level
         self.critical_value = critical_value
         self.interpolation = interpolation
+        self.computation_threshold = computation_threshold
 
         # Parameters of the model
         self.sample_size = np.shape(design)[0]
@@ -129,7 +133,7 @@ class ConjugateGradients:
         *number_of_iterations*: ``int, default = 1``. Number of conjugate gradients iterations to be performed.
         """
         for _ in range(number_of_iterations):
-            if (self.transformed_residual_vector**2).sum() < 10 ** (-8):
+            if (self.transformed_residual_vector**2).sum() <= self.computation_threshold:
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()

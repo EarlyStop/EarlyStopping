@@ -49,6 +49,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
             true_signal=self.signal,
             true_noise_level=0,
             interpolation=False,
+            computation_threshold=0,
         )
         model.iterate(2 * self.sample_size)
         self.assertAlmostEqual(sum((model.conjugate_gradient_estimate - self.signal) ** 2), 0, places=5)
