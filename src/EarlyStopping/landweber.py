@@ -7,30 +7,41 @@ class Landweber:
     """
      `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/landweber.py>`_ A class to perform estimation using the Landweber iterative method.
 
+    **Description**
+
+    Consider the *linear model*
+
+    .. math::
+        Y = Af + \delta Z,
+
+    where :math:`Z` is a :math:`D`-dimensional normal distribution. The landweber iteration is defined through:
+
+    .. math::
+        \hat{f}^{(0)}=\hat{f}_0, \quad \hat{f}^{(m+1)}= \hat{f}^{(m)} + A^{\\top}(Y-A \hat{f}^{(m)}).
 
     **Parameters**
 
-    *design*: ``array``. nxp design matrix of the linear model.
+    *design*: ``array``. design matrix of the linear model. ( :math:`A \in \mathbb{R}^{D \\times p}` )
 
-    *response*: ``array``. n-dim vector of the observed data in the linear model.
+    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{D}` )
 
-    *starting_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. (Defaults to zero).
+    *starting_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. (Defaults to zero). ( :math:`\hat{f}_0` )
 
-    *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure.
+    *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
 
-    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance.
+    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` )
 
     **Attributes**
 
-    *sample_size*: ``int``. Sample size of the linear model
+    *sample_size*: ``int``. Sample size of the linear model ( :math:`D \in \mathbb{N}` )
 
-    *para_size*: ``int``. Parameter size of the linear model
+    *para_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
 
-    *iter*: ``int``. Current Landweber iteration of the algorithm
+    *iter*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \in \mathbb{N}` )
 
-    *early_stopping_index*: ``int``. Early Stopping iteration index (Is set to None if no early stopping is performed)
+    *early_stopping_index*: ``int``. Early Stopping iteration index (Is set to None if no early stopping is performed) ( :math:`\hat{m}` )
 
-    *landweber_estimate*: ``array``. Landweber estimate at the current iteration for the data given in design
+    *landweber_estimate*: ``array``. Landweber estimate at the current iteration for the data given in design ( :math:`\hat{f}_m` )
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the Landweber estimator.
 
