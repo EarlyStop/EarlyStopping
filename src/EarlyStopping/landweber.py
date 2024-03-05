@@ -7,110 +7,83 @@ class Landweber:
     """
      `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/landweber.py>`_ A class to perform estimation using the Landweber iterative method.
 
-    Parameters
-    ----------
-    design_matrix: array
-        nxp design matrix of the linear model.
+    **Description**
 
-    response_variable: array
-        n-dim vector of the observed data in the linear model.
+    Consider the *linear model*
 
-    starting_value: array, default = None
-        Determines the zeroth step of the iterative procedure. (Defaults to zero).
+    .. math::
+        Y = Af + \delta Z,
 
-    true_signal: array, default = None
-        p-dim vector
-        For simulation purposes only. For simulated data the true signal can be
-        included to compute theoretical quantities such as the bias and the mse
-        alongside the iterative procedure.
+    where :math:`Z` is a :math:`D`-dimensional normal distribution. The landweber iteration is defined through:
 
-    true_noise_level: float, default = None
-        For simulation purposes only. Corresponds to the standard deviation
-        of normally distributed noise contributing to the response variable.
-        Allows the analytic computation of the strong and weak variance.
+    .. math::
+        \hat{f}^{(0)}=\hat{f}_0, \quad \hat{f}^{(m+1)}= \hat{f}^{(m)} + A^{\\top}(Y-A \hat{f}^{(m)}).
 
-    Attributes
-    ----------
-    sample_size: int
-        Sample size of the linear model
+    **Parameters**
 
-    para_size: int
-        Parameter size of the linear model
+    *design*: ``array``. design matrix of the linear model. ( :math:`A \in \mathbb{R}^{D \\times p}` )
 
-    iter: int
-        Current Landweber iteration of the algorithm
+    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{D}` )
 
-    early_stopping_index: int
-        Early Stopping iteration index (Is set to None if no early stopping is performed)
+    *starting_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. (Defaults to zero). ( :math:`\hat{f}_0` )
 
-    landweber_estimate: array
-        Landweber estimate at the current iteration for the data given in
-        design_matrix
+    *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
 
-    residuals: array
-        Lists the sequence of the squared residuals between the observed data and
-        the Landweber estimator.
+    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` )
 
-    strong_bias2: array
-        Only exists if true_signal was given. Lists the values of the strong squared
-        bias up to the current Landweber iteration.
+    **Attributes**
 
-    strong_variance: array
-        Only exists if true_signal was given. Lists the values of the strong variance
-        up to the current Landweber iteration.
+    *sample_size*: ``int``. Sample size of the linear model ( :math:`D \in \mathbb{N}` )
 
-    strong_error: array
-        Only exists if true_signal was given. Lists the values of the strong norm error
-        between the Landweber estimator and the true signal up to the
-        current Landweber iteration.
+    *para_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
 
-    weak_bias2: array
-        Only exists if true_signal was given. Lists the values of the weak squared
-        bias up to the current Landweber iteration.
+    *iter*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \in \mathbb{N}` )
 
-    weak_variance: array
-        Only exists if true_signal was given. Lists the values of the weak variance
-        up to the current Landweber iteration.
+    *early_stopping_index*: ``int``. Early Stopping iteration index (Is set to None if no early stopping is performed) ( :math:`\hat{m}` )
 
-    weak_error: array
-        Only exists if true_signal was given. Lists the values of the weak norm error
-        between the Landweber estimator and the true signal up to the
-        current Landweber iteration.
+    *landweber_estimate*: ``array``. Landweber estimate at the current iteration for the data given in design ( :math:`\hat{f}_m` )
 
-    weak_balanced_oracle: integer
-        Only exists if true_signal was given. Gives the stopping iteration, when
-        weak_bias2 <= weak_variance.
+    *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the Landweber estimator.
 
-    strong_balanced_oracle: integer
-        Only exists if true_signal was given. Gives the stopping iteration, when
-        strong_bias2 <= strong_variance.
+    *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong squared bias up to the current Landweber iteration.
 
-    Methods
-    -------
-    landweber(iter_num=1)
-        Performs a specified number of iterations of the Landweber algorithm.
+    *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration.
 
-    landweber_to_early_stop(crit, max_iter)
-        Applies early stopping to the Landweber iterative procedure.
+    *strong_error*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
-    landweber_gather_all(max_iter)
-        Runs the algorithm till max_iter is reached. The early_stopping_index is
-        recorded.
+    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration.
 
+    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration.
+
+    *weak_error*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
+
+    *weak_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when weak_bias2 <= weak_variance.
+
+    *strong_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when strong_bias2 <= strong_variance.
+
+    **Methods**
+
+    +--------------------------------------------+----------------------------------------------------------------------------------+
+    | landweber(``iter_num=1``)                  |Performs a specified number of iterations of the Landweber algorithm.             |
+    +--------------------------------------------+----------------------------------------------------------------------------------+
+    | landweber_to_early_stop(``max_iter``)      |Applies early stopping to the Landweber iterative procedure.                      |
+    +--------------------------------------------+----------------------------------------------------------------------------------+
+    | landweber_gather_all(``max_iter``)         |Runs the algorithm till max_iter is reached. The early_stopping_index is recorded.|
+    +--------------------------------------------+----------------------------------------------------------------------------------+ 
     """
 
-    def __init__(self, design_matrix,
-                 response_variable,
+    def __init__(self, design,
+                 response,
                  learning_rate=1,
                  critical_value=None,
                  starting_value=None,
                  true_signal=None,
                  true_noise_level=None):
 
-        # self.design_matrix = sparse.csr_matrix(design_matrix)
-        # self.response_variable = np.transpose(sparse.csr_matrix(response_variable))
-        self.design_matrix = design_matrix
-        self.response_variable = response_variable
+        # self.design = sparse.csr_matrix(design)
+        # self.response = np.transpose(sparse.csr_matrix(response))
+        self.design = design
+        self.response = response
         self.learning_rate = learning_rate
         self.starting_value = starting_value
         self.true_signal = true_signal
@@ -118,8 +91,8 @@ class Landweber:
         self.critical_value = critical_value
 
         # Parameters of the model
-        self.sample_size = np.shape(design_matrix)[0]
-        self.para_size = np.shape(design_matrix)[1]
+        self.sample_size = np.shape(design)[0]
+        self.para_size = np.shape(design)[1]
 
         # Determine starting value for the procedure
         if starting_value is None:
@@ -136,15 +109,15 @@ class Landweber:
 
         self.early_stopping_index = None
 
-        self.gram_matrix = np.transpose(self.design_matrix) @ self.design_matrix
+        self.gram_matrix = np.transpose(self.design) @ self.design
 
         if self.critical_value is None and self.true_noise_level is None:
             #maximum likelihood estimator
-            # least_squares_estimator = np.linalg.solve(self.congruency_matrix, np.transpose(self.design_matrix) @ self.response_variable)
+            # least_squares_estimator = np.linalg.solve(self.congruency_matrix, np.transpose(self.design) @ self.response)
             sparse_least_squares_estimator, istop = sparse.linalg.lsqr(self.gram_matrix, np.transpose(
-                self.design_matrix) @ self.response_variable)[:2]
+                self.design) @ self.response)[:2]
             noise_level_estimate = np.sum(
-                (self.response_variable - self.design_matrix @ sparse_least_squares_estimator) ** 2) / self.sample_size
+                (self.response - self.design @ sparse_least_squares_estimator) ** 2) / self.sample_size
             self.critical_value = noise_level_estimate * self.sample_size
 
         elif self.critical_value is None and self.true_noise_level is not None:
@@ -152,7 +125,7 @@ class Landweber:
             self.critical_value = self.true_noise_level ** 2 * self.sample_size
         
         # Residual quantities
-        self.__residual_vector = self.response_variable - self.design_matrix @ self.starting_value
+        self.__residual_vector = self.response - self.design @ self.starting_value
         self.residuals = np.array([np.sum(self.__residual_vector ** 2)])
 
         if (self.true_signal is not None) and (self.true_noise_level is not None):
@@ -165,13 +138,13 @@ class Landweber:
                 self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
 
             self.perturbation_congruency_matrix = (sparse.dia_matrix(np.eye(self.para_size)) - self.learning_rate * self.gram_matrix)
-            self.weak_perturbation_congruency_matrix = (self.design_matrix @ self.perturbation_congruency_matrix)
+            self.weak_perturbation_congruency_matrix = (self.design @ self.perturbation_congruency_matrix)
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
 
             # initialize strong/weak bias and variance
             self.expectation_estimator = self.starting_value
             self.strong_bias2 = np.array([np.sum(self.true_signal ** 2)])
-            self.weak_bias2 = np.array([np.sum((self.design_matrix @ self.true_signal) ** 2)])
+            self.weak_bias2 = np.array([np.sum((self.design @ self.true_signal) ** 2)])
 
             self.strong_variance = np.array([0])
             self.weak_variance = np.array([0])
@@ -185,10 +158,9 @@ class Landweber:
     def landweber(self, iter_num=1):
         """Performs iter_num iterations of the Landweber algorithm
 
-        Parameters
-        ----------
-        iter_num: int, default=1
-            The number of iterations to perform.
+        **Parameters**
+        
+        *iter_num*: ``int, default=1``. The number of iterations to perform.
         """
         for _ in range(iter_num):
             self.__landweber_one_iteration()
@@ -259,18 +231,18 @@ class Landweber:
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         self.landweber_estimate = (self.landweber_estimate
-                                   + self.learning_rate * np.transpose(self.design_matrix)
-                                   @ (self.response_variable - self.design_matrix @ self.landweber_estimate))
+                                   + self.learning_rate * np.transpose(self.design)
+                                   @ (self.response - self.design @ self.landweber_estimate))
         #Collect coefficients:
         self.landweber_estimate_collect.append(self.landweber_estimate)
 
         # self.landweber_estimate = (self.landweber_estimate
-        #     + self.learning_rate * np.transpose(self.design_matrix)
-        #     * (self.response_variable - self.design_matrix * self.landweber_estimate))
+        #     + self.learning_rate * np.transpose(self.design)
+        #     * (self.response - self.design * self.landweber_estimate))
 
         # Update estimation quantities
-        self.__residual_vector = (self.response_variable
-                                  - self.design_matrix @ self.landweber_estimate)
+        self.__residual_vector = (self.response
+                                  - self.design @ self.landweber_estimate)
         new_residuals = np.sum(self.__residual_vector ** 2)
         self.residuals = np.append(self.residuals, new_residuals)
         self.iter = self.iter + 1
@@ -293,13 +265,9 @@ class Landweber:
             Procedure is stopped when the residuals go below crit or iteration
             max_iter is reached.
 
-        Parameters
-        ----------
-        crit: float
-            The criterion for stopping. The procedure stops when the residual is below this value.
+        **Parameters**
 
-        max_iter: int
-            The maximum number of iterations to perform.
+        *max_iter*: ``int`` The maximum number of iterations to perform.
         """
         while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
             self.__landweber_one_iteration()
@@ -309,10 +277,9 @@ class Landweber:
         """Runs the algorithm till max_iter and gathers all relevant simulation data.
         The early stopping index is recorded.
 
-        Parameters
-        ----------
-        max_iter: int
-            The maximum number of iterations to perform.
+        **Parameters**
+        
+        *max_iter*: ``int`` The maximum number of iterations to perform.
         """
         self.landweber_to_early_stop(max_iter)
         if max_iter > self.early_stopping_index:
