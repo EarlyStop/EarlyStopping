@@ -135,6 +135,7 @@ class Landweber:
             if (scipy.sparse.issparse(self.gram_matrix)):
                self.inverse_congruency_matrix = scipy.sparse.linalg.inv(self.gram_matrix)
             else:
+                print("hello")
                 self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
 
             self.perturbation_congruency_matrix = (sparse.dia_matrix(np.eye(self.para_size)) - self.learning_rate * self.gram_matrix)
