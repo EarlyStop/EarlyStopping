@@ -60,19 +60,19 @@ models_rough = es.Landweber(design_matrix, observation_rough, true_noise_level=N
 
 iter = 1500
 start = timeit.default_timer()
-models_supersmooth.landweber_gather_all(iter)
+models_supersmooth.iterate(iter)
 stop = timeit.default_timer()
 print("Time supersmooth: ", stop - start)
 
 models_supersmooth.landweber_estimate_collect
 
 start = timeit.default_timer()
-models_smooth.landweber_gather_all(iter)
+models_smooth.iterate(iter)
 stop = timeit.default_timer()
 print("Time smooth: ", stop - start)
 
 start = timeit.default_timer()
-models_rough.landweber_gather_all(iter)
+models_rough.iterate(iter)
 stop = timeit.default_timer()
 print("Time rough: ", stop - start)
 
@@ -209,5 +209,4 @@ axs[2].set_ylabel("Weak Quantities")
 axs[2].legend()
 
 plt.tight_layout()
-
 plt.show()
