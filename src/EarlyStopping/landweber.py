@@ -25,7 +25,7 @@ class Landweber:
 
     *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{D}` )
 
-    *starting_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. (Defaults to zero). ( :math:`\hat{f}_0` )
+    *starting_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\hat{f}_0` )
 
     *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
 
@@ -39,28 +39,46 @@ class Landweber:
 
     *iter*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \in \mathbb{N}` )
 
-    *early_stopping_index*: ``int``. Early Stopping iteration index (Is set to None if no early stopping is performed) ( :math:`\hat{m}` )
+    *early_stopping_index*: ``int``. Early Stopping iteration index. Is set to None if no early stopping is triggered. ( :math:`\hat{m}` )
 
     *landweber_estimate*: ``array``. Landweber estimate at the current iteration for the data given in design ( :math:`\hat{f}_m` )
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the Landweber estimator.
 
-    *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong squared bias up to the current Landweber iteration.
+    *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong squared bias up to the current Landweber iteration. 
 
-    *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration.
+    .. math::
+       B^{2}_{m} = \\Vert (I-A^{\\top}A)(f-\hat{f}_{m-1}) \\Vert^{2}
+
+    *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration. 
+    
+    .. math::
+        V_m = \\delta^2 \\mathrm{tr}((A^{\\top}A)^{-1}(I-(I-A^{\\top}A)^{m}))
 
     *strong_error*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
-    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration.
+      .. math::
+        E[\\Vert \hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m 
 
-    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration.
+    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration. 
+    
+    .. math::
+        B^{2}_{m,A} = \\Vert A(I-A^{\\top}A)(f-\hat{f}_{m-1}) \\Vert^{2}
+
+    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration. 
+
+    .. math:: 
+       V_{m,A} = \\delta^2 \\mathrm{tr}((I-(I-A^{\\top}A)^{m}))
 
     *weak_error*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
-    *weak_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when weak_bias2 <= weak_variance.
+    .. math::
+        E[\\Vert \hat{f}_{m} - f \\Vert_A^2] = B^{2}_{m,A} + V_{m,A} 
 
-    *strong_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when strong_bias2 <= strong_variance.
+    *weak_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when :math:`B^{2}_{m,A} \leq V_{m,A}`.
 
+    *strong_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when :math:`B^{2}_{m} \leq V_{m}`.
+    
     **Methods**
 
     +--------------------------------------------+----------------------------------------------------------------------------------+
