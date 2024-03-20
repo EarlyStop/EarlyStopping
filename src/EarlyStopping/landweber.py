@@ -57,7 +57,7 @@ class Landweber:
 
     *strong_error*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
-      .. math::
+    .. math::
         E[\\Vert \hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m 
 
     *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration. 
