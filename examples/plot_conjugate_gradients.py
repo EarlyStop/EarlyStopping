@@ -22,7 +22,7 @@ np.random.seed(42)
 # To make our results comparable, we use the same simulation setting as `Blanchard et al. (2018) <https://doi.org/10.1137/17M1154096>`_ and `Stankewitz (2020) <https://doi.org/10.1214/20-EJS1747>`_.
 
 # Set parameters
-sample_size = 100
+sample_size = 10000
 parameter_size = sample_size
 max_iter = sample_size
 noise_level = 0.01
@@ -55,7 +55,7 @@ plt.show()
 # We simulate NUMBER_RUNS realisations of the Gaussian sequence space model.
 
 # Specify number of Monte Carlo runs
-NUMBER_RUNS = 100
+NUMBER_RUNS = 10
 
 # Set computation threshold
 computation_threshold = 0
