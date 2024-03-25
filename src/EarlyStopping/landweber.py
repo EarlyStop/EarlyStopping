@@ -53,7 +53,7 @@ class Landweber:
     *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration. 
     
     .. math::
-        V_m = \\delta^2 \\mathrm{tr}((A^{\\top}A)^{-1}(I-(I-A^{\\top}A)^{m}))
+        V_m = \\delta^2 \\mathrm{tr}((A^{\\top}A)^{-1}(I-(I-A^{\\top}A)^{m})^{2})
 
     *strong_error*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
@@ -68,7 +68,7 @@ class Landweber:
     *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration. 
 
     .. math:: 
-       V_{m,A} = \\delta^2 \\mathrm{tr}((I-(I-A^{\\top}A)^{m}))
+       V_{m,A} = \\delta^2 \\mathrm{tr}((I-(I-A^{\\top}A)^{m})^{2})
 
     *weak_error*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
@@ -230,7 +230,7 @@ class Landweber:
         """Update strong variance
 
         The strong variance in the m-th iteration is given by
-        :math: `\\sigma**2 \\mathrm{tr}(h^{-1}(A^{\\top}A)^{-1}(I-(I-hA^{\\top}A)^{m}))`
+        :math: `\\sigma**2 \\mathrm{tr}(h^{-1}(A^{\\top}A)^{-1}(I-(I-hA^{\\top}A)^{m})^{2})`
         """
 
         presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
@@ -240,9 +240,6 @@ class Landweber:
             @ (presquare_temporary_matrix @ presquare_temporary_matrix)
         )
 
-        # new_strong_variance = (self.true_noise_level ** 2 *
-        #                        np.trace(temporary_matrix))
-
         new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
         self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
@@ -250,10 +247,8 @@ class Landweber:
         """Update weak variance
 
         The weak variance in the m-th iteration is given by
-        :math: `\\sigma**2 \\mathrm{tr}((I-(I-hA^{\\top}A)^{m}))`
+        :math: `\\sigma**2 \\mathrm{tr}((I-(I-hA^{\\top}A)^{m})^{2})`
         """
-        # new_weak_variance = (self.true_noise_level ** 2 *
-        #                      np.trace(np.square(sparse.dia_matrix(np.eye(self.parameter_size)) - self.perturbation_congruency_matrix_power)))
 
         pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (
             self.identity - self.perturbation_congruency_matrix_power
