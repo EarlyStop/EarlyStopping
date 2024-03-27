@@ -233,14 +233,16 @@ class Landweber:
         :math: `\\sigma**2 \\mathrm{tr}(h^{-1}(A^{\\top}A)^{-1}(I-(I-hA^{\\top}A)^{m})^{2})`
         """
 
-        presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
+        #presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
         pretrace_temporary_matrix = (
             self.learning_rate ** (-1)
             * self.inverse_congruency_matrix
-            @ (presquare_temporary_matrix @ presquare_temporary_matrix)
+            @ (self.identity - self.perturbation_congruency_matrix_power) @ (self.identity - self.perturbation_congruency_matrix_power)
         )
 
         new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
+
+
         self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
     def __update_weak_variance(self):
@@ -249,10 +251,8 @@ class Landweber:
         The weak variance in the m-th iteration is given by
         :math: `\\sigma**2 \\mathrm{tr}((I-(I-hA^{\\top}A)^{m})^{2})`
         """
-
-        pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (
-            self.identity - self.perturbation_congruency_matrix_power
-        )
+        pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (self.identity - self.perturbation_congruency_matrix_power)
+        
         new_weak_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
 
         self.weak_variance = np.append(self.weak_variance, new_weak_variance)
