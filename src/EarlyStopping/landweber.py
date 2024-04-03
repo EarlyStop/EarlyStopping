@@ -259,6 +259,7 @@ class Landweber:
 
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
+        #print(f'The current iteration is {self.iteration}.')
         self.landweber_estimate = self.landweber_estimate + self.learning_rate * np.transpose(self.design) @ (
             self.response - self.design @ self.landweber_estimate
         )
