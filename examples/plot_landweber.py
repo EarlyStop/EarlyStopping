@@ -14,12 +14,13 @@ import timeit
 np.random.seed(42)
 plt.rcParams.update({"font.size": 20})
 
+
 # %%
 # Plot different signals
 # ----------------------
 # Create diagonal design matrix and supersmooth, smooth and rough signal. Plot the signal.
 
-D = 500
+D = 1000
 indices = np.arange(D) + 1
 design_matrix = dia_matrix(np.diag(1 / (np.sqrt(indices))))
 
@@ -214,78 +215,6 @@ plt.show()
 
 
 
-# %%
-# Bias/variance decomposition for a pertubated diagonal matrix
-# ------------------------------------------------------------
-# Plot the residuals, weak and strong quantities.
-
-D = 1000
-normal_matrix = np.random.normal(0, 0.1, size=(D, D))
-indices = np.arange(D) + 1
-indices = np.arange(1, D + 1)
-diagonal_values = 1 / np.sqrt(indices)
-np.fill_diagonal(normal_matrix, diagonal_values)
-design_matrix = normal_matrix
-
-NOISE_LEVEL = 0.1
-noise = np.random.normal(0, NOISE_LEVEL, D)
-indices = np.arange(D) + 1
-signal_supersmooth = 5 * np.exp(-0.1 * indices)
-response = noise + design_matrix @ signal_supersmooth
-max_iter = 250
-
-model = es.Landweber(design_matrix, response, learning_rate = 0.01 , true_signal=signal_supersmooth, true_noise_level=NOISE_LEVEL)
-
-model.iterate(max_iter)
-
-# Stopping index
-m = model.early_stopping_index
-
-# Weak balanced oracle
-weak_oracle = model.weak_balanced_oracle
-
-# Strong balanced oracle
-strong_oracle = model.strong_balanced_oracle
-
-
-fig, axs = plt.subplots(3, 1, figsize=(14, 12))
-
-axs[0].plot(range(0, max_iter + 1), model.residuals)
-# axs[0].axvline(x=m, color="red", linestyle="--")
-# axs[0].set_xlim([0, 50])
-axs[0].set_ylim([0, 20])
-axs[0].set_xlabel("Iteration")
-axs[0].set_ylabel("Residuals")
-
-
-axs[1].plot(range(0, max_iter + 1), model.strong_error, color="orange", label="Error")
-axs[1].plot(range(0, max_iter + 1), model.strong_bias2, label="$Bias^2$", color="grey")
-axs[1].plot(range(0, max_iter + 1), model.strong_variance, label="Variance", color="blue")
-axs[1].axvline(x=m, color="red", linestyle="--")
-axs[1].axvline(x=strong_oracle, color="green", linestyle="--")
-# axs[1].set_xlim([0, 50])
-axs[1].set_ylim([0, 400])
-axs[1].set_xlabel("Iteration")
-axs[1].set_ylabel("Strong Quantities")
-
-axs[2].plot(range(0, max_iter + 1), model.weak_error, color="orange", label="Error")
-axs[2].plot(range(0, max_iter + 1), model.weak_bias2, label="$Bias^2$", color="grey")
-axs[2].plot(range(0, max_iter + 1), model.weak_variance, label="Variance", color="blue")
-axs[2].axvline(x=m, color="red", linestyle="--", label=r"$\tau$")
-axs[2].axvline(x=weak_oracle, color="green", linestyle="--", label="$t$ (oracle)")
-# axs[2].set_xlim([0, 400])
-axs[2].set_ylim([0, 50])
-axs[2].set_xlabel("Iteration")
-axs[2].set_ylabel("Weak Quantities")
-axs[2].legend(loc = "upper right")
-
-plt.tight_layout()
-
-plt.show()
-
-
-
-
 
 
 
@@ -324,25 +253,26 @@ NUMBER_RUNS = 1
 noise = np.random.normal(0, noise_level, (sample_size, NUMBER_RUNS))
 observation = noise + design_times_signal[:, None]
 
-model = es.Landweber(design, observation[:, 0], learning_rate=1 / 30, true_signal=signal, true_noise_level=noise_level)
+model_gravity = es.Landweber(design, observation[:, 0], learning_rate=1 / 30, true_signal=signal, true_noise_level=noise_level)
 
-model.iterate(max_iter)
+model_gravity.iterate(max_iter)
 
 # Stopping index
-m = model.early_stopping_index
+m_gravity = model_gravity.early_stopping_index
 
+print(m_gravity)
 # Weak balanced oracle
-weak_oracle = model.weak_balanced_oracle
+weak_oracle_gravity = model_gravity.weak_balanced_oracle
 
 # Strong balanced oracle
-strong_oracle = model.strong_balanced_oracle
+strong_oracle_gravity = model_gravity.strong_balanced_oracle
 
 
 
 fig, axs = plt.subplots(3, 1, figsize=(14, 12))
 
 
-axs[0].plot(range(0, max_iter + 1), model.residuals)
+axs[0].plot(range(0, max_iter + 1), model_gravity.residuals)
 #axs[0].axvline(x=m, color="red", linestyle="--")
 axs[0].set_xlim([0, 50])
 axs[0].set_ylim([0, 20])
@@ -350,21 +280,21 @@ axs[0].set_xlabel("Iteration")
 axs[0].set_ylabel("Residuals")
 
 
-axs[1].plot(range(0, max_iter + 1), model.strong_error, color="orange", label="Error")
-axs[1].plot(range(0, max_iter + 1), model.strong_bias2, label="$Bias^2$", color="grey")
-axs[1].plot(range(0, max_iter + 1), model.strong_variance, label="Variance", color="blue")
-axs[1].axvline(x=m, color="red", linestyle="--")
-axs[1].axvline(x=strong_oracle, color="green", linestyle="--")
+axs[1].plot(range(0, max_iter + 1), model_gravity.strong_error, color="orange", label="Error")
+axs[1].plot(range(0, max_iter + 1), model_gravity.strong_bias2, label="$Bias^2$", color="grey")
+axs[1].plot(range(0, max_iter + 1), model_gravity.strong_variance, label="Variance", color="blue")
+axs[1].axvline(x=m_gravity, color="red", linestyle="--")
+axs[1].axvline(x=strong_oracle_gravity, color="green", linestyle="--")
 #axs[1].set_xlim([0, 50])
 axs[1].set_ylim([0, 0.2])
 axs[1].set_xlabel("Iteration")
 axs[1].set_ylabel("Strong Quantities")
 
-axs[2].plot(range(0, max_iter + 1), model.weak_error, color="orange", label="Error")
-axs[2].plot(range(0, max_iter + 1), model.weak_bias2, label="$Bias^2$", color="grey")
-axs[2].plot(range(0, max_iter + 1), model.weak_variance, label="Variance", color="blue")
-axs[2].axvline(x=m, color="red", linestyle="--", label=r"$\tau$")
-axs[2].axvline(x=weak_oracle, color="green", linestyle="--", label="$t$ (oracle)")
+axs[2].plot(range(0, max_iter + 1), model_gravity.weak_error, color="orange", label="Error")
+axs[2].plot(range(0, max_iter + 1), model_gravity.weak_bias2, label="$Bias^2$", color="grey")
+axs[2].plot(range(0, max_iter + 1), model_gravity.weak_variance, label="Variance", color="blue")
+axs[2].axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")
+axs[2].axvline(x=weak_oracle_gravity, color="green", linestyle="--", label="$t$ (oracle)")
 #axs[2].set_xlim([0, 400])
 axs[2].set_ylim([0, 0.002])
 axs[2].set_xlabel("Iteration")
@@ -377,4 +307,75 @@ plt.show()
 
 
 
+
 # %%
+# Bias/variance decomposition for a pertubated diagonal matrix
+# ------------------------------------------------------------
+# Plot the residuals, weak and strong quantities.
+
+D = 1000
+normal_matrix = np.random.normal(0, 0.1, size=(D, D))
+indices = np.arange(D) + 1
+indices = np.arange(1, D + 1)
+diagonal_values = 1 / np.sqrt(indices)
+np.fill_diagonal(normal_matrix, diagonal_values)
+design_matrix = normal_matrix
+
+NOISE_LEVEL = 0.1
+noise = np.random.normal(0, NOISE_LEVEL, D)
+indices = np.arange(D) + 1
+signal_supersmooth = 5 * np.exp(-0.1 * indices)
+response = noise + design_matrix @ signal_supersmooth
+max_iter = 250
+
+model_pertubation = es.Landweber(design_matrix, response, learning_rate = 0.01 , true_signal=signal_supersmooth, true_noise_level=NOISE_LEVEL)
+
+model_pertubation.iterate(max_iter)
+
+# Stopping index
+m_pertubation = model_pertubation.early_stopping_index
+
+# Weak balanced oracle
+weak_oracle_pertubation = model_pertubation.weak_balanced_oracle
+
+# Strong balanced oracle
+strong_oracle_pertubation = model_pertubation.strong_balanced_oracle
+
+
+fig, axs = plt.subplots(3, 1, figsize=(14, 12))
+
+axs[0].plot(range(0, max_iter + 1), model_pertubation.residuals)
+# axs[0].axvline(x=m, color="red", linestyle="--")
+# axs[0].set_xlim([0, 50])
+axs[0].set_ylim([0, 20])
+axs[0].set_xlabel("Iteration")
+axs[0].set_ylabel("Residuals")
+
+
+axs[1].plot(range(0, max_iter + 1), model_pertubation.strong_error, color="orange", label="Error")
+axs[1].plot(range(0, max_iter + 1), model_pertubation.strong_bias2, label="$Bias^2$", color="grey")
+axs[1].plot(range(0, max_iter + 1), model_pertubation.strong_variance, label="Variance", color="blue")
+axs[1].axvline(x=m_pertubation, color="red", linestyle="--")
+axs[1].axvline(x=strong_oracle_pertubation, color="green", linestyle="--")
+# axs[1].set_xlim([0, 50])
+axs[1].set_ylim([0, 400])
+axs[1].set_xlabel("Iteration")
+axs[1].set_ylabel("Strong Quantities")
+
+axs[2].plot(range(0, max_iter + 1), model_pertubation.weak_error, color="orange", label="Error")
+axs[2].plot(range(0, max_iter + 1), model_pertubation.weak_bias2, label="$Bias^2$", color="grey")
+axs[2].plot(range(0, max_iter + 1), model_pertubation.weak_variance, label="Variance", color="blue")
+axs[2].axvline(x=m_pertubation, color="red", linestyle="--", label=r"$\tau$")
+axs[2].axvline(x=weak_oracle_pertubation, color="green", linestyle="--", label="$t$ (oracle)")
+# axs[2].set_xlim([0, 400])
+axs[2].set_ylim([0, 50])
+axs[2].set_xlabel("Iteration")
+axs[2].set_ylabel("Weak Quantities")
+axs[2].legend(loc = "upper right")
+
+plt.tight_layout()
+
+plt.show()
+
+
+
