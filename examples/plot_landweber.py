@@ -13,7 +13,7 @@ import timeit
 
 np.random.seed(42)
 plt.rcParams.update({"font.size": 20})
-
+print('The seed is 42.')
 
 # %%
 # Plot different signals
