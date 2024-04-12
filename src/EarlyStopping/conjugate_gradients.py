@@ -180,6 +180,9 @@ class ConjugateGradients:
         *max_iter*: ``int``. The maximum number of iterations to be performed.
         """
         while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
+            if (self.transformed_residual_vector**2).sum() <= self.computation_threshold:
+                print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
+                break
             if self.interpolation is True:
                 old_conjugate_gradient_estimate = self.conjugate_gradient_estimate
             self.__conjugate_gradients_one_iteration()
@@ -205,7 +208,10 @@ class ConjugateGradients:
         """
         self.discrepancy_stop(max_iter)
         conjugate_gradient_estimate = self.conjugate_gradient_estimate
-        if max_iter > int(np.ceil(self.early_stopping_index)):
+        if (
+            max_iter > int(np.ceil(self.early_stopping_index))
+            and (self.transformed_residual_vector**2).sum() > self.computation_threshold
+        ):
             self.iterate(max_iter - int(np.ceil(self.early_stopping_index)))
             self.conjugate_gradient_estimate = conjugate_gradient_estimate
 
