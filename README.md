@@ -25,7 +25,7 @@ Early stopping is a python library implementing computationally efficient model 
   </a>.
   In: <em>Journal of Econometrics</em> 234(2), 714-731 (2023).
 
-Check out the [documentation](https://esfiep.github.io/EarlyStopping/) for more information.
+Check out the [documentation](https://earlystop.github.io/EarlyStopping/) for more information.
 
 ## Development notes
 
