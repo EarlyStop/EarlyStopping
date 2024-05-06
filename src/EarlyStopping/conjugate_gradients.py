@@ -97,15 +97,25 @@ class ConjugateGradients:
 
         # Residual quantities
         self.residual_vector = response - design @ self.conjugate_gradient_estimate
-        self.residuals = np.array([(self.residual_vector**2).sum()])
+        self.residuals = np.array([np.dot(self.residual_vector, self.residual_vector)])
 
         if self.true_signal is not None:
             self.transformed_true_signal = self.design @ self.true_signal
             self.strong_empirical_errors = np.array(
-                [((self.conjugate_gradient_estimate - self.true_signal) ** 2).sum()]
+                [
+                    np.dot(
+                        self.conjugate_gradient_estimate - self.true_signal,
+                        self.conjugate_gradient_estimate - self.true_signal,
+                    )
+                ]
             )
             self.weak_empirical_errors = np.array(
-                [((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2).sum()]
+                [
+                    np.dot(
+                        self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal,
+                        self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal,
+                    )
+                ]
             )
             self.strong_estimator_distances = np.array(
                 [0]
@@ -133,7 +143,10 @@ class ConjugateGradients:
         *number_of_iterations*: ``int, default = 1``. Number of conjugate gradients iterations to be performed.
         """
         for _ in range(number_of_iterations):
-            if (self.transformed_residual_vector**2).sum() <= self.computation_threshold:
+            if (
+                np.dot(self.transformed_residual_vector, self.transformed_residual_vector)
+                <= self.computation_threshold
+            ):
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()
@@ -141,35 +154,56 @@ class ConjugateGradients:
     def __conjugate_gradients_one_iteration(self):
         """Performs one iteration of the conjugate gradients algorithm"""
         old_transformed_residual_vector = self.transformed_residual_vector
-        squared_norm_old_transformed_residual_vector = (old_transformed_residual_vector**2).sum()
+        squared_norm_old_transformed_residual_vector = np.dot(
+            old_transformed_residual_vector, old_transformed_residual_vector
+        )
         transformed_search_direction = self.design @ self.search_direction
-        learning_rate = squared_norm_old_transformed_residual_vector / (transformed_search_direction**2).sum()
+        learning_rate = squared_norm_old_transformed_residual_vector / np.dot(
+            transformed_search_direction, transformed_search_direction
+        )
         conjugate_gradient_estimates_distance = learning_rate * self.search_direction
         transformed_conjugate_gradient_estimates_distance = learning_rate * transformed_search_direction
         self.conjugate_gradient_estimate = self.conjugate_gradient_estimate + conjugate_gradient_estimates_distance
+        # if self.iter % 50 == 0:
+        #     self.residual_vector = (
+        #         self.response - self.design @ self.conjugate_gradient_estimate
+        #     )  # due to numerical errors building up, it could make sense to sometimes calculate the residual directly (slow!)
+        # else:
+        #     self.residual_vector = self.residual_vector - transformed_conjugate_gradient_estimates_distance
         self.residual_vector = self.residual_vector - transformed_conjugate_gradient_estimates_distance
         self.transformed_residual_vector = self.transposed_design @ self.residual_vector
         transformed_residual_ratio = (
-            self.transformed_residual_vector**2
-        ).sum() / squared_norm_old_transformed_residual_vector
+            np.dot(self.transformed_residual_vector, self.transformed_residual_vector)
+            / squared_norm_old_transformed_residual_vector
+        )
         self.search_direction = self.transformed_residual_vector + transformed_residual_ratio * self.search_direction
-        self.residuals = np.append(self.residuals, (self.residual_vector**2).sum())
+        self.residuals = np.append(self.residuals, np.dot(self.residual_vector, self.residual_vector))
+        print(np.dot(self.residual_vector, self.residual_vector))
 
         self.iter = self.iter + 1
 
         if self.true_signal is not None:
             self.strong_empirical_errors = np.append(
-                self.strong_empirical_errors, ((self.conjugate_gradient_estimate - self.true_signal) ** 2).sum()
+                self.strong_empirical_errors,
+                np.dot(
+                    self.conjugate_gradient_estimate - self.true_signal,
+                    self.conjugate_gradient_estimate - self.true_signal,
+                ),
             )
             self.weak_empirical_errors = np.append(
                 self.weak_empirical_errors,
                 ((self.design @ self.conjugate_gradient_estimate - self.transformed_true_signal) ** 2).sum(),
             )
             self.strong_estimator_distances = np.append(
-                self.strong_estimator_distances, ((conjugate_gradient_estimates_distance) ** 2).sum()
+                self.strong_estimator_distances,
+                np.dot(conjugate_gradient_estimates_distance, conjugate_gradient_estimates_distance),
             )
             self.weak_estimator_distances = np.append(
-                self.weak_estimator_distances, ((transformed_conjugate_gradient_estimates_distance) ** 2).sum()
+                self.weak_estimator_distances,
+                np.dot(
+                    transformed_conjugate_gradient_estimates_distance,
+                    transformed_conjugate_gradient_estimates_distance,
+                ),
             )
 
     def discrepancy_stop(self, max_iter):
@@ -180,6 +214,12 @@ class ConjugateGradients:
         *max_iter*: ``int``. The maximum number of iterations to be performed.
         """
         while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
+            if (
+                np.dot(self.transformed_residual_vector, self.transformed_residual_vector)
+                <= self.computation_threshold
+            ):
+                print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
+                break
             if self.interpolation is True:
                 old_conjugate_gradient_estimate = self.conjugate_gradient_estimate
             self.__conjugate_gradients_one_iteration()
@@ -205,7 +245,10 @@ class ConjugateGradients:
         """
         self.discrepancy_stop(max_iter)
         conjugate_gradient_estimate = self.conjugate_gradient_estimate
-        if max_iter > int(np.ceil(self.early_stopping_index)):
+        if (
+            max_iter > int(np.ceil(self.early_stopping_index))
+            and np.dot(self.transformed_residual_vector, self.transformed_residual_vector) > self.computation_threshold
+        ):
             self.iterate(max_iter - int(np.ceil(self.early_stopping_index)))
             self.conjugate_gradient_estimate = conjugate_gradient_estimate
 

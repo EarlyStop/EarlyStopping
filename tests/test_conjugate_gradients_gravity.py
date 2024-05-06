@@ -66,6 +66,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                 true_signal=self.signal,
                 true_noise_level=self.noise_level,
                 interpolation=False,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]
@@ -93,6 +94,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                 true_signal=self.signal,
                 true_noise_level=self.noise_level,
                 interpolation=True,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]
@@ -151,6 +153,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                 true_signal=self.signal,
                 true_noise_level=self.noise_level,
                 interpolation=True,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]
@@ -161,6 +164,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                 true_signal=self.signal,
                 true_noise_level=self.noise_level,
                 interpolation=False,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]

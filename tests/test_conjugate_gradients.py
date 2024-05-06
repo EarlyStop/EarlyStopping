@@ -48,6 +48,7 @@ class TestConjugateGradients(unittest.TestCase):
             true_signal=self.signal_supersmooth,
             true_noise_level=0,
             interpolation=False,
+            computation_threshold=0,
         )
         model_smooth = es.ConjugateGradients(
             self.design_noise_free,
@@ -55,6 +56,7 @@ class TestConjugateGradients(unittest.TestCase):
             true_signal=self.signal_smooth,
             true_noise_level=0,
             interpolation=False,
+            computation_threshold=0,
         )
         model_rough = es.ConjugateGradients(
             self.design_noise_free,
@@ -62,6 +64,7 @@ class TestConjugateGradients(unittest.TestCase):
             true_signal=self.signal_rough,
             true_noise_level=0,
             interpolation=False,
+            computation_threshold=0,
         )
         model_supersmooth.iterate(2 * self.sample_size_noise_free)
         model_smooth.iterate(2 * self.sample_size_noise_free)
