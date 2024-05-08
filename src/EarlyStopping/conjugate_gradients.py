@@ -3,8 +3,16 @@ import numpy as np
 
 class ConjugateGradients:
     """
-    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/conjugate_gradients.py>`_
-    Conjugate gradients algorithm applied to the normal equation of a linear model
+     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/conjugate_gradients.py>`_ A class to perform estimation using the conjugate gradients algorithm for the normal equation.
+
+    **Description**
+
+    Consider the *linear model*
+
+    .. math::
+        Y = Af + \delta Z,
+
+    where :math:`Z` is a :math:`D`-dimensional standard normal distribution. The conjugate gradient estimate :math:`\hat{f}^{(k)}` at the integer iteration index :math:`k` is iteratively calculated by the following algorithm:
 
     **Parameters**
 
