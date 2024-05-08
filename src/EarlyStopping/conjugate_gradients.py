@@ -151,10 +151,7 @@ class ConjugateGradients:
         *number_of_iterations*: ``int, default = 1``. Number of conjugate gradients iterations to be performed.
         """
         for _ in range(number_of_iterations):
-            if (
-                np.dot(self.transformed_residual_vector, self.transformed_residual_vector)
-                <= self.computation_threshold
-            ):
+            if np.dot(self.transformed_residual_vector, self.transformed_residual_vector) <= self.computation_threshold:
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             self.__conjugate_gradients_one_iteration()
@@ -186,7 +183,7 @@ class ConjugateGradients:
         )
         self.search_direction = self.transformed_residual_vector + transformed_residual_ratio * self.search_direction
         self.residuals = np.append(self.residuals, np.dot(self.residual_vector, self.residual_vector))
-        print(np.dot(self.residual_vector, self.residual_vector))
+        # print(np.dot(self.residual_vector, self.residual_vector))
 
         self.iter = self.iter + 1
 
@@ -222,10 +219,7 @@ class ConjugateGradients:
         *max_iter*: ``int``. The maximum number of iterations to be performed.
         """
         while self.residuals[self.iter] > self.critical_value and self.iter < max_iter:
-            if (
-                np.dot(self.transformed_residual_vector, self.transformed_residual_vector)
-                <= self.computation_threshold
-            ):
+            if np.dot(self.transformed_residual_vector, self.transformed_residual_vector) <= self.computation_threshold:
                 print(f"Transformed residual vector is zero. Algorithm terminates at iteration {self.iter}.")
                 break
             if self.interpolation is True:
@@ -329,9 +323,9 @@ class ConjugateGradients:
                 empirical_errors = empirical_errors_list[error_type]
                 estimator_distances = estimator_distances_list[error_type]
                 for index in np.arange(max_iter):
-                    alpha = (
-                        empirical_errors[index] - empirical_errors[index + 1] + estimator_distances[index + 1]
-                    ) / (2 * estimator_distances[index + 1])
+                    alpha = (empirical_errors[index] - empirical_errors[index + 1] + estimator_distances[index + 1]) / (
+                        2 * estimator_distances[index + 1]
+                    )
                     if alpha < 0:
                         optimal_index_list = np.append(optimal_index_list, index)
                     elif alpha > 1:

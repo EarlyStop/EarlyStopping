@@ -45,6 +45,9 @@ python3 -m ipykernel install --user --name=myenv      # Create Jupyter kernel fr
 ```
 From the notebooks directory open the Jupyter notebook example.ipynb with the kernel myenv and run the code!
 
+### Installation from Python Package Index
+[https://test.pypi.org/project/EarlyStopping/0.0.1/](https://test.pypi.org/project/EarlyStopping/0.0.1/)
+
 ### Creating documentation locally
 The online documentation is not built until it has been merged into main. To build documentation locally and check how things look run
 ```bash
