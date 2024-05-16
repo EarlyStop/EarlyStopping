@@ -76,7 +76,7 @@ observation_smooth = noise + (design @ signal_smooth)[:, None]
 observation_rough = noise + (design @ signal_rough)[:, None]
 
 # %%
-# We choose to interpolate linearly between the conjugate gradient estimates at integer iteration indices and create the models.
+# We create the models.
 
 # Set interpolation boolean
 interpolation_boolean = False
@@ -382,7 +382,7 @@ noise = np.random.normal(0, noise_level, (sample_size_gravity, NUMBER_RUNS))
 observation_gravity = noise + design_times_signal[:, None]
 
 # %%
-# We choose to interpolate linearly between the conjugate gradient estimates at integer iteration indices and create the models.
+# We create the models.
 gravity_strong_empirical_error_cg = np.zeros(NUMBER_RUNS)
 gravity_weak_empirical_error_cg = np.zeros(NUMBER_RUNS)
 
