@@ -25,6 +25,7 @@ import EarlyStopping as es
 sns.set_theme(style="ticks")
 np.random.seed(42)
 
+
 # %%
 # Simulation Setting
 # ------------------
