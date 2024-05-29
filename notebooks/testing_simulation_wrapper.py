@@ -11,26 +11,17 @@ from scipy.sparse import dia_matrix
 
 importlib.reload(es)
 
-
-# Set parameters
 sample_size = 1000
-parameter_size = sample_size
-max_iter = sample_size
-noise_level = 0.01
-critical_value = sample_size * (noise_level**2)
+indices = np.arange(1000) + 1
 
-# Create diagonal design matrices
-indices = np.arange(sample_size) + 1
-design = dia_matrix(np.diag(1 / (np.sqrt(indices))))
+parameters = es.SimulationParameters(
+    design=dia_matrix(np.diag(1 / np.sqrt(indices))),
+    true_signal=5 * np.exp(-0.1 * indices),
+    true_noise_level=0.01,
+    max_iterations=1000)
 
-# Create signals
-signal_supersmooth = 5 * np.exp(-0.1 * indices)
+simulation = es.SimulationWrapper(**parameters.__dict__)
 
-# Create observations for the three different signals
-
-
-simulation = es.SimulationWrapper(design=design, true_signal=signal_supersmooth,
-                     true_noise_level=noise_level, max_iterations=max_iter)
 results = simulation.run_simulation()
 
 
