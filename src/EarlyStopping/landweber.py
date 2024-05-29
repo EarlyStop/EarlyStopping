@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 from scipy import sparse
-
+import warnings
 
 class Landweber:
     """
@@ -177,6 +177,8 @@ class Landweber:
             self.strong_error = self.strong_bias2 + self.strong_variance
             self.weak_error = self.weak_bias2 + self.weak_variance
 
+            self.strong_empirical_error = np.array([np.sum((self.starting_value - self.true_signal) ** 2)])
+
             self.weak_balanced_oracle = 0
             self.strong_balanced_oracle = 0
 
@@ -189,6 +191,13 @@ class Landweber:
         """
         for _ in range(iter_num):
             self.__landweber_one_iteration()
+
+
+    def get_early_stopping_index(self):
+
+        if self.early_stopping_index is None:
+            warnings.warn("Early stopping iteration not found! Returning the maximum iteration.", category=UserWarning)
+        return self.early_stopping_index if self.early_stopping_index is not None else self.iteration
 
     def __update_iterative_matrices(self):
         """Update iterative quantities
@@ -257,6 +266,14 @@ class Landweber:
 
         self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
+
+    def __update_strong_empirical_error(self):
+        """Update the strong empirical error"""
+        strong_empirical_error = np.sum((self.landweber_estimate - self.true_signal)** 2)
+        self.strong_empirical_error = np.append(self.strong_empirical_error, strong_empirical_error)
+
+
+
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
         #print(f'The current iteration is {self.iteration}.')
@@ -292,6 +309,8 @@ class Landweber:
             self.strong_error = self.strong_bias2 + self.strong_variance
             self.weak_error = self.weak_bias2 + self.weak_variance
 
+            self.__update_strong_empirical_error()
+
             self.weak_balanced_oracle = (
                 (np.argmax(self.weak_bias2 <= self.weak_variance))
                 if np.any(self.weak_bias2 <= self.weak_variance)
@@ -304,39 +323,4 @@ class Landweber:
                 else None
             )
 
-    # def landweber_to_early_stop(self, max_iter):
-    #     """Early stopping for the Landweber procedure
 
-    #         Procedure is stopped when the residuals go below crit or iteration
-    #         max_iter is reached.
-
-    #     **Parameters**
-
-    #     *max_iter*: ``int`` The maximum number of iterations to perform.
-    #     """
-    #     while self.residuals[self.iteration] > self.critical_value and self.iteration < max_iter:
-    #         self.__landweber_one_iteration()
-    #     self.early_stopping_index = self.iteration
-
-    # def landweber_gather_all(self, max_iter):
-    #     """Runs the algorithm till max_iter and gathers all relevant simulation data.
-    #     The early stopping index is recorded.
-
-    #     **Parameters**
-
-    #     *max_iter*: ``int`` The maximum number of iterations to perform.
-    #     """
-    #     self.landweber_to_early_stop(max_iter)
-    #     if max_iter > self.early_stopping_index:
-    #         self.landweber(max_iter - self.early_stopping_index)
-    #     if (self.true_signal is not None) and (self.true_noise_level is not None):
-    #         self.weak_balanced_oracle = (
-    #             (np.argmax(self.weak_bias2 <= self.weak_variance))
-    #             if np.any(self.weak_bias2 <= self.weak_variance)
-    #             else None
-    #         )
-    #         self.strong_balanced_oracle = (
-    #             (np.argmax(self.strong_bias2 <= self.strong_variance))
-    #             if np.any(self.strong_bias2 <= self.strong_variance)
-    #             else None
-    #         )
