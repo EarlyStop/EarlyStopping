@@ -3,6 +3,7 @@ from joblib import Parallel, delayed
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator
 import seaborn as sns
 import pandas as pd
 from scipy.sparse.linalg import svds
@@ -149,13 +150,21 @@ class SimulationWrapper:
         quantity_boxplot = sns.boxplot(
             x="variable",
             y="value",
+            hue="variable",
             data=comparison_table_quantity,
             width=0.8,
             palette=["tab:purple", "tab:purple"],
+            legend=False
         )
         quantity_boxplot.set_ylabel(f"{quantity_name}", fontsize=24)  # Increase fontsize
         quantity_boxplot.set_xlabel("Data generating processes", fontsize=24)  # Increase fontsize
-        quantity_boxplot.set_xticklabels(quantity_boxplot.get_xticklabels(), rotation=45)
+
+        # Get current tick locations and labels
+        locations = quantity_boxplot.get_xticks()
+        labels = [item.get_text() for item in quantity_boxplot.get_xticklabels()]
+        # Set fixed locator and labels
+        quantity_boxplot.xaxis.set_major_locator(FixedLocator(locations))
+        quantity_boxplot.set_xticklabels(labels, rotation=45)
 
         quantity_boxplot.tick_params(axis="both", which="major", labelsize=24)  # Increase fontsize
         plt.title(f"Comparison of {quantity_name}", fontsize=28)  # Increase title fontsize
