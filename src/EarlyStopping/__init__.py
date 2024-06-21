@@ -4,4 +4,5 @@ from .conjugate_gradients import ConjugateGradients
 from .landweber import Landweber
 from .simulation_wrapper import SimulationWrapper
 from .simulation_wrapper import SimulationParameters
+from .simulation_wrapper import SimulationData
 

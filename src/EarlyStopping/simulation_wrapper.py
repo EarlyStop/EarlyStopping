@@ -1,5 +1,8 @@
 import numpy as np
 from joblib import Parallel, delayed
+from scipy.linalg import toeplitz
+from scipy.sparse import dia_matrix
+
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
 import matplotlib.pyplot as plt
@@ -9,12 +12,201 @@ import pandas as pd
 from scipy.sparse.linalg import svds
 
 
+class SimulationData:
+
+    def diagonal_data(sample_size, type = "supersmooth"):
+        indices = np.arange(sample_size) + 1
+        design = dia_matrix(np.diag(1 / np.sqrt(indices)))
+        if type == "supersmooth":
+            true_signal = 5 * np.exp(-0.1 * indices)
+        elif type == "smooth":
+            true_signal = 5000 * np.abs(np.sin(0.01 * indices)) * indices ** (-1.6)
+        elif type == "rough":
+            true_signal = 250 * np.abs(np.sin(0.002 * indices)) * indices ** (-0.8)
+        else:
+            ValueError('Currently, only supersmooth, smooth and rough are supported')
+
+        response_noiseless = np.dot(design, true_signal)
+        return design, response_noiseless, true_signal
+
+    def gravity(sample_size, a = 0, b = 1, d = 0.25):
+        # Parameter controlling the ill-posedness: the larger, the more ill-posed, default in regtools: d = 0.25
+
+        t = (np.arange(1, sample_size + 1) - 0.5) / sample_size
+        s = ((np.arange(1, sample_size + 1) - 0.5) * (b - a)) / sample_size
+        T, S = np.meshgrid(t, s)
+
+        design = (1 / sample_size) * d * (d ** 2 * np.ones((sample_size, sample_size)) + (S - T) ** 2) ** (-(3 / 2))
+        true_signal = np.sin(np.pi * t) + 0.5 * np.sin(2 * np.pi * t)
+
+        response_noiseless = np.dot(design, true_signal)
+        return design, response_noiseless, true_signal
+
+    def heat(sample_size, kappa=1):
+        """
+        Test problem: inverse heat equation.
+
+        Parameters:
+        sample_size (int): Number of discretization points.
+        kappa (float): Controls the ill-conditioning of the matrix.
+
+        Returns:
+        design (numpy.ndarray): The matrix representing the integral operator.
+        response_noiseless (numpy.ndarray): The right-hand side vector.
+        true_signal (numpy.ndarray): The exact solution vector.
+        """
+        # Initialization
+        h = 1 / sample_size
+        t = np.linspace(h / 2, 1, sample_size)  # midpoints
+        c = h / (2 * kappa * np.sqrt(np.pi))
+        d = 1 / (4 * kappa ** 2)
+
+        # Compute the matrix A
+        k = c * t ** (-1.5) * np.exp(-d / t)
+        r = np.zeros(len(t))
+        r[0] = k[0]
+        design = toeplitz(k, r)
+
+        # Compute the vectors x and b
+        true_signal = np.zeros(sample_size)
+        for i in range(1, sample_size // 2 + 1):
+            ti = i * 20 / sample_size
+            if ti < 2:
+                true_signal[i - 1] = 0.75 * (ti ** 2) / 4
+            elif ti < 3:
+                true_signal[i - 1] = 0.75 + (ti - 2) * (3 - ti)
+            else:
+                true_signal[i - 1] = 0.75 * np.exp(-(ti - 3) * 2)
+
+        true_signal[sample_size // 2 + 1:] = 0
+
+        response_noiseless = np.dot(design, true_signal)
+
+        return design, response_noiseless, true_signal
+
+    def deriv2(sample_size, example=1):
+        # Initialize variables and compute coefficients
+        h = 1 / sample_size
+        sqh = np.sqrt(h)
+        h32 = h * sqh
+        h2 = h ** 2
+        sqhi = 1 / sqh
+        t = 2 / 3
+        design = np.zeros((sample_size, sample_size))
+
+        # Compute the matrix A
+        for i in range(1, sample_size + 1):
+            design[i - 1, i - 1] = h2 * ((i ** 2 - i + 0.25) * h - (i - t))
+            for j in range(1, i):
+                design[i - 1, j - 1] = h2 * (j - 0.5) * ((i - 0.5) * h - 1)
+        design = design + np.tril(design, -1).T
+
+        # Compute the right-hand side vector b
+        response_noiseless = np.zeros(sample_size)
+        if example == 1:
+            for i in range(1, sample_size + 1):
+                response_noiseless[i - 1] = h32 * (i - 0.5) * ((i ** 2 + (i - 1) ** 2) * h2 / 2 - 1) / 6
+        elif example == 2:
+            ee = 1 - np.exp(1)
+            for i in range(1, sample_size + 1):
+                response_noiseless[i - 1] = sqhi * (np.exp(i * h) - np.exp((i - 1) * h) + ee * (i - 0.5) * h2 - h)
+        elif example == 3:
+            if sample_size % 2 != 0:
+                raise ValueError('Order n must be even')
+            else:
+                for i in range(1, sample_size // 2 + 1):
+                    s1 = i * h
+                    s12 = s1 ** 2
+                    s2 = (i - 1) * h
+                    s22 = s2 ** 2
+                    response_noiseless[i - 1] = sqhi * (s12 + s22 - 1.5) * (s12 - s22) / 24
+                for i in range(sample_size // 2 + 1, sample_size + 1):
+                    s1 = i * h
+                    s12 = s1 ** 2
+                    s2 = (i - 1) * h
+                    s22 = s2 ** 2
+                    response_noiseless[i - 1] = sqhi * (-(s12 + s22) * (s12 - s22) + 4 * (s1 ** 3 - s2 ** 3) -
+                                       4.5 * (s12 - s22) + h) / 24
+        else:
+            raise ValueError('Illegal value of example')
+
+        # Compute the solution vector x
+        true_signal = np.zeros(sample_size)
+        if example == 1:
+            for i in range(1, sample_size + 1):
+                true_signal[i - 1] = h32 * (i - 0.5)
+        elif example == 2:
+            for i in range(1, sample_size + 1):
+                true_signal[i - 1] = sqhi * (np.exp(i * h) - np.exp((i - 1) * h))
+        elif example == 3:
+            for i in range(1, sample_size // 2 + 1):
+                true_signal[i - 1] = sqhi * ((i * h) ** 2 - ((i - 1) * h) ** 2) / 2
+            for i in range(sample_size // 2 + 1, sample_size + 1):
+                true_signal[i - 1] = sqhi * (h - ((i * h) ** 2 - ((i - 1) * h) ** 2) / 2)
+
+        return design, response_noiseless, true_signal
+
+    def phillips(sample_size):
+        # Check if n is a multiple of 4
+        if sample_size % 4 != 0:
+            raise ValueError('The order n must be a multiple of 4')
+
+        # Compute the matrix A using the toeplitz function
+        h = 12 / sample_size
+        n4 = sample_size // 4
+        c = np.cos(np.arange(-1, n4 + 1) * 4 * np.pi / sample_size)
+        r1 = np.zeros(sample_size)
+        # Debug: Print array shapes
+
+        r1[:n4] = h + 9 / (h * np.pi ** 2) * (2 * c[1:n4 + 1] - c[:n4] - c[2:n4 + 2])
+        r1[n4] = h / 2 + 9 / (h * np.pi ** 2) * (np.cos(4 * np.pi / sample_size) - 1)
+        design = toeplitz(r1)
+
+        # Compute the right-hand side b
+        response_noiseless = np.zeros(sample_size)
+        c = np.pi / 3
+
+        for i in range(sample_size // 2, sample_size):
+            t1 = -6 + (i + 1) * h
+            t2 = t1 - h
+            response_noiseless[i] = (t1 * (6 - abs(t1) / 2) +
+                    ((3 - abs(t1) / 2) * np.sin(c * t1) - 2 / c * (np.cos(c * t1) - 1)) / c -
+                    t2 * (6 - abs(t2) / 2) -
+                    ((3 - abs(t2) / 2) * np.sin(c * t2) - 2 / c * (np.cos(c * t2) - 1)) / c)
+            response_noiseless[sample_size - i - 1] = response_noiseless[i]
+        response_noiseless /= np.sqrt(h)
+
+        # Compute the solution x
+        true_signal = np.zeros(sample_size)
+        # s = np.arange(0, h * 5 + 10 * np.finfo(float).eps, h)
+        # original version (problem with array sizes in np.arange)
+        # s = np.range(n4)
+        # s = np.arange(0, h * (n4+1), h)
+        s = np.linspace(0, 3, n4+1, endpoint=True)
+        true_signal[2 * n4:3 * n4] = (h + np.diff(np.sin(s * c)) / c) / np.sqrt(h)
+
+        true_signal[n4:2 * n4] = true_signal[3 * n4 - 1:2 * n4 - 1:-1]
+
+        return design, response_noiseless, true_signal
+
+
 class SimulationParameters:
-    def __init__(self, design, true_signal, true_noise_level, max_iterations):
+    def __init__(self,
+                 design,
+                 true_signal,
+                 true_noise_level,
+                 max_iterations,
+                 monte_carlo_runs,
+                 response_noiseless=None,
+                 cores=5):
+
         self.design = design
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
         self.max_iterations = max_iterations
+        self.monte_carlo_runs = monte_carlo_runs
+        self.response_noiseless = response_noiseless
+        self.cores = cores
         self.validate()
 
     def validate(self):
@@ -28,7 +220,7 @@ class SimulationParameters:
 
 class SimulationWrapper:
     def __init__(
-        self, design, true_signal=None, true_noise_level=None, monte_carlo_runs=5, max_iterations=1000, cores=3
+        self, design, true_signal=None, true_noise_level=None, monte_carlo_runs=5, max_iterations=1000, cores=5, response_noiseless=None
     ):
         self.design = design
         self.true_signal = true_signal
@@ -37,12 +229,17 @@ class SimulationWrapper:
         self.max_iterations = max_iterations
         self.cores = cores
 
+        if response_noiseless is None:
+            self.response_noiseless = self.design @ self.true_signal
+        else:
+            self.response_noiseless = response_noiseless
+
         self.sample_size = design.shape[0]
 
     def run_simulation(self):
         info("Running simulation.")
         noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-        self.response = noise + (self.design @ self.true_signal)[:, None]
+        self.response = noise + (self.response_noiseless)[:, None]
 
         info("Searching for viable learning rates.")
         self.learning_rate = self.__search_learning_rate(search_depth=10)
@@ -52,10 +249,13 @@ class SimulationWrapper:
             delayed(self.monte_carlo_wrapper)(m) for m in range(self.monte_carlo_runs)
         )
 
-        strong_errors, weak_errors = zip(*self.results)
+        strong_errors, weak_errors, weak_relative_efficiency, strong_relative_efficiency = zip(*self.results)
 
         self.__visualise(np.vstack(strong_errors), "Strong Empirical Error at $\\tau$")
         self.__visualise(np.vstack(weak_errors), "Weak Empirical Error at $\\tau$")
+        self.__visualise(np.vstack(weak_relative_efficiency), quantity_name="Weak relative efficiency at $\\tau$")
+        self.__visualise(np.vstack(strong_relative_efficiency), quantity_name="Strong relative efficiency at $\\tau$")
+
         return self.results
 
     def __search_learning_rate(self, search_depth):
@@ -130,9 +330,19 @@ class SimulationWrapper:
             model_conjugate_gradients.early_stopping_index
         ]
 
+        landweber_weak_relative_efficiency = np.sqrt(np.min(model_landweber.weak_empirical_error)/landweber_weak_empirical_error)
+        landweber_strong_relative_efficiency = np.sqrt(np.min(model_landweber.strong_empirical_error)/landweber_strong_empirical_error)
+
+        conjugate_gradients_weak_relative_efficiency  = np.sqrt(
+            np.min(model_conjugate_gradients.weak_empirical_errors) / conjugate_gradients_weak_empirical_error)
+        conjugate_gradients_strong_relative_efficiency = np.sqrt(
+            np.min(model_conjugate_gradients.strong_empirical_errors) / conjugate_gradients_strong_empirical_error)
+
         return (
             np.array([landweber_strong_empirical_error, conjugate_gradients_strong_empirical_error]),
             np.array([landweber_weak_empirical_error, conjugate_gradients_weak_empirical_error]),
+            np.array([landweber_weak_relative_efficiency, conjugate_gradients_weak_relative_efficiency]),
+            np.array([landweber_strong_relative_efficiency, conjugate_gradients_strong_relative_efficiency])
         )
 
     def __visualise(self, quantity_to_visualise, quantity_name):
@@ -153,8 +363,7 @@ class SimulationWrapper:
             hue="variable",
             data=comparison_table_quantity,
             width=0.8,
-            palette=["tab:purple", "tab:purple"],
-            legend=False
+            palette=["tab:purple", "tab:purple"]
         )
         quantity_boxplot.set_ylabel(f"{quantity_name}", fontsize=24)  # Increase fontsize
         quantity_boxplot.set_xlabel("Data generating processes", fontsize=24)  # Increase fontsize
@@ -169,6 +378,7 @@ class SimulationWrapper:
         quantity_boxplot.tick_params(axis="both", which="major", labelsize=24)  # Increase fontsize
         plt.title(f"Comparison of {quantity_name}", fontsize=28)  # Increase title fontsize
         plt.tight_layout()
+        plt.legend([], [], frameon=False)
         plt.show()
 
 
