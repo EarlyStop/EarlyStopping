@@ -249,12 +249,24 @@ class SimulationWrapper:
             delayed(self.monte_carlo_wrapper)(m) for m in range(self.monte_carlo_runs)
         )
 
-        strong_errors, weak_errors, weak_relative_efficiency, strong_relative_efficiency = zip(*self.results)
+        (strong_errors, weak_errors, weak_relative_efficiency, strong_relative_efficiency,
+        landweber_strong_bias, landweber_strong_variance, landweber_strong_error, landweber_weak_bias,
+        landweber_weak_variance, landweber_weak_error, landweber_residuals) = zip(*self.results)
 
-        self.__visualise(np.vstack(strong_errors), "Strong Empirical Error at $\\tau$")
-        self.__visualise(np.vstack(weak_errors), "Weak Empirical Error at $\\tau$")
-        self.__visualise(np.vstack(weak_relative_efficiency), quantity_name="Weak relative efficiency at $\\tau$")
-        self.__visualise(np.vstack(strong_relative_efficiency), quantity_name="Strong relative efficiency at $\\tau$")
+        self.__visualise_boxplot(np.vstack(strong_errors), "Strong Empirical Error at $\\tau$")
+        self.__visualise_boxplot(np.vstack(weak_errors), "Weak Empirical Error at $\\tau$")
+        self.__visualise_boxplot(np.vstack(weak_relative_efficiency), quantity_name="Weak relative efficiency at $\\tau$")
+        self.__visualise_boxplot(np.vstack(strong_relative_efficiency), quantity_name="Strong relative efficiency at $\\tau$")
+
+        np.vstack((np.mean(landweber_residuals, axis=0), np.mean(landweber_strong_bias, axis=0)), )
+
+        self.__visualise_bias_variance_tradeoff(residuals_mean = np.mean(landweber_residuals, axis=0),
+                                                strong_bias2_mean = np.mean(landweber_strong_bias, axis=0),
+                                                strong_variance_mean = np.mean(landweber_strong_variance, axis=0),
+                                                strong_error_mean = np.mean(landweber_strong_error, axis=0),
+                                                weak_bias2_mean = np.mean(landweber_weak_bias, axis=0),
+                                                weak_variance_mean = np.mean(landweber_weak_variance, axis=0),
+                                                weak_error_mean = np.mean(landweber_weak_error, axis=0))
 
         return self.results
 
@@ -316,36 +328,92 @@ class SimulationWrapper:
         model_conjugate_gradients.gather_all(self.max_iterations)
         model_landweber.iterate(self.max_iterations)
 
-        landweber_strong_empirical_error = model_landweber.strong_empirical_error[
+        landweber_strong_bias = model_landweber.strong_bias2
+        landweber_strong_variance = model_landweber.strong_variance
+        landweber_strong_error = model_landweber.strong_error
+        landweber_weak_bias = model_landweber.weak_bias2
+        landweber_weak_variance = model_landweber.weak_variance
+        landweber_weak_error = model_landweber.weak_error
+        landweber_residuals = model_landweber.residuals
+
+
+        landweber_strong_empirical_error_es = model_landweber.strong_empirical_error[
             model_landweber.get_early_stopping_index()
         ]
-        conjugate_gradients_strong_empirical_error = model_conjugate_gradients.strong_empirical_errors[
+        conjugate_gradients_strong_empirical_error_es = model_conjugate_gradients.strong_empirical_errors[
             model_conjugate_gradients.early_stopping_index
         ]
 
-        landweber_weak_empirical_error = model_landweber.weak_empirical_error[
+        landweber_weak_empirical_error_es = model_landweber.weak_empirical_error[
             model_landweber.get_early_stopping_index()
         ]
-        conjugate_gradients_weak_empirical_error = model_conjugate_gradients.weak_empirical_errors[
+        conjugate_gradients_weak_empirical_error_es = model_conjugate_gradients.weak_empirical_errors[
             model_conjugate_gradients.early_stopping_index
         ]
 
-        landweber_weak_relative_efficiency = np.sqrt(np.min(model_landweber.weak_empirical_error)/landweber_weak_empirical_error)
-        landweber_strong_relative_efficiency = np.sqrt(np.min(model_landweber.strong_empirical_error)/landweber_strong_empirical_error)
+        landweber_weak_relative_efficiency = np.sqrt(np.min(model_landweber.weak_empirical_error)/landweber_weak_empirical_error_es)
+        landweber_strong_relative_efficiency = np.sqrt(np.min(model_landweber.strong_empirical_error)/landweber_strong_empirical_error_es)
 
         conjugate_gradients_weak_relative_efficiency  = np.sqrt(
-            np.min(model_conjugate_gradients.weak_empirical_errors) / conjugate_gradients_weak_empirical_error)
+            np.min(model_conjugate_gradients.weak_empirical_errors) / conjugate_gradients_weak_empirical_error_es)
         conjugate_gradients_strong_relative_efficiency = np.sqrt(
-            np.min(model_conjugate_gradients.strong_empirical_errors) / conjugate_gradients_strong_empirical_error)
+            np.min(model_conjugate_gradients.strong_empirical_errors) / conjugate_gradients_strong_empirical_error_es)
 
         return (
-            np.array([landweber_strong_empirical_error, conjugate_gradients_strong_empirical_error]),
-            np.array([landweber_weak_empirical_error, conjugate_gradients_weak_empirical_error]),
+            np.array([landweber_strong_empirical_error_es, conjugate_gradients_strong_empirical_error_es]),
+            np.array([landweber_weak_empirical_error_es, conjugate_gradients_weak_empirical_error_es]),
             np.array([landweber_weak_relative_efficiency, conjugate_gradients_weak_relative_efficiency]),
-            np.array([landweber_strong_relative_efficiency, conjugate_gradients_strong_relative_efficiency])
+            np.array([landweber_strong_relative_efficiency, conjugate_gradients_strong_relative_efficiency]),
+            landweber_strong_bias, landweber_strong_variance, landweber_strong_error, landweber_weak_bias,
+            landweber_weak_variance, landweber_weak_error, landweber_residuals
         )
 
-    def __visualise(self, quantity_to_visualise, quantity_name):
+    def __visualise_bias_variance_tradeoff(self,
+                                           residuals_mean,
+                                           strong_bias2_mean,
+                                           strong_variance_mean,
+                                           strong_error_mean,
+                                           weak_bias2_mean,
+                                           weak_variance_mean,
+                                           weak_error_mean):
+
+        fig, axs = plt.subplots(3, 1, figsize=(14, 12))
+
+        axs[0].plot(range(0, self.max_iterations + 1), residuals_mean/np.max(residuals_mean))
+        # axs[0].axvline(x=supersmooth_m, color="red", linestyle="--")
+        axs[0].set_xlim([0, 50])
+        axs[0].set_ylim([0, 1])
+        axs[0].set_xlabel("Iteration")
+        axs[0].set_ylabel("Normalised Residuals")
+
+        axs[1].plot(range(0, self.max_iterations  + 1), strong_error_mean/np.max(strong_error_mean), color="orange", label="Error")
+        axs[1].plot(range(0, self.max_iterations  + 1), strong_bias2_mean/np.max(strong_bias2_mean), label="$Bias^2$", color="grey")
+        axs[1].plot(range(0, self.max_iterations  + 1), strong_variance_mean/np.max(strong_variance_mean), label="Variance", color="blue")
+        # axs[1].axvline(x=supersmooth_m, color="red", linestyle="--")
+        # axs[1].axvline(x=supersmooth_strong_oracle, color="green", linestyle="--")
+        axs[1].set_xlim([0, 50])
+        axs[1].set_ylim([0, 0.5])
+        axs[1].set_xlabel("Iteration")
+        axs[1].set_ylabel("Normalised Strong Quantities")
+
+        axs[2].plot(range(0, self.max_iterations  + 1), weak_error_mean/np.max(weak_error_mean), color="orange", label="Error")
+        axs[2].plot(range(0, self.max_iterations  + 1), weak_bias2_mean/np.max(weak_bias2_mean), label="$Bias^2$", color="grey")
+        axs[2].plot(range(0, self.max_iterations  + 1), weak_variance_mean/np.max(weak_variance_mean), label="Variance", color="blue")
+        # axs[2].axvline(x=supersmooth_m, color="red", linestyle="--", label=r"$\tau$")
+        # axs[2].axvline(x=supersmooth_weak_oracle, color="green", linestyle="--", label="$t$ (oracle)")
+        axs[2].set_xlim([0, 50])
+        axs[2].set_ylim([0, 0.5])
+        axs[2].set_xlabel("Iteration")
+        axs[2].set_ylabel("Normalised Weak Quantities")
+        axs[2].legend()
+
+        plt.tight_layout()
+
+        plt.show()
+
+
+
+    def __visualise_boxplot(self, quantity_to_visualise, quantity_name):
 
         comparison_table_quantity = pd.DataFrame(
             {"conjugate_gradient": quantity_to_visualise[:, 1], "landweber": quantity_to_visualise[:, 0]}
@@ -356,7 +424,7 @@ class SimulationWrapper:
             value_vars=["conjugate_gradient", "landweber"],
         )
 
-        plt.figure(figsize=(14, 10))
+        plt.figure(figsize=(14, 12))
         quantity_boxplot = sns.boxplot(
             x="variable",
             y="value",
