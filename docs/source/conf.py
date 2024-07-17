@@ -31,7 +31,7 @@ sphinx_gallery_conf = {
      'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
 }
 
-
+html_extra_path = ['extra_files'] # added manually for search optimization
 templates_path = ['_templates']
 exclude_patterns = []
 
