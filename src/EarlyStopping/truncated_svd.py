@@ -39,7 +39,7 @@ class TruncatedSVD:
         print(f"s: {s}")
 
         self.diagonal_design = np.append(self.diagonal_design, s)
-        self.diagonal_response = np.append(self.diagonal_response, vh @ self.response)
+        self.diagonal_response = np.append(self.diagonal_response, u.transpose() @ self.response)
         self.eigenvector_matrix = np.append(self.eigenvector_matrix, vh.transpose(), axis=1)
 
         self.reduced_design = self.reduced_design - s * u @ vh
