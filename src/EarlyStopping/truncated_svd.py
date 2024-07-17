@@ -7,14 +7,12 @@ class TruncatedSVD:
     def __init__(self,
         design,
         response,
-        critical_value=None,
         true_signal=None,
         true_noise_level=None,
     ):
 
         self.design = design
         self.response = response
-        self.critical_value = critical_value
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
 
@@ -57,3 +55,16 @@ class TruncatedSVD:
         self.reduced_design = self.reduced_design - s * u @ vh
         
         self.iteration += 1
+
+    def discrepancy_stop(self, critical_value, max_iteration):
+        """ Early stopping for the SVD procedure based on the discrepancy principle. Procedure is
+            stopped when the residuals go below the critical value or max_iteration is reached.
+
+            **Parameters**
+
+            *critical_value*: ``float``. Critical value for the early stopping procedure.
+
+            *max_iteration*: ``int``. Maximal number of iterations to be performed.
+        """
+        while self.residuals[self.iteration] > critical_value and self.iteration < max_iteration:
+            self.__truncated_SVD_one_iteration()
