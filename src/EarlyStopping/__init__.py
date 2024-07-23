@@ -5,4 +5,5 @@ from .landweber import Landweber
 from .simulation_wrapper import SimulationWrapper
 from .simulation_wrapper import SimulationParameters
 from .simulation_wrapper import SimulationData
+from .truncated_svd import TruncatedSVD
 
