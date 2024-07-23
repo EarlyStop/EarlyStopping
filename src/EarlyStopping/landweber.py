@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 from scipy import sparse
+import warnings
 
 
 class Landweber:
@@ -45,40 +46,40 @@ class Landweber:
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the Landweber estimator.
 
-    *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong squared bias up to the current Landweber iteration. 
+    *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong squared bias up to the current Landweber iteration.
 
     .. math::
        B^{2}_{m} = \\Vert (I-A^{\\top}A)(f-\hat{f}_{m-1}) \\Vert^{2}
 
-    *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration. 
-    
+    *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration.
+
     .. math::
         V_m = \\delta^2 \\mathrm{tr}((A^{\\top}A)^{-1}(I-(I-A^{\\top}A)^{m})^{2})
 
     *strong_error*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
     .. math::
-        E[\\Vert \hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m 
+        E[\\Vert \hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m
 
-    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration. 
-    
+    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration.
+
     .. math::
         B^{2}_{m,A} = \\Vert A(I-A^{\\top}A)(f-\hat{f}_{m-1}) \\Vert^{2}
 
-    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration. 
+    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration.
 
-    .. math:: 
+    .. math::
        V_{m,A} = \\delta^2 \\mathrm{tr}((I-(I-A^{\\top}A)^{m})^{2})
 
     *weak_error*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
     .. math::
-        E[\\Vert \hat{f}_{m} - f \\Vert_A^2] = B^{2}_{m,A} + V_{m,A} 
+        E[\\Vert \hat{f}_{m} - f \\Vert_A^2] = B^{2}_{m,A} + V_{m,A}
 
     *weak_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when :math:`B^{2}_{m,A} \leq V_{m,A}`.
 
     *strong_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when :math:`B^{2}_{m} \leq V_{m}`.
-    
+
     **Methods**
 
     +--------------------------------------------+----------------------------------------------------------------------------------+
@@ -168,14 +169,19 @@ class Landweber:
 
             # initialize strong/weak bias and variance
             self.expectation_estimator = self.starting_value
-            self.strong_bias2 = np.array([np.sum(self.true_signal**2)])
-            self.weak_bias2 = np.array([np.sum((self.design @ self.true_signal) ** 2)])
+            self.strong_bias2 = np.array([np.sum((self.true_signal - self.starting_value) ** 2)])
+            self.weak_bias2 = np.array([np.sum((self.design @ (self.true_signal - self.starting_value)) ** 2)])
 
             self.strong_variance = np.array([0])
             self.weak_variance = np.array([0])
 
             self.strong_error = self.strong_bias2 + self.strong_variance
             self.weak_error = self.weak_bias2 + self.weak_variance
+
+            self.strong_empirical_error = np.array([np.sum((self.starting_value - self.true_signal) ** 2)])
+            self.weak_empirical_error = np.array(
+                [np.sum((self.design @ (self.starting_value - self.true_signal)) ** 2)]
+            )
 
             self.weak_balanced_oracle = 0
             self.strong_balanced_oracle = 0
@@ -189,6 +195,12 @@ class Landweber:
         """
         for _ in range(iter_num):
             self.__landweber_one_iteration()
+
+    def get_early_stopping_index(self):
+
+        if self.early_stopping_index is None:
+            warnings.warn("Early stopping iteration not found! Returning the maximum iteration.", category=UserWarning)
+        return self.early_stopping_index if self.early_stopping_index is not None else self.iteration
 
     def __update_iterative_matrices(self):
         """Update iterative quantities
@@ -233,15 +245,15 @@ class Landweber:
         :math: `\\sigma**2 \\mathrm{tr}(h^{-1}(A^{\\top}A)^{-1}(I-(I-hA^{\\top}A)^{m})^{2})`
         """
 
-        #presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
+        # presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
         pretrace_temporary_matrix = (
             self.learning_rate ** (-1)
             * self.inverse_congruency_matrix
-            @ (self.identity - self.perturbation_congruency_matrix_power) @ (self.identity - self.perturbation_congruency_matrix_power)
+            @ (self.identity - self.perturbation_congruency_matrix_power)
+            @ (self.identity - self.perturbation_congruency_matrix_power)
         )
 
         new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
-
 
         self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
@@ -251,15 +263,27 @@ class Landweber:
         The weak variance in the m-th iteration is given by
         :math: `\\sigma**2 \\mathrm{tr}((I-(I-hA^{\\top}A)^{m})^{2})`
         """
-        pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (self.identity - self.perturbation_congruency_matrix_power)
-        
+        pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (
+            self.identity - self.perturbation_congruency_matrix_power
+        )
+
         new_weak_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
 
         self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
+    def __update_strong_empirical_error(self):
+        """Update the strong empirical error"""
+        strong_empirical_error = np.sum((self.landweber_estimate - self.true_signal) ** 2)
+        self.strong_empirical_error = np.append(self.strong_empirical_error, strong_empirical_error)
+
+    def __update_weak_empirical_error(self):
+        """Update the weak empirical error"""
+        weak_empirical_error = np.sum((self.design @ (self.landweber_estimate - self.true_signal)) ** 2)
+        self.weak_empirical_error = np.append(self.weak_empirical_error, weak_empirical_error)
+
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
-        #print(f'The current iteration is {self.iteration}.')
+        # print(f'The current iteration is {self.iteration}.')
         self.landweber_estimate = self.landweber_estimate + self.learning_rate * np.transpose(self.design) @ (
             self.response - self.design @ self.landweber_estimate
         )
@@ -292,6 +316,9 @@ class Landweber:
             self.strong_error = self.strong_bias2 + self.strong_variance
             self.weak_error = self.weak_bias2 + self.weak_variance
 
+            self.__update_strong_empirical_error()
+            self.__update_weak_empirical_error()
+
             self.weak_balanced_oracle = (
                 (np.argmax(self.weak_bias2 <= self.weak_variance))
                 if np.any(self.weak_bias2 <= self.weak_variance)
@@ -303,40 +330,3 @@ class Landweber:
                 if np.any(self.strong_bias2 <= self.strong_variance)
                 else None
             )
-
-    # def landweber_to_early_stop(self, max_iter):
-    #     """Early stopping for the Landweber procedure
-
-    #         Procedure is stopped when the residuals go below crit or iteration
-    #         max_iter is reached.
-
-    #     **Parameters**
-
-    #     *max_iter*: ``int`` The maximum number of iterations to perform.
-    #     """
-    #     while self.residuals[self.iteration] > self.critical_value and self.iteration < max_iter:
-    #         self.__landweber_one_iteration()
-    #     self.early_stopping_index = self.iteration
-
-    # def landweber_gather_all(self, max_iter):
-    #     """Runs the algorithm till max_iter and gathers all relevant simulation data.
-    #     The early stopping index is recorded.
-
-    #     **Parameters**
-
-    #     *max_iter*: ``int`` The maximum number of iterations to perform.
-    #     """
-    #     self.landweber_to_early_stop(max_iter)
-    #     if max_iter > self.early_stopping_index:
-    #         self.landweber(max_iter - self.early_stopping_index)
-    #     if (self.true_signal is not None) and (self.true_noise_level is not None):
-    #         self.weak_balanced_oracle = (
-    #             (np.argmax(self.weak_bias2 <= self.weak_variance))
-    #             if np.any(self.weak_bias2 <= self.weak_variance)
-    #             else None
-    #         )
-    #         self.strong_balanced_oracle = (
-    #             (np.argmax(self.strong_bias2 <= self.strong_variance))
-    #             if np.any(self.strong_bias2 <= self.strong_variance)
-    #             else None
-    #         )
