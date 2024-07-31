@@ -7,14 +7,19 @@ class Test_landweber(unittest.TestCase):
 
     def setUp(self):
         self.design = np.diag([1, 2, 3, 4, 5])
-        self.true_signal = np.random.normal(0, 1, 5)
+        self.true_signal = np.random.normal(5, 1, 5)
+        print(self.true_signal)
         self.tol = 10**(-7)
         self.response = self.design @ self.true_signal
-        self.alg = es.Landweber(self.design, self.response, true_signal = self.true_signal, learning_rate = 0.1)
+        self.alg = es.Landweber(self.design, self.response, true_signal = self.true_signal, learning_rate = 0.01)
+        print(self.alg.iteration)
         
     def test_matrix_inversion(self):
-        landweber_estimate = self.alg.get_estimate(100)
-        self.assertAlmostEqual(landweber_estimate, self.true_signal, places=2)
+        landweber_estimate = self.alg.get_estimate(500)
+        print(self.alg.landweber_estimate_list)
+
+        print(self.alg.iteration)
+        self.assertAlmostEqual(np.sum((landweber_estimate - self.true_signal)**2), 0, places=2)
 
         # self.para_size = 50
         # self.iteration = 100

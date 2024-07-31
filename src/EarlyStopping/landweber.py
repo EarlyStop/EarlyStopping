@@ -186,7 +186,6 @@ class Landweber:
         return landweber_estimate
         
     def get_early_stopping_index(self):
-
         if self.early_stopping_index is None:
             warnings.warn("Early stopping iteration not found! Returning the maximum iteration.", category=UserWarning)
         return self.early_stopping_index if self.early_stopping_index is not None else self.iteration
