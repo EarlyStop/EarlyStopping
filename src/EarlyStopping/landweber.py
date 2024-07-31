@@ -26,7 +26,7 @@ class Landweber:
 
     *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{D}` )
 
-    *starting_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\hat{f}_0` )
+    *initial_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\hat{f}_0` )
 
     *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
 
@@ -36,13 +36,9 @@ class Landweber:
 
     *sample_size*: ``int``. Sample size of the linear model ( :math:`D \in \mathbb{N}` )
 
-    *para_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
+    *parameter_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
 
-    *iter*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \in \mathbb{N}` )
-
-    *early_stopping_index*: ``int``. Early Stopping iteration index. Is set to None if no early stopping is triggered. ( :math:`\hat{m}` )
-
-    *landweber_estimate*: ``array``. Landweber estimate at the current iteration for the data given in design ( :math:`\hat{f}_m` )
+    *iteration*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \in \mathbb{N}` )
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the Landweber estimator.
 
@@ -56,7 +52,7 @@ class Landweber:
     .. math::
         V_m = \\delta^2 \\mathrm{tr}((A^{\\top}A)^{-1}(I-(I-A^{\\top}A)^{m})^{2})
 
-    *strong_error*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
+    *strong_risk*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
     .. math::
         E[\\Vert \hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m
@@ -71,23 +67,19 @@ class Landweber:
     .. math::
        V_{m,A} = \\delta^2 \\mathrm{tr}((I-(I-A^{\\top}A)^{m})^{2})
 
-    *weak_error*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
+    *weak_risk*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
     .. math::
         E[\\Vert \hat{f}_{m} - f \\Vert_A^2] = B^{2}_{m,A} + V_{m,A}
 
-    *weak_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when :math:`B^{2}_{m,A} \leq V_{m,A}`.
-
-    *strong_balanced_oracle*: ``integer``. Only exists if true_signal was given. Gives the stopping iteration, when :math:`B^{2}_{m} \leq V_{m}`.
-
     **Methods**
 
     +--------------------------------------------+----------------------------------------------------------------------------------+
-    | landweber(``iter_num=1``)                  |Performs a specified number of iterations of the Landweber algorithm.             |
+    | iterate(``number_of_iterations=1``)        |Performs a specified number of iterations of the Landweber algorithm.             |
     +--------------------------------------------+----------------------------------------------------------------------------------+
     | landweber_to_early_stop(``max_iter``)      |Applies early stopping to the Landweber iterative procedure.                      |
     +--------------------------------------------+----------------------------------------------------------------------------------+
-    | landweber_gather_all(``max_iter``)         |Runs the algorithm till max_iter is reached. The early_stopping_index is recorded.|
+    | get_estimate(``iteration``)                |Returns the landweber estimator at iteration.                                     |
     +--------------------------------------------+----------------------------------------------------------------------------------+
     """
 
@@ -96,62 +88,45 @@ class Landweber:
         design,
         response,
         learning_rate=1,
-        critical_value=None,
-        starting_value=None,
+        initial_value=None,
         true_signal=None,
         true_noise_level=None,
     ):
 
-        # self.design = sparse.csr_matrix(design)
-        # self.response = np.transpose(sparse.csr_matrix(response))
         self.design = design
         self.response = response
         self.learning_rate = learning_rate
-        self.starting_value = starting_value
+        self.initial_value = initial_value
         self.true_signal = true_signal
-        self.true_noise_level = true_noise_level  # sigma
-        self.critical_value = critical_value
+        self.true_noise_level = true_noise_level
 
         # Parameters of the model
         self.sample_size = np.shape(design)[0]
         self.parameter_size = np.shape(design)[1]
 
         # Determine starting value for the procedure
-        if starting_value is None:
-            # self.starting_value = np.transpose(sparse.csr_matrix(np.zeros(self.parameter_size)))
-            self.starting_value = np.zeros(self.parameter_size)
+        if initial_value is None:
+            warnings.warn("No initial_value is given, using zero by default.", category=UserWarning)
+            self.initial_value = np.zeros(self.parameter_size)
         else:
-            self.starting_value = starting_value
+            if initial_value.size != self.parameter_size:
+                ValueError('The dimension of the initial_value should match paramter size!')
+            self.initial_value = initial_value
 
         # Estimation quantities
         self.iteration = 0
-        self.landweber_estimate = self.starting_value
-        # Collect coefficients:
-        self.landweber_estimate_collect = []
+        self.landweber_estimate = self.initial_value
 
-        self.early_stopping_index = None
+        # Collect coefficients:
+        self.landweber_estimate_list = [self.initial_value]
 
         self.gram_matrix = np.transpose(self.design) @ self.design
 
-        if self.critical_value is None and self.true_noise_level is None:
-            # maximum likelihood estimator
-            # least_squares_estimator = np.linalg.solve(self.congruency_matrix, np.transpose(self.design) @ self.response)
-            sparse_least_squares_estimator, istop = sparse.linalg.lsqr(
-                self.gram_matrix, np.transpose(self.design) @ self.response
-            )[:2]
-            noise_level_estimate = (
-                np.sum((self.response - self.design @ sparse_least_squares_estimator) ** 2) / self.sample_size
-            )
-            self.critical_value = noise_level_estimate * self.sample_size
-
-        elif self.critical_value is None and self.true_noise_level is not None:
-            # if the true noise level is given, it does not need to be estimated
-            self.critical_value = self.true_noise_level**2 * self.sample_size
-
         # Residual quantities
-        self.__residual_vector = self.response - self.design @ self.starting_value
+        self.__residual_vector = self.response - self.design @ self.initial_value
         self.residuals = np.array([np.sum(self.__residual_vector**2)])
 
+        #  Initialilze theoretical quantities
         if (self.true_signal is not None) and (self.true_noise_level is not None):
             # initialize matrices required for computing the strong/weak bias and variance
             self.identity = sparse.dia_matrix(np.eye(self.parameter_size))
@@ -168,34 +143,48 @@ class Landweber:
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
 
             # initialize strong/weak bias and variance
-            self.expectation_estimator = self.starting_value
-            self.strong_bias2 = np.array([np.sum((self.true_signal - self.starting_value) ** 2)])
-            self.weak_bias2 = np.array([np.sum((self.design @ (self.true_signal - self.starting_value)) ** 2)])
+            self.expectation_estimator = self.initial_value
+            self.strong_bias2 = np.array([np.sum((self.true_signal - self.initial_value) ** 2)])
+            self.weak_bias2 = np.array([np.sum((self.design @ (self.true_signal - self.initial_value)) ** 2)])
 
             self.strong_variance = np.array([0])
             self.weak_variance = np.array([0])
 
-            self.strong_error = self.strong_bias2 + self.strong_variance
-            self.weak_error = self.weak_bias2 + self.weak_variance
+            self.strong_risk = self.strong_bias2 + self.strong_variance
+            self.weak_risk = self.weak_bias2 + self.weak_variance
 
-            self.strong_empirical_error = np.array([np.sum((self.starting_value - self.true_signal) ** 2)])
-            self.weak_empirical_error = np.array(
-                [np.sum((self.design @ (self.starting_value - self.true_signal)) ** 2)]
+            self.strong_empirical_risk = np.array([np.sum((self.initial_value - self.true_signal) ** 2)])
+            self.weak_empricial_risk = np.array(
+                [np.sum((self.design @ (self.initial_value - self.true_signal)) ** 2)]
             )
 
-            self.weak_balanced_oracle = 0
-            self.strong_balanced_oracle = 0
-
-    def iterate(self, iter_num=1):
-        """Performs iter_num iterations of the Landweber algorithm
+    def iterate(self, number_of_iterations):
+        """Performs number_of_iterations iterations of the Landweber algorithm
 
         **Parameters**
 
-        *iter_num*: ``int, default=1``. The number of iterations to perform.
+        *number_of_iterations*: ``int``. The number of iterations to perform.
         """
-        for _ in range(iter_num):
+        for _ in range(number_of_iterations):
             self.__landweber_one_iteration()
 
+    def get_estimate(self, iteration):
+        """Returns the Landweber estimate at iteration
+
+        **Parameters**
+
+        *iteration*: ``int``. The iteration at which the Landweber estimate is requested.
+
+        **Returns**
+
+        *landweber_estimate*: ``ndarray``. The Landweber estimate at iteration.
+        """
+        if iteration > self.iteration:
+            self.iterate(iteration - self.iteration)
+
+        landweber_estimate = self.landweber_estimate_list[iteration]
+        return landweber_estimate
+        
     def get_early_stopping_index(self):
 
         if self.early_stopping_index is None:
@@ -271,36 +260,29 @@ class Landweber:
 
         self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
-    def __update_strong_empirical_error(self):
+    def __update_strong_empirical_risk(self):
         """Update the strong empirical error"""
-        strong_empirical_error = np.sum((self.landweber_estimate - self.true_signal) ** 2)
-        self.strong_empirical_error = np.append(self.strong_empirical_error, strong_empirical_error)
+        strong_empirical_risk = np.sum((self.landweber_estimate - self.true_signal) ** 2)
+        self.strong_empirical_risk = np.append(self.strong_empirical_risk, strong_empirical_risk)
 
-    def __update_weak_empirical_error(self):
+    def __update_weak_empricial_risk(self):
         """Update the weak empirical error"""
-        weak_empirical_error = np.sum((self.design @ (self.landweber_estimate - self.true_signal)) ** 2)
-        self.weak_empirical_error = np.append(self.weak_empirical_error, weak_empirical_error)
+        weak_empricial_risk = np.sum((self.design @ (self.landweber_estimate - self.true_signal)) ** 2)
+        self.weak_empricial_risk = np.append(self.weak_empricial_risk, weak_empricial_risk)
 
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
-        # print(f'The current iteration is {self.iteration}.')
+
         self.landweber_estimate = self.landweber_estimate + self.learning_rate * np.transpose(self.design) @ (
             self.response - self.design @ self.landweber_estimate
         )
-        # Collect coefficients:
-        self.landweber_estimate_collect.append(self.landweber_estimate)
-
-        # self.landweber_estimate = (self.landweber_estimate
-        #     + self.learning_rate * np.transpose(self.design)
-        #     * (self.response - self.design * self.landweber_estimate))
+        # Collect coefficients
+        self.landweber_estimate_list.append(self.landweber_estimate)
 
         # Update estimation quantities
         self.__residual_vector = self.response - self.design @ self.landweber_estimate
         new_residuals = np.sum(self.__residual_vector**2)
         self.residuals = np.append(self.residuals, new_residuals)
-
-        if (self.early_stopping_index is None) and (self.residuals[self.iteration] <= self.critical_value):
-            self.early_stopping_index = self.iteration
 
         self.iteration = self.iteration + 1
 
@@ -313,20 +295,8 @@ class Landweber:
             self.__update_iterative_matrices()
 
             # update MSE and weak MSE
-            self.strong_error = self.strong_bias2 + self.strong_variance
-            self.weak_error = self.weak_bias2 + self.weak_variance
+            self.strong_risk = self.strong_bias2 + self.strong_variance
+            self.weak_risk = self.weak_bias2 + self.weak_variance
 
-            self.__update_strong_empirical_error()
-            self.__update_weak_empirical_error()
-
-            self.weak_balanced_oracle = (
-                (np.argmax(self.weak_bias2 <= self.weak_variance))
-                if np.any(self.weak_bias2 <= self.weak_variance)
-                else None
-            )
-
-            self.strong_balanced_oracle = (
-                (np.argmax(self.strong_bias2 <= self.strong_variance))
-                if np.any(self.strong_bias2 <= self.strong_variance)
-                else None
-            )
+            self.__update_strong_empirical_risk()
+            self.__update_weak_empricial_risk()
