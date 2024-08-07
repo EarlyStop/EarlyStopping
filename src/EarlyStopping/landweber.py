@@ -74,13 +74,19 @@ class Landweber:
 
     **Methods**
 
-    +--------------------------------------------+----------------------------------------------------------------------------------+
-    | iterate(``number_of_iterations=1``)        |Performs a specified number of iterations of the Landweber algorithm.             |
-    +--------------------------------------------+----------------------------------------------------------------------------------+
-    | landweber_to_early_stop(``max_iter``)      |Applies early stopping to the Landweber iterative procedure.                      |
-    +--------------------------------------------+----------------------------------------------------------------------------------+
-    | get_estimate(``iteration``)                |Returns the landweber estimator at iteration.                                     |
-    +--------------------------------------------+----------------------------------------------------------------------------------+
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | iterate(``number_of_iterations=1``)                     | Performs a specified number of iterations of the Landweber algorithm.    |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | landweber_to_early_stop(``max_iter``)                   | Applies early stopping to the Landweber iterative procedure.             |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_estimate(``iteration``)                             | Returns the landweber estimator at iteration.                            |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_discrepancy_stop(``critical_value, max_iteration``) | Returns the early stopping index according to the discrepancy principle. |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_weak_balanced_oracle(``max_iteration``)             | Returns the weak balanced oracle if found up to max_iteration.           |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_strong_balanced_oracle(``max_iteration``)           | Returns the strong balanced oracle if found up to max_iteration.         |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
     """
 
     def __init__(
@@ -110,7 +116,7 @@ class Landweber:
             self.initial_value = np.zeros(self.parameter_size)
         else:
             if initial_value.size != self.parameter_size:
-                ValueError('The dimension of the initial_value should match paramter size!')
+                ValueError("The dimension of the initial_value should match paramter size!")
             self.initial_value = initial_value
 
         # Estimation quantities
@@ -154,9 +160,7 @@ class Landweber:
             self.weak_risk = self.weak_bias2 + self.weak_variance
 
             self.strong_empirical_risk = np.array([np.sum((self.initial_value - self.true_signal) ** 2)])
-            self.weak_empricial_risk = np.array(
-                [np.sum((self.design @ (self.initial_value - self.true_signal)) ** 2)]
-            )
+            self.weak_empricial_risk = np.array([np.sum((self.design @ (self.initial_value - self.true_signal)) ** 2)])
 
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the Landweber algorithm
@@ -184,11 +188,98 @@ class Landweber:
 
         landweber_estimate = self.landweber_estimate_list[iteration]
         return landweber_estimate
-        
-    def get_early_stopping_index(self):
-        if self.early_stopping_index is None:
-            warnings.warn("Early stopping iteration not found! Returning the maximum iteration.", category=UserWarning)
-        return self.early_stopping_index if self.early_stopping_index is not None else self.iteration
+
+    def get_discrepancy_stop(self, critical_value, max_iteration):
+        """Returns early stopping index based on discrepancy principle up to max_iteration
+
+        **Parameters**
+
+        *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
+        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
+        where :math: `\\kappa` is the critical value.
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.
+        (None is returned if the stopping index is not found.)
+        """
+        if self.residuals[self.iteration] <= critical_value:
+
+            # argmax takes the first instance of True in the true-false array
+            early_stopping_index = np.argmax(self.residuals <= critical_value)
+            return early_stopping_index
+
+        if self.residuals[self.iteration] > critical_value:
+            while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
+                self.__landweber_one_iteration()
+
+        if self.residuals[self.iteration] <= critical_value:
+            early_stopping_index = self.iteration
+            return early_stopping_index
+        else:
+            warnings.warn("Early stopping index not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
+
+    def get_weak_balanced_oracle(self, max_iteration):
+        """Returns weak balanced oracle if found up to max_iteration.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *weak_balanced_oracle*: ``int``. The first iteration at which the weak bias is smaller than the weak variance.
+        """
+        if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
+            # argmax takes the first instance of True in the true-false array
+            weak_balanced_oracle = np.argmax(self.weak_bias2 <= self.weak_variance)
+            return weak_balanced_oracle
+
+        if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
+            while (
+                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
+            ):
+                self.__landweber_one_iteration()
+
+        if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
+            weak_balanced_oracle = self.iteration
+            return weak_balanced_oracle
+        else:
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
+
+    def get_strong_balanced_oracle(self, max_iteration):
+        """Returns strong balanced oracle if found up to max_iteration.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller than the strong variance.
+        """
+        if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
+            # argmax takes the first instance of True in the true-false array
+            strong_balanced_oracle = np.argmax(self.strong_bias2 <= self.strong_variance)
+            return strong_balanced_oracle
+
+        if self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]:
+            while (
+                self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]
+                and self.iteration <= max_iteration
+            ):
+                self.__landweber_one_iteration()
+
+        if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
+            strong_balanced_oracle = self.iteration
+            return strong_balanced_oracle
+        else:
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
 
     def __update_iterative_matrices(self):
         """Update iterative quantities
