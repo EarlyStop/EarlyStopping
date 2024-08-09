@@ -34,7 +34,7 @@ np.random.seed(42)
 # Set parameters
 sample_size = 1000
 parameter_size = sample_size
-max_iter = sample_size
+max_iteration = sample_size
 noise_level = 0.01
 critical_value = sample_size * (noise_level**2)
 
@@ -144,49 +144,27 @@ for i in range(NUMBER_RUNS):
     )
 
     # Gather all estimates for the Conjugate Gradients models
-    models_supersmooth_cg.gather_all(max_iter)
-    models_smooth_cg.gather_all(max_iter)
-    models_rough_cg.gather_all(max_iter)
+    models_supersmooth_cg.gather_all(max_iteration)
+    models_smooth_cg.gather_all(max_iteration)
+    models_rough_cg.gather_all(max_iteration)
 
     # Iterate Landweber models for max_iter iterations
-    models_supersmooth_landweber.iterate(max_iter)
-    models_smooth_landweber.iterate(max_iter)
-    models_rough_landweber.iterate(max_iter)
+    models_supersmooth_landweber.iterate(max_iteration)
+    models_smooth_landweber.iterate(max_iteration)
+    models_rough_landweber.iterate(max_iteration)
 
-    # Calculate the strong empirical errors for Landweber estimates of the supersmooth signal
-    supersmooth_strong_empirical_error_landweber[i] = np.sum(
-        (
-            (
-                models_supersmooth_landweber.landweber_estimate_collect[
-                    models_supersmooth_landweber.early_stopping_index
-                ]
-                - models_supersmooth_landweber.true_signal
-            )
-        )
-        ** 2
-    )
 
-    # Calculate the strong empirical errors for Landweber estimates of the smooth signal
-    smooth_strong_empirical_error_landweber[i] = np.sum(
-        (
-            (
-                models_smooth_landweber.landweber_estimate_collect[models_smooth_landweber.early_stopping_index]
-                - models_smooth_landweber.true_signal
-            )
-        )
-        ** 2
-    )
+    # Get the stopping index for the Landweber estimates
+    supersmooth_stopping_index = models_supersmooth_landweber.get_discrepancy_stop(sample_size*(noise_level**2), max_iteration)
+    smooth_stopping_index = models_smooth_landweber.get_discrepancy_stop(sample_size * (noise_level ** 2), max_iteration)
+    rough_stopping_index = models_rough_landweber.get_discrepancy_stop(sample_size * (noise_level ** 2), max_iteration)
 
-    # Calculate the strong empirical errors for Landweber estimates of the rough signal
-    rough_strong_empirical_error_landweber[i] = np.sum(
-        (
-            (
-                models_rough_landweber.landweber_estimate_collect[models_rough_landweber.early_stopping_index]
-                - models_rough_landweber.true_signal
-            )
-        )
-        ** 2
-    )
+
+    # Calculate the strong empirical errors for Landweber estimates of the different signals
+    supersmooth_strong_empirical_error_landweber[i] = models_supersmooth_landweber.strong_empirical_risk[supersmooth_stopping_index]
+    smooth_strong_empirical_error_landweber[i] = models_smooth_landweber.strong_empirical_risk[smooth_stopping_index]
+    rough_strong_empirical_error_landweber[i] = models_rough_landweber.strong_empirical_risk[rough_stopping_index]
+
 
     # Get the strong empirical errors for Conjugate Gradients estimates of the supersmooth signal
     supersmooth_strong_empirical_error_cg[i] = models_supersmooth_cg.strong_empirical_errors[
@@ -202,43 +180,11 @@ for i in range(NUMBER_RUNS):
     rough_strong_empirical_error_cg[i] = models_rough_cg.strong_empirical_errors[models_rough_cg.early_stopping_index]
 
     # WEAK EMPIRICAL ERRORS
-    # Calculate the weak empirical errors for Landweber estimates of the supersmooth signal
-    supersmooth_weak_empirical_error_landweber[i] = np.sum(
-        (
-            design
-            @ (
-                models_supersmooth_landweber.landweber_estimate_collect[
-                    models_supersmooth_landweber.early_stopping_index
-                ]
-                - models_supersmooth_landweber.true_signal
-            )
-        )
-        ** 2
-    )
 
-    #  Calculate the weak empirical errors for Landweber estimates of the smooth signal
-    smooth_weak_empirical_error_landweber[i] = np.sum(
-        (
-            design
-            @ (
-                models_smooth_landweber.landweber_estimate_collect[models_smooth_landweber.early_stopping_index]
-                - models_smooth_landweber.true_signal
-            )
-        )
-        ** 2
-    )
-
-    # Calculate the weak empirical errors for Landweber estimates of the rough signal
-    rough_weak_empirical_error_landweber[i] = np.sum(
-        (
-            design
-            @ (
-                models_rough_landweber.landweber_estimate_collect[models_rough_landweber.early_stopping_index]
-                - models_rough_landweber.true_signal
-            )
-        )
-        ** 2
-    )
+    # Calculate the weak empirical errors for Landweber estimates of the different signals
+    supersmooth_weak_empirical_error_landweber[i] = models_supersmooth_landweber.weak_empirical_risk[supersmooth_stopping_index]
+    smooth_weak_empirical_error_landweber[i] = models_smooth_landweber.weak_empirical_risk[smooth_stopping_index]
+    rough_weak_empirical_error_landweber[i] = models_rough_landweber.weak_empirical_risk[rough_stopping_index]
 
     # Get the weak empirical errors for Conjugate Gradients estimates of the supersmooth signal
     supersmooth_weak_empirical_error_cg[i] = models_supersmooth_cg.weak_empirical_errors[
@@ -372,7 +318,7 @@ design_times_signal = design_gravity @ signal_gravity
 
 # Set parameters
 parameter_size = sample_size_gravity
-max_iter = 10000
+max_iteration = 10000
 noise_level = 10 ** (-2)
 
 # Specify number of Monte Carlo runs
@@ -394,7 +340,7 @@ count_landweber_fails = 0
 
 for i in range(NUMBER_RUNS):
     # Create models for the gravity signal using Conjugate Gradients
-    models_gravity_cg = es.ConjugateGradients(
+    model_gravity_cg = es.ConjugateGradients(
         design_gravity,
         observation_gravity[:, i],
         true_signal=signal_gravity,
@@ -404,7 +350,7 @@ for i in range(NUMBER_RUNS):
     )
 
     #  Create models for the gravity signal using Landweber
-    models_gravity_landweber = es.Landweber(
+    model_gravity_landweber = es.Landweber(
         design_gravity,
         observation_gravity[:, i],
         true_signal=signal_gravity,
@@ -413,43 +359,26 @@ for i in range(NUMBER_RUNS):
     )
 
     # Gather all estimates for the Conjugate Gradients models
-    models_gravity_cg.gather_all(max_iter)
+    model_gravity_cg.gather_all(max_iteration)
 
     # Iterate Landweber models for max_iter iterations
-    models_gravity_landweber.iterate(max_iter)
+    model_gravity_landweber.iterate(max_iteration)
 
-    if models_gravity_landweber.early_stopping_index == None:
+    gravity_stopping_index = model_gravity_landweber.get_discrepancy_stop(sample_size_gravity * (noise_level ** 2), max_iteration)
+
+    if gravity_stopping_index  == None:
         count_landweber_fails += 1
         continue
 
     # Get the strong empirical errors for Conjugate Gradients estimates of the gravity signal
-    gravity_strong_empirical_error_cg[i] = models_gravity_cg.strong_empirical_errors[
-        models_gravity_cg.early_stopping_index
-    ]
+    gravity_strong_empirical_error_cg[i] = model_gravity_cg.strong_empirical_errors[model_gravity_cg.early_stopping_index]
+    gravity_weak_empirical_error_cg[i] = model_gravity_cg.weak_empirical_errors[model_gravity_cg.early_stopping_index]
 
-    # Get the weak empirical errors for Conjugate Gradients estimates of the gravity signal
-    gravity_weak_empirical_error_cg[i] = models_gravity_cg.weak_empirical_errors[models_gravity_cg.early_stopping_index]
+    # Calculate the strong empirical errors for Landweber estimates of the gravity signal
+    gravity_weak_empirical_error_landweber[i] = model_gravity_landweber.weak_empirical_risk[gravity_stopping_index]
+    gravity_strong_empirical_error_landweber[i] = model_gravity_landweber.strong_empirical_risk[gravity_stopping_index]
 
-    gravity_weak_empirical_error_landweber[i] = np.sum(
-        (
-            design_gravity
-            @ (
-                models_gravity_landweber.landweber_estimate_collect[models_gravity_landweber.early_stopping_index]
-                - models_gravity_landweber.true_signal
-            )
-        )
-        ** 2
-    )
 
-    gravity_strong_empirical_error_landweber[i] = np.sum(
-        (
-            (
-                models_gravity_landweber.landweber_estimate_collect[models_gravity_landweber.early_stopping_index]
-                - models_gravity_landweber.true_signal
-            )
-        )
-        ** 2
-    )
 
 print(f"Landweber failed {count_landweber_fails} attempts out of {NUMBER_RUNS}.")
 

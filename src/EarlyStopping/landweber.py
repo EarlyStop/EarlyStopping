@@ -160,7 +160,7 @@ class Landweber:
             self.weak_risk = self.weak_bias2 + self.weak_variance
 
             self.strong_empirical_risk = np.array([np.sum((self.initial_value - self.true_signal) ** 2)])
-            self.weak_empricial_risk = np.array([np.sum((self.design @ (self.initial_value - self.true_signal)) ** 2)])
+            self.weak_empirical_risk = np.array([np.sum((self.design @ (self.initial_value - self.true_signal)) ** 2)])
 
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the Landweber algorithm
@@ -355,10 +355,10 @@ class Landweber:
         strong_empirical_risk = np.sum((self.landweber_estimate - self.true_signal) ** 2)
         self.strong_empirical_risk = np.append(self.strong_empirical_risk, strong_empirical_risk)
 
-    def __update_weak_empricial_risk(self):
+    def __update_weak_empirical_risk(self):
         """Update the weak empirical error"""
-        weak_empricial_risk = np.sum((self.design @ (self.landweber_estimate - self.true_signal)) ** 2)
-        self.weak_empricial_risk = np.append(self.weak_empricial_risk, weak_empricial_risk)
+        weak_empirical_risk = np.sum((self.design @ (self.landweber_estimate - self.true_signal)) ** 2)
+        self.weak_empirical_risk = np.append(self.weak_empirical_risk, weak_empirical_risk)
 
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
@@ -389,4 +389,4 @@ class Landweber:
             self.weak_risk = self.weak_bias2 + self.weak_variance
 
             self.__update_strong_empirical_risk()
-            self.__update_weak_empricial_risk()
+            self.__update_weak_empirical_risk()

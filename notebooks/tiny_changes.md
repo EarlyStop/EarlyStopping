@@ -4,6 +4,7 @@
 - [ ] Add warning message when oracle iteration is not found
 - [ ] Update docu landweber
 - [ ] Add a proper code documentation for the simmulation wrapper
+- [ ] change strong_empirical_errors to strong_empirical_risk in CG (Laura)
 
 
 # Current goal:
