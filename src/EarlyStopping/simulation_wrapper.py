@@ -298,6 +298,7 @@ class SimulationWrapper:
         )
 
         model_landweber.iterate(self.max_iterations)
+        stopping_index_landweber = model_landweber.get_discrepancy_stop(self.sample_size*(self.true_noise_level**2), self.max_iterations)
 
         converges = True
         for k in range((self.max_iterations - 1)):
@@ -307,7 +308,10 @@ class SimulationWrapper:
         if converges is False:
             info(f"The estimator does not converge for learning rate: {self.learning_rate_candidates[m]}", color="red")
 
-        return converges, model_landweber.strong_empirical_error[model_landweber.get_early_stopping_index()]
+        if stopping_index_landweber==None:
+            stopping_index_landweber = self.max_iterations
+
+        return converges, model_landweber.strong_empirical_risk[stopping_index_landweber]
 
     def monte_carlo_wrapper(self, m):
         info(f"Monte Carlo run {m + 1}/{self.monte_carlo_runs}.")
@@ -330,29 +334,26 @@ class SimulationWrapper:
 
         landweber_strong_bias = model_landweber.strong_bias2
         landweber_strong_variance = model_landweber.strong_variance
-        landweber_strong_error = model_landweber.strong_error
+        landweber_strong_risk = model_landweber.strong_risk
         landweber_weak_bias = model_landweber.weak_bias2
         landweber_weak_variance = model_landweber.weak_variance
-        landweber_weak_error = model_landweber.weak_error
+        landweber_weak_risk = model_landweber.weak_risk
         landweber_residuals = model_landweber.residuals
 
+        stopping_index_landweber = model_landweber.get_discrepancy_stop(self.sample_size*(self.true_noise_level**2), self.max_iterations)
 
-        landweber_strong_empirical_error_es = model_landweber.strong_empirical_error[
-            model_landweber.get_early_stopping_index()
-        ]
+        landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
         conjugate_gradients_strong_empirical_error_es = model_conjugate_gradients.strong_empirical_errors[
             model_conjugate_gradients.early_stopping_index
         ]
 
-        landweber_weak_empirical_error_es = model_landweber.weak_empirical_error[
-            model_landweber.get_early_stopping_index()
-        ]
+        landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
         conjugate_gradients_weak_empirical_error_es = model_conjugate_gradients.weak_empirical_errors[
             model_conjugate_gradients.early_stopping_index
         ]
 
-        landweber_weak_relative_efficiency = np.sqrt(np.min(model_landweber.weak_empirical_error)/landweber_weak_empirical_error_es)
-        landweber_strong_relative_efficiency = np.sqrt(np.min(model_landweber.strong_empirical_error)/landweber_strong_empirical_error_es)
+        landweber_weak_relative_efficiency = np.sqrt(np.min(model_landweber.weak_empirical_risk)/landweber_weak_empirical_risk_es)
+        landweber_strong_relative_efficiency = np.sqrt(np.min(model_landweber.strong_empirical_risk)/landweber_strong_empirical_risk_es)
 
         conjugate_gradients_weak_relative_efficiency  = np.sqrt(
             np.min(model_conjugate_gradients.weak_empirical_errors) / conjugate_gradients_weak_empirical_error_es)
@@ -360,12 +361,12 @@ class SimulationWrapper:
             np.min(model_conjugate_gradients.strong_empirical_errors) / conjugate_gradients_strong_empirical_error_es)
 
         return (
-            np.array([landweber_strong_empirical_error_es, conjugate_gradients_strong_empirical_error_es]),
-            np.array([landweber_weak_empirical_error_es, conjugate_gradients_weak_empirical_error_es]),
+            np.array([landweber_strong_empirical_risk_es, conjugate_gradients_strong_empirical_error_es]),
+            np.array([landweber_weak_empirical_risk_es, conjugate_gradients_weak_empirical_error_es]),
             np.array([landweber_weak_relative_efficiency, conjugate_gradients_weak_relative_efficiency]),
             np.array([landweber_strong_relative_efficiency, conjugate_gradients_strong_relative_efficiency]),
-            landweber_strong_bias, landweber_strong_variance, landweber_strong_error, landweber_weak_bias,
-            landweber_weak_variance, landweber_weak_error, landweber_residuals
+            landweber_strong_bias, landweber_strong_variance, landweber_strong_risk, landweber_weak_bias,
+            landweber_weak_variance, landweber_weak_risk, landweber_residuals
         )
 
     def __visualise_bias_variance_tradeoff(self,

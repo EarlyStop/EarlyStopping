@@ -9,6 +9,7 @@ from scipy.sparse import dia_matrix
 
 importlib.reload(es)
 
+
 design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=1000, type = 'supersmooth')
 #design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=100)
 #design, response_noiseless, true_signal = es.SimulationData.heat(sample_size=100)
