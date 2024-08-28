@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 from scipy import sparse
 from scipy.sparse.linalg import svds
+import warnings
 
 class TruncatedSVD:
     """
@@ -15,6 +16,10 @@ class TruncatedSVD:
     *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
 
     *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` )
+
+    *diagonal*: ``bool, default = False'' The user may set this to true if the
+    design matrix is diagonal with strictly positive singular values to avoid
+    unnecessary computation in the diagonal sequence space model.
 
     **Attributes**
 
@@ -40,12 +45,14 @@ class TruncatedSVD:
         response,
         true_signal = None,
         true_noise_level = None,
+        diagonal = False
     ):
 
         self.design = design
         self.response = response
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
+        self.diagonal = diagonal
 
         # Parameters of the model
         self.sample_size = np.shape(self.design)[0]
@@ -71,8 +78,12 @@ class TruncatedSVD:
 
         *number_of_iterations*: ``int``. The number of iterations to perform.
         """
-        for _ in range(number_of_iterations):
-            self.__truncated_SVD_one_iteration()
+        if not self.diagonal: 
+            for _ in range(number_of_iterations):
+                self.__truncated_SVD_one_iteration()
+        else:
+            for _ in range(number_of_iterations):
+                self.__truncated_SVD_one_iteration_diagonal()
 
     def get_estimate(self, iteration):
         """Returns the truncated SVD estimate at iteration.
@@ -90,7 +101,7 @@ class TruncatedSVD:
 
         truncated_svd_estimate = self.truncated_svd_estimate_list[iteration]
         return truncated_svd_estimate
-    
+
     def __truncated_SVD_one_iteration(self):
         # Get next singular triplet
         u, s, vh = svds(self.reduced_design, k=1)
@@ -111,6 +122,19 @@ class TruncatedSVD:
         # Reduce design by one eigen triplet 
         self.reduced_design = self.reduced_design - s * u @ vh
         
+        self.iteration += 1
+
+    def __truncated_SVD_one_iteration_diagonal(self):
+        s = self.design[self.iteration, self.iteration]
+
+        standard_basis_vector = np.zeros(self.parameter_size)
+        standard_basis_vector[self.iteration] = 1.0
+        new_truncated_svd_estimate = self.truncated_svd_estimate_list[self.iteration] + self.response[self.iteration] / s * standard_basis_vector
+        self.truncated_svd_estimate_list.append(new_truncated_svd_estimate) 
+
+        new_residual = self.residuals[self.iteration] - self.response[self.iteration]**2
+        self.residuals = np.append(self.residuals, new_residual)
+
         self.iteration += 1
 
     def get_discrepancy_stop(self, critical_value, max_iteration):
@@ -137,7 +161,7 @@ class TruncatedSVD:
 
         if self.residuals[self.iteration] > critical_value:
             while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
-                self.__truncated_SVD_one_iteration()
+                self.iterate(1)
 
         if self.residuals[self.iteration] <= critical_value:
             early_stopping_index = self.iteration
