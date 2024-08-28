@@ -113,15 +113,35 @@ class TruncatedSVD:
         
         self.iteration += 1
 
-    def discrepancy_stop(self, critical_value, max_iteration):
-        """ Early stopping for the SVD procedure based on the discrepancy principle. Procedure is
-            stopped when the residuals go below the critical value or max_iteration is reached.
+    def get_discrepancy_stop(self, critical_value, max_iteration):
+        """Returns early stopping index based on discrepancy principle up to max_iteration
 
-            **Parameters**
+        **Parameters**
 
-            *critical_value*: ``float``. Critical value for the early stopping procedure.
+        *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
+        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
+        where :math: `\\kappa` is the critical value.
 
-            *max_iteration*: ``int``. Maximal number of iterations to be performed.
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.
+        (None is returned if the stopping index is not found.)
         """
-        while self.residuals[self.iteration] > critical_value and self.iteration < max_iteration:
-            self.__truncated_SVD_one_iteration()
+        if self.residuals[self.iteration] <= critical_value:
+
+            # argmax takes the first instance of True in the true-false array
+            early_stopping_index = np.argmax(self.residuals <= critical_value)
+            return early_stopping_index
+
+        if self.residuals[self.iteration] > critical_value:
+            while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
+                self.__truncated_SVD_one_iteration()
+
+        if self.residuals[self.iteration] <= critical_value:
+            early_stopping_index = self.iteration
+            return early_stopping_index
+        else:
+            warnings.warn("Early stopping index not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
