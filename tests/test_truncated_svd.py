@@ -16,7 +16,8 @@ class TestTruncatedSVD(unittest.TestCase):
         noiseless_response = design @ signal
         alg = es.TruncatedSVD(design, noiseless_response)
         alg.iterate(self.sample_size)
-        self.assertAlmostEqual(np.mean(alg.truncated_svd_estimate - signal), 0, places=5)
+        truncated_svd_estimate = alg.get_estimate(alg.iteration)
+        self.assertAlmostEqual(np.mean(truncated_svd_estimate - signal), 0, places=5)
 
     def test_inversion_without_noise(self):
         design = np.random.normal(0, 1, 
@@ -25,7 +26,8 @@ class TestTruncatedSVD(unittest.TestCase):
         noiseless_response = design @ signal
         alg = es.TruncatedSVD(design, noiseless_response)
         alg.iterate(self.sample_size)
-        self.assertAlmostEqual(np.mean(alg.truncated_svd_estimate - signal), 0, places=5)
+        truncated_svd_estimate = alg.get_estimate(alg.iteration)
+        self.assertAlmostEqual(np.mean(truncated_svd_estimate - signal), 0, places=5)
 
     def test_residuals_go_to_zero(self):
         design = np.random.normal(0, 1, 
