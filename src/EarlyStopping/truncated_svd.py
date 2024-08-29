@@ -17,9 +17,7 @@ class TruncatedSVD:
 
     *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` )
 
-    *diagonal*: ``bool, default = False'' The user may set this to true if the
-    design matrix is diagonal with strictly positive singular values to avoid
-    unnecessary computation in the diagonal sequence space model.
+    *diagonal*: ``bool, default = False'' The user may set this to true if the design matrix is diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal sequence space model.
 
     **Attributes**
 
@@ -31,12 +29,18 @@ class TruncatedSVD:
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the estimator.
 
+    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current iteration.
+
+    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current iteration.
+
     **Methods**
 
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | iterate(``number_of_iterations=1``)                     | Performs a specified number of iterations of the Landweber algorithm.    |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | get_estimate(``iteration``)                             | Returns the truncated SVD estimator at iteration.                        |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_discrepancy_stop(``critical_value, max_iteration``) | Returns the early stopping index according to the discrepancy principle. |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
 
     """
@@ -71,6 +75,13 @@ class TruncatedSVD:
         self.residuals = np.array([np.sum(self.response**2)])
         self.truncated_svd_estimate_list = [np.zeros(self.parameter_size)]
 
+        # Initialize theoretical quantities
+        if self.true_signal is not None:
+            self.weak_bias2 = np.array([np.sum((self.design @ self.true_signal)**2)])
+            self.weak_variance = np.array([0])
+            self.strong_bias2 = np.array([np.sum(self.true_signal**2)])
+            self.strong_variance = np.array([0])
+
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the algorithm
 
@@ -94,13 +105,111 @@ class TruncatedSVD:
 
         **Returns**
 
-        *truncated_svd_estimate*: ``ndarray``. The truncated svd estimate at iteration.
+        *truncated_svd_estimate*: ``ndarray``. The truncated svd estimate at
+        iteration.
         """
         if iteration > self.iteration:
             self.iterate(iteration - self.iteration)
 
         truncated_svd_estimate = self.truncated_svd_estimate_list[iteration]
         return truncated_svd_estimate
+
+    def get_discrepancy_stop(self, critical_value, max_iteration):
+        """Returns early stopping index based on discrepancy principle up to
+        max_iteration.
+
+        **Parameters**
+
+        *critical_value*: ``float``. The critical value for the discrepancy
+        principle. The algorithm stops when :math: `\\Vert Y - A \hat{f}^{(m)}
+        \\Vert^{2} \leq \\kappa^{2},` where :math: `\\kappa` is the critical
+        value.
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be
+        considered.
+
+        **Returns**
+
+        *early_stopping_index*: ``int``. The first iteration at which the
+        discrepancy principle is satisfied.  (None is returned if the stopping
+        index is not found.)
+        """
+        if self.residuals[self.iteration] <= critical_value:
+
+            # argmax takes the first instance of True in the true-false array
+            early_stopping_index = np.argmax(self.residuals <= critical_value)
+            return early_stopping_index
+
+        if self.residuals[self.iteration] > critical_value:
+            while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
+                self.iterate(1)
+
+        if self.residuals[self.iteration] <= critical_value:
+            early_stopping_index = self.iteration
+            return early_stopping_index
+        else:
+            warnings.warn("Early stopping index not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
+
+    def get_weak_balanced_oracle(self, max_iteration):
+        """Returns weak balanced oracle if found up to max_iteration.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *weak_balanced_oracle*: ``int``. The first iteration at which the weak bias is smaller than the weak variance.
+        """
+        if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
+            # argmax takes the first instance of True in the true-false array
+            weak_balanced_oracle = np.argmax(self.weak_bias2 <= self.weak_variance)
+            return int(weak_balanced_oracle)
+
+        if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
+            while (
+                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
+            ):
+                self.iterate(1)
+
+        if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
+            weak_balanced_oracle = self.iteration
+            return weak_balanced_oracle
+        else:
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
+
+    def get_strong_balanced_oracle(self, max_iteration):
+        """Returns strong balanced oracle if found up to max_iteration.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller than the strong variance.
+        """
+        if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
+            # argmax takes the first instance of True in the true-false array
+            strong_balanced_oracle = np.argmax(self.strong_bias2 <= self.strong_variance)
+            return int(strong_balanced_oracle)
+
+        if self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]:
+            while (
+                self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]
+                and self.iteration <= max_iteration
+            ):
+                self.iterate(1)
+
+        if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
+            strong_balanced_oracle = self.iteration
+            return strong_balanced_oracle
+        else:
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            return None
+
 
     def __truncated_SVD_one_iteration(self):
         # Get next singular triplet
@@ -135,37 +244,18 @@ class TruncatedSVD:
         new_residual = self.residuals[self.iteration] - self.response[self.iteration]**2
         self.residuals = np.append(self.residuals, new_residual)
 
+        # Updating theoretical quantities
+        if self.true_signal is not None:
+            new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.true_signal[self.iteration]**2
+            self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
+
+            new_weak_variance = self.weak_variance[self.iteration] + self.true_noise_level**2
+            self.weak_variance = np.append(self.weak_variance, new_weak_variance)
+
+            new_strong_bias2 = self.strong_bias2[self.iteration] - self.true_signal[self.iteration]**2
+            self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
+
+            new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
+            self.strong_variance = np.append(self.strong_variance, new_strong_variance)
+
         self.iteration += 1
-
-    def get_discrepancy_stop(self, critical_value, max_iteration):
-        """Returns early stopping index based on discrepancy principle up to max_iteration
-
-        **Parameters**
-
-        *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
-        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
-        where :math: `\\kappa` is the critical value.
-
-        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
-
-        **Returns**
-
-        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.
-        (None is returned if the stopping index is not found.)
-        """
-        if self.residuals[self.iteration] <= critical_value:
-
-            # argmax takes the first instance of True in the true-false array
-            early_stopping_index = np.argmax(self.residuals <= critical_value)
-            return early_stopping_index
-
-        if self.residuals[self.iteration] > critical_value:
-            while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
-                self.iterate(1)
-
-        if self.residuals[self.iteration] <= critical_value:
-            early_stopping_index = self.iteration
-            return early_stopping_index
-        else:
-            warnings.warn("Early stopping index not found up to max_iteration. Returning None.", category=UserWarning)
-            return None
