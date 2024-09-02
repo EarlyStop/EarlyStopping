@@ -5,6 +5,7 @@
 - [ ] Update docu landweber
 - [ ] Add a proper code documentation for the simmulation wrapper
 - [ ] change strong_empirical_errors to strong_empirical_risk in CG (Laura)
+- [ ] Make sure to check if all the quantities for computing oracle quantities already exist before just running into an error on the get balanaced oracle methods
 
 
 # Current goal:
