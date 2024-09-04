@@ -6,7 +6,7 @@ import warnings
 
 class TruncatedSVD:
     """
-     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_ A class to perform estimation using truncated SVD estimation.
+    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_ A class to perform estimation using truncated SVD estimation.
 
     **Parameters**
 
@@ -120,8 +120,7 @@ class TruncatedSVD:
         return truncated_svd_estimate
 
     def get_discrepancy_stop(self, critical_value, max_iteration):
-        """Returns early stopping index based on discrepancy principle up to
-        max_iteration.
+        """Returns early stopping index based on discrepancy principle up to max_iteration.
 
         **Parameters**
 
@@ -219,7 +218,6 @@ class TruncatedSVD:
         # Get diagonal sequence model quantities
         self.diagonal_design = np.append(self.diagonal_design, s)
         self.diagonal_response = np.append(self.diagonal_response, u.transpose() @ self.response)
-        self.diagonal_true_signal = np.append(self.diagonal_true_signal, u.transpose() @ self.true_signal)
         self.eigenvector_matrix = np.append(self.eigenvector_matrix, vh.transpose(), axis=1)
         self.diagonal_estimate = np.append(self.diagonal_estimate,
                                            self.diagonal_response[self.iteration] / s)
@@ -235,6 +233,8 @@ class TruncatedSVD:
 
         # Updating theoretical quantities
         if self.true_signal is not None:
+            self.diagonal_true_signal = np.append(self.diagonal_true_signal, u.transpose() @ self.true_signal)
+
             new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.diagonal_true_signal[self.iteration]**2
             self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
 
