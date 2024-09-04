@@ -6,6 +6,7 @@ import warnings
 
 class TruncatedSVD:
     """
+     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_ A class to perform estimation using truncated SVD estimation.
 
     **Parameters**
 
@@ -42,6 +43,10 @@ class TruncatedSVD:
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | get_discrepancy_stop(``critical_value, max_iteration``) | Returns the early stopping index according to the discrepancy principle. |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_weak_balanced_oracle(``max_iteration``)             | Returns the weak balanced oracle if found up to max_iteration.           |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
+    | get_strong_balanced_oracle(``max_iteration``)           | Returns the strong balanced oracle if found up to max_iteration.         |
+    +---------------------------------------------------------+--------------------------------------------------------------------------+
 
     """
     def __init__(self,
@@ -66,6 +71,7 @@ class TruncatedSVD:
 
         # Quantities in terms of the SVD
         self.diagonal_design = np.array([])
+        self.diagonal_true_signal= np.array([])
         self.diagonal_response = np.array([])
         self.diagonal_estimate = np.array([])
 
@@ -105,8 +111,7 @@ class TruncatedSVD:
 
         **Returns**
 
-        *truncated_svd_estimate*: ``ndarray``. The truncated svd estimate at
-        iteration.
+        *truncated_svd_estimate*: ``ndarray``. The truncated svd estimate at iteration.
         """
         if iteration > self.iteration:
             self.iterate(iteration - self.iteration)
@@ -125,20 +130,17 @@ class TruncatedSVD:
         \\Vert^{2} \leq \\kappa^{2},` where :math: `\\kappa` is the critical
         value.
 
-        *max_iteration*: ``int``. The maximum number of total iterations to be
-        considered.
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
 
         **Returns**
 
-        *early_stopping_index*: ``int``. The first iteration at which the
-        discrepancy principle is satisfied.  (None is returned if the stopping
-        index is not found.)
+        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.  (None is returned if the stopping index is not found.)
         """
         if self.residuals[self.iteration] <= critical_value:
 
             # argmax takes the first instance of True in the true-false array
             early_stopping_index = np.argmax(self.residuals <= critical_value)
-            return early_stopping_index
+            return int(early_stopping_index)
 
         if self.residuals[self.iteration] > critical_value:
             while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
@@ -210,7 +212,6 @@ class TruncatedSVD:
             warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
             return None
 
-
     def __truncated_SVD_one_iteration(self):
         # Get next singular triplet
         u, s, vh = svds(self.reduced_design, k=1)
@@ -218,6 +219,7 @@ class TruncatedSVD:
         # Get diagonal sequence model quantities
         self.diagonal_design = np.append(self.diagonal_design, s)
         self.diagonal_response = np.append(self.diagonal_response, u.transpose() @ self.response)
+        self.diagonal_true_signal = np.append(self.diagonal_true_signal, u.transpose() @ self.true_signal)
         self.eigenvector_matrix = np.append(self.eigenvector_matrix, vh.transpose(), axis=1)
         self.diagonal_estimate = np.append(self.diagonal_estimate,
                                            self.diagonal_response[self.iteration] / s)
@@ -230,6 +232,20 @@ class TruncatedSVD:
 
         # Reduce design by one eigen triplet 
         self.reduced_design = self.reduced_design - s * u @ vh
+
+        # Updating theoretical quantities
+        if self.true_signal is not None:
+            new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.diagonal_true_signal[self.iteration]**2
+            self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
+
+            new_weak_variance = self.weak_variance[self.iteration] + self.true_noise_level**2
+            self.weak_variance = np.append(self.weak_variance, new_weak_variance)
+
+            new_strong_bias2 = self.strong_bias2[self.iteration] - self.diagonal_true_signal[self.iteration]**2
+            self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
+
+            new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
+            self.strong_variance = np.append(self.strong_variance, new_strong_variance)
         
         self.iteration += 1
 
