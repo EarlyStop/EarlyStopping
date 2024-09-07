@@ -20,7 +20,7 @@ print('The seed is 42.')
 # ----------------------
 # Create diagonal design matrix and supersmooth, smooth and rough signal. Plot the signal.
 
-D = 1000
+D = 10000
 indices = np.arange(D) + 1
 design_matrix = dia_matrix(np.diag(1 / (np.sqrt(indices))))
 

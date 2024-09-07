@@ -236,13 +236,17 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
-    def run_simulation(self):
+    def run_simulation(self, learning_rate = None):
         info("Running simulation.")
         noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
         self.response = noise + (self.response_noiseless)[:, None]
 
-        info("Searching for viable learning rates.")
-        self.learning_rate = self.__search_learning_rate(search_depth=10)
+        if learning_rate == "auto":
+            info("Searching for viable learning rates.")
+            self.learning_rate = self.__search_learning_rate(search_depth=10)
+        else:
+            self.learning_rate = 1
+
 
         info("Running Monte Carlo simulation.")
         self.results = Parallel(n_jobs=self.cores)(
@@ -251,7 +255,8 @@ class SimulationWrapper:
 
         (strong_errors, weak_errors, weak_relative_efficiency, strong_relative_efficiency,
         landweber_strong_bias, landweber_strong_variance, landweber_strong_error, landweber_weak_bias,
-        landweber_weak_variance, landweber_weak_error, landweber_residuals) = zip(*self.results)
+        landweber_weak_variance, landweber_weak_error, landweber_residuals, stopping_index_landweber,
+        balanced_oracle_weak, balanced_oracle_strong) = zip(*self.results)
 
         self.__visualise_boxplot(np.vstack(strong_errors), "Strong Empirical Error at $\\tau$")
         self.__visualise_boxplot(np.vstack(weak_errors), "Weak Empirical Error at $\\tau$")
@@ -341,6 +346,8 @@ class SimulationWrapper:
         landweber_residuals = model_landweber.residuals
 
         stopping_index_landweber = model_landweber.get_discrepancy_stop(self.sample_size*(self.true_noise_level**2), self.max_iterations)
+        balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(self.max_iterations)
+        balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(self.max_iterations)
 
         landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
         conjugate_gradients_strong_empirical_error_es = model_conjugate_gradients.strong_empirical_errors[
@@ -365,8 +372,16 @@ class SimulationWrapper:
             np.array([landweber_weak_empirical_risk_es, conjugate_gradients_weak_empirical_error_es]),
             np.array([landweber_weak_relative_efficiency, conjugate_gradients_weak_relative_efficiency]),
             np.array([landweber_strong_relative_efficiency, conjugate_gradients_strong_relative_efficiency]),
-            landweber_strong_bias, landweber_strong_variance, landweber_strong_risk, landweber_weak_bias,
-            landweber_weak_variance, landweber_weak_risk, landweber_residuals
+            landweber_strong_bias,
+            landweber_strong_variance,
+            landweber_strong_risk,
+            landweber_weak_bias,
+            landweber_weak_variance,
+            landweber_weak_risk,
+            landweber_residuals,
+            stopping_index_landweber,
+            balanced_oracle_weak,
+            balanced_oracle_strong
         )
 
     def __visualise_bias_variance_tradeoff(self,
