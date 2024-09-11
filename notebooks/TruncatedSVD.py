@@ -48,7 +48,7 @@ alg = es.TruncatedSVD(design, response, true_signal, true_noise_level,
                       diagonal = True)
 
 # Bias-variance decomposition and oracle quantities
-alg.iterate(500)
+alg.iterate(3000)
 
 plt.figure()
 plt.plot(indices[0: alg.iteration + 1], alg.weak_variance, label="Variance")
@@ -70,7 +70,12 @@ plt.plot(indices, estimated_signal)
 plt.plot(indices, true_signal)
 plt.ylim([0, 2])
 
+---------------------------------------------------------------------------------
+
 # Two step procedure
+aic_index = alg.get_aic_iteration(4000)
+
+aic = alg.preliminary_aic + 2 * true_noise_level**2 * np.sum(alg.diagonal_design
 
 
 
