@@ -43,7 +43,7 @@ class TruncatedSVD:
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | get_discrepancy_stop(``critical_value, max_iteration``) | Returns the early stopping index according to the discrepancy principle. |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
-    | get_aic_iteration(``max_iteration, K=2``)               | Returns the iteration chosen by the Akaike information criterion.        |
+    | get_aic(``max_iteration, K=2``)                         | Returns the iteration chosen by the Akaike information criterion.        |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
     | get_weak_balanced_oracle(``max_iteration``)             | Returns the weak balanced oracle if found up to max_iteration.           |
     +---------------------------------------------------------+--------------------------------------------------------------------------+
@@ -81,7 +81,6 @@ class TruncatedSVD:
         self.eigenvector_matrix = np.empty((self.parameter_size, 0))
 
         self.residuals = np.array([np.sum(self.response**2)])
-        self.preliminary_aic = np.array([0])
         self.truncated_svd_estimate_list = [np.zeros(self.parameter_size)]
 
         # Initialize theoretical quantities
@@ -155,7 +154,7 @@ class TruncatedSVD:
             warnings.warn("Early stopping index not found up to max_iteration. Returning None.", category=UserWarning)
             return None
 
-    def get_aic_iteration(self, max_iteration, K = 2):
+    def get_aic(self, max_iteration, K = 2):
         """Returns the iteration chosen by the Akaike information criterion computed up max_iteration.
 
         **Parameters**
@@ -171,11 +170,15 @@ class TruncatedSVD:
         if max_iteration > self.iteration:
             self.iterate(max_iteration - self.iteration)
 
-        aic = self.preliminary_aic + K * self.true_noise_level**2 * np.sum(self.diagonal_design**(-2))
-        aic_index = np.argmin(aic)
-        return aic_index
+        if self.diagonal:
+            self.diagonal_response = self.response
 
+        data_fit_term = - np.cumsum(self.diagonal_response[:max_iteration]**2 / self.diagonal_design[:max_iteration]**2)
+        penalty_term  = K * self.true_noise_level**2 * np.cumsum(self.diagonal_design[:max_iteration]**(-2))
+        aic           = data_fit_term + penalty_term 
+        aic_index     = np.argmin(aic)
 
+        return [aic_index, aic]
 
     def get_weak_balanced_oracle(self, max_iteration):
         """Returns weak balanced oracle if found up to max_iteration.
@@ -286,10 +289,6 @@ class TruncatedSVD:
 
         new_residual = self.residuals[self.iteration] - self.response[self.iteration]**2
         self.residuals = np.append(self.residuals, new_residual)
-
-        # TODO: Sum in aic is wrong
-        new_preliminary_aic = self.preliminary_aic[self.iteration] - self.response[self.iteration]**2 / s**2
-        self.preliminary_aic = np.append(self.preliminary_aic, new_preliminary_aic)
 
         # Updating theoretical quantities
         if self.true_signal is not None:
