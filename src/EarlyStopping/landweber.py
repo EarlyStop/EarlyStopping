@@ -212,7 +212,7 @@ class Landweber:
             return early_stopping_index
 
         if self.residuals[self.iteration] > critical_value:
-            while self.residuals[self.iteration] > critical_value and self.iteration <= max_iteration:
+            while self.residuals[self.iteration] > critical_value and self.iteration < max_iteration:
                 self.__landweber_one_iteration()
 
         if self.residuals[self.iteration] <= critical_value:
