@@ -26,7 +26,7 @@ class SimulationData:
         else:
             ValueError("Currently, only supersmooth, smooth and rough are supported.")
 
-        response_noiseless = design @ true_signal  # np.dot did not give the correct result
+        response_noiseless = design @ true_signal
         return design, response_noiseless, true_signal
 
     def gravity(sample_size, a=0, b=1, d=0.25):
@@ -39,7 +39,7 @@ class SimulationData:
         design = (1 / sample_size) * d * (d**2 * np.ones((sample_size, sample_size)) + (S - T) ** 2) ** (-(3 / 2))
         true_signal = np.sin(np.pi * t) + 0.5 * np.sin(2 * np.pi * t)
 
-        response_noiseless = np.dot(design, true_signal)
+        response_noiseless = design @ true_signal
         return design, response_noiseless, true_signal
 
     def heat(sample_size, kappa=1):
@@ -80,7 +80,7 @@ class SimulationData:
 
         true_signal[sample_size // 2 + 1 :] = 0
 
-        response_noiseless = np.dot(design, true_signal)
+        response_noiseless = design @ true_signal
 
         return design, response_noiseless, true_signal
 
@@ -222,11 +222,12 @@ class SimulationParameters:
 
     def validate(self):
         if not isinstance(self.true_signal, np.ndarray):
-            raise ValueError("true_signal must be a numpy array")
-        if not (0 < self.true_noise_level):
-            raise ValueError("true_noise_level must be between 0 and 1")
-        if not isinstance(self.max_iterations, int) or self.max_iterations <= 0:
-            raise ValueError("max_iterations must be a positive integer")
+            raise ValueError("true_signal must be a numpy array.")
+        if not (0 <= self.true_noise_level):
+            raise ValueError("true_noise_level must be greater than or equal to 0.")
+        if not isinstance(self.max_iterations, int) or self.max_iterations < 0:
+            raise ValueError("max_iterations must be a nonnegative integer.")
+        # add more cases to validate
 
 
 class SimulationWrapper:
@@ -235,19 +236,20 @@ class SimulationWrapper:
         design,
         true_signal=None,
         true_noise_level=None,
-        monte_carlo_runs=5,
         max_iterations=1000,
+        monte_carlo_runs=5,
+        response_noiseless=None,
         critical_value=None,
         interpolation=False,
         computation_threshold=10 ** (-8),
         cores=5,
-        response_noiseless=None,
     ):
+
         self.design = design
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
-        self.monte_carlo_runs = monte_carlo_runs
         self.max_iterations = max_iterations
+        self.monte_carlo_runs = monte_carlo_runs
         self.critical_value = critical_value
         self.interpolation = interpolation
         self.computation_threshold = computation_threshold
