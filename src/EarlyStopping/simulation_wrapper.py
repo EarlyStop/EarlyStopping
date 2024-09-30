@@ -330,7 +330,6 @@ class SimulationWrapper:
         info("Running simulation.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-        np.save("noise_2.npy", self.noise)
         self.response = self.noise + (self.response_noiseless)[:, None]
 
         info("Running Monte-Carlo simulation.")
@@ -474,32 +473,32 @@ class SimulationWrapper:
             self.critical_value = self.sample_size * (self.true_noise_level**2)
 
         strong_empirical_oracle = model_conjugate_gradients.get_strong_empirical_oracle(
-            self.max_iteration, interpolation=self.interpolation
+            max_iteration=self.max_iteration, interpolation=self.interpolation
         )
         weak_empirical_oracle = model_conjugate_gradients.get_weak_empirical_oracle(
-            self.max_iteration, interpolation=self.interpolation
+            max_iteration=self.max_iteration, interpolation=self.interpolation
         )
         stopping_index = model_conjugate_gradients.get_discrepancy_stop(
-            self.critical_value, self.max_iteration, interpolation=self.interpolation
+            critical_value=self.critical_value, max_iteration=self.max_iteration, interpolation=self.interpolation
         )
         strong_empirical_oracle_risk = model_conjugate_gradients.get_strong_empirical_risk(strong_empirical_oracle)
         weak_empirical_oracle_risk = model_conjugate_gradients.get_weak_empirical_risk(weak_empirical_oracle)
-        strong_stopping_index_risk = model_conjugate_gradients.get_strong_empirical_risk(stopping_index)
-        weak_stopping_index_risk = model_conjugate_gradients.get_weak_empirical_risk(stopping_index)
+        strong_empirical_stopping_index_risk = model_conjugate_gradients.get_strong_empirical_risk(stopping_index)
+        weak_empirical_stopping_index_risk = model_conjugate_gradients.get_weak_empirical_risk(stopping_index)
 
-        strong_relative_efficiency = np.sqrt(strong_empirical_oracle_risk / strong_stopping_index_risk)
-        weak_relative_efficiency = np.sqrt(weak_empirical_oracle_risk / weak_stopping_index_risk)
+        strong_relative_efficiency = np.sqrt(strong_empirical_oracle_risk / strong_empirical_stopping_index_risk)
+        weak_relative_efficiency = np.sqrt(weak_empirical_oracle_risk / weak_empirical_stopping_index_risk)
 
         return (
+            strong_empirical_oracle,
+            weak_empirical_oracle,
+            stopping_index,
+            strong_empirical_oracle_risk,
+            strong_empirical_stopping_index_risk,
+            weak_empirical_oracle_risk,
+            weak_empirical_stopping_index_risk,
             strong_relative_efficiency,
             weak_relative_efficiency,
-            strong_empirical_oracle,
-            strong_empirical_oracle_risk,
-            weak_empirical_oracle,
-            weak_empirical_oracle_risk,
-            stopping_index,
-            strong_stopping_index_risk,
-            weak_stopping_index_risk,
         )
 
     # def __visualise_bias_variance_tradeoff(
