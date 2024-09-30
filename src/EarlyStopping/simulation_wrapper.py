@@ -201,6 +201,7 @@ class SimulationParameters:
         true_noise_level,
         max_iterations,
         monte_carlo_runs,
+        noise=None,
         response_noiseless=None,
         critical_value=None,
         interpolation=False,
@@ -213,6 +214,7 @@ class SimulationParameters:
         self.true_noise_level = true_noise_level
         self.max_iterations = max_iterations
         self.monte_carlo_runs = monte_carlo_runs
+        self.noise = noise
         self.response_noiseless = response_noiseless
         self.critical_value = critical_value
         self.interpolation = interpolation
@@ -227,7 +229,7 @@ class SimulationParameters:
             raise ValueError("true_noise_level must be greater than or equal to 0.")
         if not isinstance(self.max_iterations, int) or self.max_iterations < 0:
             raise ValueError("max_iterations must be a nonnegative integer.")
-        # add more cases to validate
+        # add more cases to validate (e.g. for noise)
 
 
 class SimulationWrapper:
@@ -238,6 +240,7 @@ class SimulationWrapper:
         true_noise_level=None,
         max_iterations=1000,
         monte_carlo_runs=5,
+        noise=None,
         response_noiseless=None,
         critical_value=None,
         interpolation=False,
@@ -250,6 +253,7 @@ class SimulationWrapper:
         self.true_noise_level = true_noise_level
         self.max_iterations = max_iterations
         self.monte_carlo_runs = monte_carlo_runs
+        self.noise = noise
         self.critical_value = critical_value
         self.interpolation = interpolation
         self.computation_threshold = computation_threshold
@@ -264,8 +268,10 @@ class SimulationWrapper:
 
     def run_simulation(self, learning_rate=None):
         info("Running simulation.")
-        noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-        self.response = noise + (self.response_noiseless)[:, None]
+        if self.noise is None:
+            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
+        self.response = self.noise + (self.response_noiseless)[:, None]
+        np.savetxt("matrix.txt", self.noise)
 
         if learning_rate == "auto":
             info("Searching for viable learning rates.")
@@ -324,6 +330,7 @@ class SimulationWrapper:
         info("Running simulation.")
         noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
         self.response = noise + (self.response_noiseless)[:, None]
+        np.savetxt("matrix.txt", noise)
 
         info("Running Monte-Carlo simulation.")
         self.results = Parallel(n_jobs=self.cores)(
