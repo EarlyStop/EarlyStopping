@@ -489,6 +489,8 @@ class SimulationWrapper:
         strong_relative_efficiency = np.sqrt(strong_empirical_oracle_risk / strong_empirical_stopping_index_risk)
         weak_relative_efficiency = np.sqrt(weak_empirical_oracle_risk / weak_empirical_stopping_index_risk)
 
+        terminal_iteration = model_conjugate_gradients.iteration
+
         return (
             strong_empirical_oracle,
             weak_empirical_oracle,
@@ -499,6 +501,7 @@ class SimulationWrapper:
             weak_empirical_stopping_index_risk,
             strong_relative_efficiency,
             weak_relative_efficiency,
+            terminal_iteration,
         )
 
     # def __visualise_bias_variance_tradeoff(
