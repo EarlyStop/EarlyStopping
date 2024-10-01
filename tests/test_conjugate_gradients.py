@@ -381,9 +381,44 @@ class TestConjugateGradients(unittest.TestCase):
                 all(weak_empirical_oracle_risk_rough <= risk for risk in models_rough[run].weak_empirical_risk)
             )
 
+            interpolated_strong_risk_supersmooth = []
+            step_size = 0.1
+            for iteration in np.arange(0, models_supersmooth[run].iteration + step_size, step_size):
+                interpolated_strong_risk_supersmooth = np.append(
+                    interpolated_strong_risk_supersmooth,
+                    models_supersmooth[run].get_strong_empirical_risk(iteration),
+                )
+            interpolated_strong_risk_supersmooth = [
+                risk for risk in interpolated_strong_risk_supersmooth if risk is not None
+            ]
+            interpolated_strong_risk_smooth = []
+            step_size = 0.1
+            for iteration in np.arange(0, models_smooth[run].iteration + step_size, step_size):
+                interpolated_strong_risk_smooth = np.append(
+                    interpolated_strong_risk_smooth,
+                    models_smooth[run].get_strong_empirical_risk(iteration),
+                )
+            interpolated_strong_risk_smooth = [risk for risk in interpolated_strong_risk_smooth if risk is not None]
+            interpolated_strong_risk_rough = []
+            step_size = 0.1
+            for iteration in np.arange(0, models_rough[run].iteration + step_size, step_size):
+                interpolated_strong_risk_rough = np.append(
+                    interpolated_strong_risk_rough,
+                    models_rough[run].get_strong_empirical_risk(iteration),
+                )
+            interpolated_strong_risk_rough = [risk for risk in interpolated_strong_risk_rough if risk is not None]
+
+            self.assertTrue(
+                all(strong_empirical_oracle_risk_supersmooth <= risk for risk in interpolated_strong_risk_supersmooth)
+            )
+            self.assertTrue(
+                all(strong_empirical_oracle_risk_smooth <= risk for risk in interpolated_strong_risk_smooth)
+            )
+            self.assertTrue(all(strong_empirical_oracle_risk_rough <= risk for risk in interpolated_strong_risk_rough))
+
             interpolated_weak_risk_supersmooth = []
             step_size = 0.1
-            for iteration in np.arange(0, max_iteration + step_size, step_size):
+            for iteration in np.arange(0, models_supersmooth[run].iteration + step_size, step_size):
                 interpolated_weak_risk_supersmooth = np.append(
                     interpolated_weak_risk_supersmooth,
                     models_supersmooth[run].get_weak_empirical_risk(iteration),
@@ -391,6 +426,25 @@ class TestConjugateGradients(unittest.TestCase):
             interpolated_weak_risk_supersmooth = [
                 risk for risk in interpolated_weak_risk_supersmooth if risk is not None
             ]
+            interpolated_weak_risk_smooth = []
+            step_size = 0.1
+            for iteration in np.arange(0, models_smooth[run].iteration + step_size, step_size):
+                interpolated_weak_risk_smooth = np.append(
+                    interpolated_weak_risk_smooth,
+                    models_smooth[run].get_weak_empirical_risk(iteration),
+                )
+            interpolated_weak_risk_smooth = [risk for risk in interpolated_weak_risk_smooth if risk is not None]
+            interpolated_weak_risk_rough = []
+            step_size = 0.1
+            for iteration in np.arange(0, models_rough[run].iteration + step_size, step_size):
+                interpolated_weak_risk_rough = np.append(
+                    interpolated_weak_risk_rough,
+                    models_rough[run].get_weak_empirical_risk(iteration),
+                )
+            interpolated_weak_risk_rough = [risk for risk in interpolated_weak_risk_rough if risk is not None]
+
             self.assertTrue(
                 all(weak_empirical_oracle_risk_supersmooth <= risk for risk in interpolated_weak_risk_supersmooth)
             )
+            self.assertTrue(all(weak_empirical_oracle_risk_smooth <= risk for risk in interpolated_weak_risk_smooth))
+            self.assertTrue(all(weak_empirical_oracle_risk_rough <= risk for risk in interpolated_weak_risk_rough))
