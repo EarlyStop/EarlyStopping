@@ -97,7 +97,7 @@ class ConjugateGradients:
             self.initial_value = np.zeros(self.parameter_size)
         else:
             if initial_value.size != self.parameter_size:
-                ValueError("The dimension of the initial_value should match paramter size!")
+                raise ValueError("The dimension of the initial_value should match paramter size!")
             self.initial_value = initial_value
 
         # Estimation quantities
@@ -136,8 +136,9 @@ class ConjugateGradients:
         """
         for _ in range(number_of_iterations):
             if np.sum(self.__transformed_residual_vector**2) <= self.computation_threshold:
-                print(
-                    f"Algorithm terminates at iteration {self.iteration}: norm of transformed residual vector ({np.sum(self.__transformed_residual_vector**2)}) <= computation_threshold ({self.computation_threshold})."
+                warnings.warn(
+                    f"Algorithm terminates at iteration {self.iteration}: norm of transformed residual vector ({np.sum(self.__transformed_residual_vector**2)}) <= computation_threshold ({self.computation_threshold}).",
+                    category=UserWarning,
                 )
                 break
             self.__conjugate_gradients_one_iteration()
@@ -151,7 +152,7 @@ class ConjugateGradients:
 
         **Returns**
 
-        *conjugate_gradient_estimate*: ``array``. The conjugate gradient estimate at iteration. (``None`` is returned if the algorithm terminates before iteration.)
+        *conjugate_gradient_estimate*: ``array``. The conjugate gradient estimate at iteration.
         """
 
         iteration_ceil = np.ceil(iteration).astype("int")
@@ -159,12 +160,10 @@ class ConjugateGradients:
         if iteration_ceil > self.iteration:
             self.iterate(iteration_ceil - self.iteration)
 
-        if iteration_ceil >= len(self.conjugate_gradient_estimate_list):
-            warnings.warn(
-                "Algorithm terminated due to computation_threshold before (ceiling of) requested iteration. Returning None.",
-                category=UserWarning,
+        if iteration_ceil > self.iteration:
+            raise ValueError(
+                "Algorithm terminated due to computation_threshold before (ceiling of) requested iteration."
             )
-            return None
 
         if iteration % 1 == 0:
             conjugate_gradient_estimate = self.conjugate_gradient_estimate_list[int(iteration)]
@@ -193,11 +192,12 @@ class ConjugateGradients:
         **Returns**
 
         *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied or
-        :math: `\\Vert A^{\top}(Y - A \hat{f}^{(m)}) \\Vert^{2} \leq C,` where `C` is the computation_threshold
+        :math: `\\Vert A^{\\top}(Y - A \hat{f}^{(m)}) \\Vert^{2} \leq C,` where `C` is the computation_threshold
         for the emergency stop.
         (``None`` is returned if the stopping index is not found.)
         """
 
+        # discrepancy stop on existing estimators
         if np.any(self.residuals <= critical_value):
             iteration = np.argmax(self.residuals <= critical_value)
             if interpolation is True and iteration > 0:
@@ -209,29 +209,22 @@ class ConjugateGradients:
                 early_stopping_index = iteration - 1 + alpha
             else:
                 early_stopping_index = iteration
-            if np.any(self.__transformed_residuals <= self.computation_threshold):
-                early_stopping_index = min(
-                    np.argmax(self.__transformed_residuals <= self.computation_threshold), early_stopping_index
-                )
             return early_stopping_index
-
-        if np.any(self.__transformed_residuals <= self.computation_threshold):
-            return np.argmax(self.__transformed_residuals <= self.computation_threshold)
-
-        if np.all(self.residuals > critical_value) and np.all(
-            self.__transformed_residuals > self.computation_threshold
-        ):
+        # further iteration if necessary and possible
+        elif self.__transformed_residuals[self.iteration] > self.computation_threshold:
             while (
                 self.residuals[self.iteration] > critical_value
-                and np.sum(self.__transformed_residual_vector**2) > self.computation_threshold
+                and self.__transformed_residuals[self.iteration] > self.computation_threshold
                 and self.iteration < max_iteration
             ):
                 self.__conjugate_gradients_one_iteration()
 
-        if np.sum(self.__transformed_residual_vector**2) <= self.computation_threshold:
+        # emergency stop
+        if self.__transformed_residuals[self.iteration] <= self.computation_threshold:
             early_stopping_index = self.iteration
             return early_stopping_index
 
+        # discrepancy stop
         if self.residuals[self.iteration] <= critical_value:
             if interpolation is True and self.iteration > 0:
                 alpha = 1 - np.sqrt(
@@ -260,12 +253,8 @@ class ConjugateGradients:
         if iteration_ceil > self.iteration:
             self.iterate(iteration_ceil - self.iteration)
 
-        if iteration_ceil >= len(self.conjugate_gradient_estimate_list):
-            warnings.warn(
-                "Algorithm terminated due to computation_threshold before (ceiling of) requested iteration. Returning None.",
-                category=UserWarning,
-            )
-            return None
+        if iteration_ceil > self.iteration:
+            ValueError("Algorithm terminated due to computation_threshold before (ceiling of) requested iteration.")
 
         if iteration % 1 == 0:
             residual = self.residuals[int(iteration)]
@@ -286,20 +275,9 @@ class ConjugateGradients:
         """
 
         if self.true_signal is None:
-            warnings.warn(
-                "No true signal given. Returning None.",
-                category=UserWarning,
-            )
-            return None
+            raise ValueError("No true signal given.")
 
         conjugate_gradient_estimate = self.get_estimate(iteration)
-
-        if conjugate_gradient_estimate is None:
-            warnings.warn(
-                "Algorithm terminated due to computation_threshold before (ceiling of) requested iteration. Returning None.",
-                category=UserWarning,
-            )
-            return None
 
         strong_empirical_risk = np.sum((conjugate_gradient_estimate - self.true_signal) ** 2)
         return strong_empirical_risk
@@ -313,20 +291,9 @@ class ConjugateGradients:
         """
 
         if self.true_signal is None:
-            warnings.warn(
-                "No true signal given. Returning None.",
-                category=UserWarning,
-            )
-            return None
+            raise ValueError("No true signal given.")
 
         conjugate_gradient_estimate = self.get_estimate(iteration)
-
-        if conjugate_gradient_estimate is None:
-            warnings.warn(
-                "Algorithm terminated due to computation_threshold before (ceiling of) requested iteration. Returning None.",
-                category=UserWarning,
-            )
-            return None
 
         weak_empirical_risk = np.sum((self.design @ conjugate_gradient_estimate - self.__transformed_true_signal) ** 2)
         return weak_empirical_risk
@@ -346,16 +313,12 @@ class ConjugateGradients:
         """
 
         if self.true_signal is None:
-            warnings.warn(
-                "No true signal given. Returning None.",
-                category=UserWarning,
-            )
-            return None
+            raise ValueError("No true signal given.")
 
         if max_iteration > self.iteration:
             self.iterate(max_iteration - self.iteration)
 
-        if max_iteration >= len(self.conjugate_gradient_estimate_list):
+        if max_iteration > self.iteration:
             warnings.warn(
                 "Algorithm terminated due to computation_threshold before max_iteration. max_iteration is set to terminal iteration index.",
                 category=UserWarning,
@@ -403,16 +366,12 @@ class ConjugateGradients:
         """
 
         if self.true_signal is None:
-            warnings.warn(
-                "No true signal given. Returning None.",
-                category=UserWarning,
-            )
-            return None
+            raise ValueError("No true signal given.")
 
         if max_iteration > self.iteration:
             self.iterate(max_iteration - self.iteration)
 
-        if max_iteration >= len(self.conjugate_gradient_estimate_list):
+        if max_iteration > self.iteration:
             warnings.warn(
                 "Algorithm terminated due to computation_threshold before max_iteration. max_iteration is set to terminal iteration index.",
                 category=UserWarning,
