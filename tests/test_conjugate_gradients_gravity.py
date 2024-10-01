@@ -150,3 +150,52 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                 early_stopping_index_noninterpolated,
                 places=5,
             )
+
+    def test_empirical_oracles(self):
+        # Test if the risks at the interpolated empirical oracles are smaller or equal to all risks along the integer iteration path
+        # and, in addition, for supersmooth if they are smaller or equal to all risks along a real-valued grid of iteration indices
+
+        models = [
+            es.ConjugateGradients(
+                self.design,
+                self.observation[:, i],
+                true_signal=self.signal,
+                true_noise_level=self.noise_level,
+                computation_threshold=0,
+            )
+            for i in range(self.NUMBER_RUNS)
+        ]
+
+        max_iteration = self.sample_size
+        for run in range(self.NUMBER_RUNS):
+            strong_empirical_oracle = models[run].get_strong_empirical_oracle(max_iteration, True)
+            strong_empirical_oracle_risk = models[run].get_strong_empirical_risk(strong_empirical_oracle)
+
+            self.assertTrue(all(strong_empirical_oracle_risk <= risk for risk in models[run].strong_empirical_risk))
+
+            weak_empirical_oracle = models[run].get_weak_empirical_oracle(max_iteration, True)
+            weak_empirical_oracle_risk = models[run].get_weak_empirical_risk(weak_empirical_oracle)
+
+            self.assertTrue(all(weak_empirical_oracle_risk <= risk for risk in models[run].weak_empirical_risk))
+
+            interpolated_strong_risk = []
+            step_size = 0.1
+            for iteration in np.arange(0, models[run].iteration + step_size, step_size):
+                interpolated_strong_risk = np.append(
+                    interpolated_strong_risk,
+                    models[run].get_strong_empirical_risk(iteration),
+                )
+            interpolated_strong_risk = [risk for risk in interpolated_strong_risk if risk is not None]
+
+            self.assertTrue(all(strong_empirical_oracle_risk <= risk for risk in interpolated_strong_risk))
+
+            interpolated_weak_risk = []
+            step_size = 0.1
+            for iteration in np.arange(0, models[run].iteration + step_size, step_size):
+                interpolated_weak_risk = np.append(
+                    interpolated_weak_risk,
+                    models[run].get_weak_empirical_risk(iteration),
+                )
+            interpolated_weak_risk = [risk for risk in interpolated_weak_risk if risk is not None]
+
+            self.assertTrue(all(weak_empirical_oracle_risk <= risk for risk in interpolated_weak_risk))
