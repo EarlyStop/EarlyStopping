@@ -50,13 +50,13 @@ class TestConjugateGradientsGravity(unittest.TestCase):
             computation_threshold=0,
         )
         model.iterate(2 * self.sample_size)
-        self.assertAlmostEqual(sum((model.get_estimate(model.iteration) - self.signal) ** 2), 0, places=5)
+        self.assertAlmostEqual(sum((model.get_estimate(model.iteration) - self.signal) ** 2), 0, places=7)
 
     def calculate_residual(self, response, design, conjugate_gradient_estimate):
         return np.sum((response - design @ conjugate_gradient_estimate) ** 2)
 
     def test_residuals(self):
-        # Test if the entry in the residuals vector at the discrepancy stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
+        # Test if the entry in the residuals vector at the noninterpolated discrepancy stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
         critical_value = (np.sqrt(self.sample_size) + self.sample_size) * (self.noise_level**2)
         models = [
             es.ConjugateGradients(
@@ -83,7 +83,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
             self.assertAlmostEqual(
                 residual,
                 models[run].residuals[int(early_stopping_index)],
-                places=5,
+                places=7,
             )
 
     def test_interpolation(self):
@@ -110,7 +110,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
 
             # Test if the interpolated squared residual at the discrepancy stopping index agrees with the critical value
             if early_stopping_index < max_iteration:
-                self.assertAlmostEqual(interpolated_residual, critical_value, places=5)
+                self.assertAlmostEqual(interpolated_residual, critical_value, places=7)
 
             interpolated_residual_via_estimator = self.calculate_residual(
                 models[run].response,
@@ -119,7 +119,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
             )
 
             # Test if the interpolated squared residual at the discrepancy stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
-            self.assertAlmostEqual(interpolated_residual_via_estimator, interpolated_residual, places=5)
+            self.assertAlmostEqual(interpolated_residual_via_estimator, interpolated_residual, places=7)
 
     def test_early_stopping_index(self):
         # Test if the discrepancy stopping index for the model without interpolation agrees with the rounded up discrepancy stopping index for the interpolated model
@@ -148,7 +148,7 @@ class TestConjugateGradientsGravity(unittest.TestCase):
             self.assertAlmostEqual(
                 np.ceil(early_stopping_index_interpolated),
                 early_stopping_index_noninterpolated,
-                places=5,
+                places=7,
             )
 
     def test_empirical_oracles(self):
@@ -185,7 +185,6 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                     interpolated_strong_risk,
                     models[run].get_strong_empirical_risk(iteration),
                 )
-            interpolated_strong_risk = [risk for risk in interpolated_strong_risk if risk is not None]
 
             self.assertTrue(all(strong_empirical_oracle_risk <= risk for risk in interpolated_strong_risk))
 
@@ -196,6 +195,4 @@ class TestConjugateGradientsGravity(unittest.TestCase):
                     interpolated_weak_risk,
                     models[run].get_weak_empirical_risk(iteration),
                 )
-            interpolated_weak_risk = [risk for risk in interpolated_weak_risk if risk is not None]
-
             self.assertTrue(all(weak_empirical_oracle_risk <= risk for risk in interpolated_weak_risk))

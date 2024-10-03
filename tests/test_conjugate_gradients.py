@@ -66,20 +66,20 @@ class TestConjugateGradients(unittest.TestCase):
         self.assertAlmostEqual(
             sum((model_supersmooth.get_estimate(model_supersmooth.iteration) - self.signal_supersmooth) ** 2),
             0,
-            places=5,
+            places=7,
         )
         self.assertAlmostEqual(
-            sum((model_smooth.get_estimate(model_smooth.iteration) - self.signal_smooth) ** 2), 0, places=5
+            sum((model_smooth.get_estimate(model_smooth.iteration) - self.signal_smooth) ** 2), 0, places=7
         )
         self.assertAlmostEqual(
-            sum((model_rough.get_estimate(model_rough.iteration) - self.signal_rough) ** 2), 0, places=5
+            sum((model_rough.get_estimate(model_rough.iteration) - self.signal_rough) ** 2), 0, places=7
         )
 
     def calculate_residual(self, response, design, conjugate_gradient_estimate):
         return np.sum((response - design @ conjugate_gradient_estimate) ** 2)
 
     def test_residuals(self):
-        # Test if the entry in the residuals vector at the early stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
+        # Test if the entry in the residuals vector at the noninterpolated early stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
         critical_value = self.noise_level**2 * self.sample_size
         models_supersmooth = [
             es.ConjugateGradients(
@@ -141,13 +141,13 @@ class TestConjugateGradients(unittest.TestCase):
             self.assertAlmostEqual(
                 residual_supersmooth,
                 models_supersmooth[run].residuals[int(supersmooth_early_stopping_index)],
-                places=5,
+                places=7,
             )
             self.assertAlmostEqual(
-                residual_smooth, models_smooth[run].residuals[int(smooth_early_stopping_index)], places=5
+                residual_smooth, models_smooth[run].residuals[int(smooth_early_stopping_index)], places=7
             )
             self.assertAlmostEqual(
-                residual_rough, models_rough[run].residuals[int(rough_early_stopping_index)], places=5
+                residual_rough, models_rough[run].residuals[int(rough_early_stopping_index)], places=7
             )
 
     def test_interpolation(self):
@@ -159,6 +159,7 @@ class TestConjugateGradients(unittest.TestCase):
                 self.observation_supersmooth[:, i],
                 true_signal=self.signal_supersmooth,
                 true_noise_level=self.noise_level,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]
@@ -168,6 +169,7 @@ class TestConjugateGradients(unittest.TestCase):
                 self.observation_smooth[:, i],
                 true_signal=self.signal_smooth,
                 true_noise_level=self.noise_level,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]
@@ -177,6 +179,7 @@ class TestConjugateGradients(unittest.TestCase):
                 self.observation_rough[:, i],
                 true_signal=self.signal_rough,
                 true_noise_level=self.noise_level,
+                computation_threshold=0,
             )
             for i in range(self.NUMBER_RUNS)
         ]
@@ -199,11 +202,11 @@ class TestConjugateGradients(unittest.TestCase):
 
             # Test if the interpolated squared residual at the discrepancy stopping index agrees with the critical value
             if supersmooth_early_stopping_index < max_iteration:
-                self.assertAlmostEqual(interpolated_residual_supersmooth, critical_value, places=5)
+                self.assertAlmostEqual(interpolated_residual_supersmooth, critical_value, places=7)
             if smooth_early_stopping_index < max_iteration:
-                self.assertAlmostEqual(interpolated_residual_smooth, critical_value, places=5)
+                self.assertAlmostEqual(interpolated_residual_smooth, critical_value, places=7)
             if rough_early_stopping_index < max_iteration:
-                self.assertAlmostEqual(interpolated_residual_rough, critical_value, places=5)
+                self.assertAlmostEqual(interpolated_residual_rough, critical_value, places=7)
 
             interpolated_residual_supersmooth_via_estimator = self.calculate_residual(
                 models_supersmooth[run].response,
@@ -223,10 +226,10 @@ class TestConjugateGradients(unittest.TestCase):
 
             # Test if the interpolated squared residual at the discrepancy stopping index agrees with the squared residual of the conjugate gradient estimate at the same index
             self.assertAlmostEqual(
-                interpolated_residual_supersmooth_via_estimator, interpolated_residual_supersmooth, places=5
+                interpolated_residual_supersmooth_via_estimator, interpolated_residual_supersmooth, places=7
             )
-            self.assertAlmostEqual(interpolated_residual_smooth_via_estimator, interpolated_residual_smooth, places=5)
-            self.assertAlmostEqual(interpolated_residual_rough_via_estimator, interpolated_residual_rough, places=5)
+            self.assertAlmostEqual(interpolated_residual_smooth_via_estimator, interpolated_residual_smooth, places=7)
+            self.assertAlmostEqual(interpolated_residual_rough_via_estimator, interpolated_residual_rough, places=7)
 
     def test_early_stopping_index(self):
         # Test if the discrepancy stopping index for the model without interpolation agrees with the rounded up discrepancy stopping index for the interpolated model
@@ -282,17 +285,17 @@ class TestConjugateGradients(unittest.TestCase):
             self.assertAlmostEqual(
                 np.ceil(early_stopping_index_supersmooth_interpolated),
                 early_stopping_index_supersmooth_noninterpolated,
-                places=5,
+                places=7,
             )
             self.assertAlmostEqual(
                 np.ceil(early_stopping_index_smooth_interpolated),
                 early_stopping_index_smooth_noninterpolated,
-                places=5,
+                places=7,
             )
             self.assertAlmostEqual(
                 np.ceil(early_stopping_index_rough_interpolated),
                 early_stopping_index_rough_noninterpolated,
-                places=5,
+                places=7,
             )
 
     def test_empirical_oracles(self):
@@ -388,9 +391,6 @@ class TestConjugateGradients(unittest.TestCase):
                     interpolated_strong_risk_supersmooth,
                     models_supersmooth[run].get_strong_empirical_risk(iteration),
                 )
-            interpolated_strong_risk_supersmooth = [
-                risk for risk in interpolated_strong_risk_supersmooth if risk is not None
-            ]
             interpolated_strong_risk_smooth = []
             step_size = 0.1
             for iteration in np.arange(0, models_smooth[run].iteration + step_size, step_size):
@@ -398,7 +398,6 @@ class TestConjugateGradients(unittest.TestCase):
                     interpolated_strong_risk_smooth,
                     models_smooth[run].get_strong_empirical_risk(iteration),
                 )
-            interpolated_strong_risk_smooth = [risk for risk in interpolated_strong_risk_smooth if risk is not None]
             interpolated_strong_risk_rough = []
             step_size = 0.1
             for iteration in np.arange(0, models_rough[run].iteration + step_size, step_size):
@@ -406,7 +405,6 @@ class TestConjugateGradients(unittest.TestCase):
                     interpolated_strong_risk_rough,
                     models_rough[run].get_strong_empirical_risk(iteration),
                 )
-            interpolated_strong_risk_rough = [risk for risk in interpolated_strong_risk_rough if risk is not None]
 
             self.assertTrue(
                 all(strong_empirical_oracle_risk_supersmooth <= risk for risk in interpolated_strong_risk_supersmooth)
@@ -423,9 +421,6 @@ class TestConjugateGradients(unittest.TestCase):
                     interpolated_weak_risk_supersmooth,
                     models_supersmooth[run].get_weak_empirical_risk(iteration),
                 )
-            interpolated_weak_risk_supersmooth = [
-                risk for risk in interpolated_weak_risk_supersmooth if risk is not None
-            ]
             interpolated_weak_risk_smooth = []
             step_size = 0.1
             for iteration in np.arange(0, models_smooth[run].iteration + step_size, step_size):
@@ -433,7 +428,6 @@ class TestConjugateGradients(unittest.TestCase):
                     interpolated_weak_risk_smooth,
                     models_smooth[run].get_weak_empirical_risk(iteration),
                 )
-            interpolated_weak_risk_smooth = [risk for risk in interpolated_weak_risk_smooth if risk is not None]
             interpolated_weak_risk_rough = []
             step_size = 0.1
             for iteration in np.arange(0, models_rough[run].iteration + step_size, step_size):
@@ -441,7 +435,6 @@ class TestConjugateGradients(unittest.TestCase):
                     interpolated_weak_risk_rough,
                     models_rough[run].get_weak_empirical_risk(iteration),
                 )
-            interpolated_weak_risk_rough = [risk for risk in interpolated_weak_risk_rough if risk is not None]
 
             self.assertTrue(
                 all(weak_empirical_oracle_risk_supersmooth <= risk for risk in interpolated_weak_risk_supersmooth)
