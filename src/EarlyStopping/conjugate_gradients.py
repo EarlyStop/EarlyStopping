@@ -135,9 +135,9 @@ class ConjugateGradients:
         *number_of_iterations*: ``int``. The number of iterations to perform.
         """
         for _ in range(number_of_iterations):
-            if np.sum(self.__transformed_residual_vector**2) <= self.computation_threshold:
+            if self.__transformed_residuals[self.iteration] <= self.computation_threshold:
                 warnings.warn(
-                    f"Algorithm terminates at iteration {self.iteration}: norm of transformed residual vector ({np.sum(self.__transformed_residual_vector**2)}) <= computation_threshold ({self.computation_threshold}).",
+                    f"Algorithm terminates at iteration {self.iteration}: norm of transformed residual vector ({self.__transformed_residuals[self.iteration]}) <= computation_threshold ({self.computation_threshold}).",
                     category=UserWarning,
                 )
                 break
@@ -241,11 +241,11 @@ class ConjugateGradients:
             return None
 
     def get_residual(self, iteration):
-        """Returns the squared residual at a possibly noninteger iteration index. The function is vectorized such that arrays of indices can be inserted.
+        """Returns the squared residual at a possibly noninteger iteration index.
 
         **Parameters**
 
-        *iteration*: ``array or float``. Index or array of iteration indices where the interpolated squared residual(s) should be calculated.
+        *iteration*: ``float``. Iteration index where the interpolated squared residual should be calculated.
         """
 
         iteration_ceil = np.ceil(iteration).astype("int")
@@ -254,7 +254,9 @@ class ConjugateGradients:
             self.iterate(iteration_ceil - self.iteration)
 
         if iteration_ceil > self.iteration:
-            ValueError("Algorithm terminated due to computation_threshold before (ceiling of) requested iteration.")
+            raise ValueError(
+                "Algorithm terminated due to computation_threshold before (ceiling of) requested iteration."
+            )
 
         if iteration % 1 == 0:
             residual = self.residuals[int(iteration)]
@@ -267,11 +269,11 @@ class ConjugateGradients:
         return residual
 
     def get_strong_empirical_risk(self, iteration):
-        """Returns the strong empirical error at a possibly noninteger iteration index. The function is vectorized such that arrays of indices can be inserted.
+        """Returns the strong empirical error at a possibly noninteger iteration index.
 
         **Parameters**
 
-        *iteration*: ``array or float``. Index or array of iteration indices where the interpolated error(s) should be calculated.
+        *iteration*: ``float``. Iteration index where the interpolated error should be calculated.
         """
 
         if self.true_signal is None:
@@ -283,11 +285,11 @@ class ConjugateGradients:
         return strong_empirical_risk
 
     def get_weak_empirical_risk(self, iteration):
-        """Returns the weak empirical error at a possibly noninteger iteration index. The function is vectorized such that arrays of indices can be inserted.
+        """Returns the weak empirical error at a possibly noninteger iteration index.
 
         **Parameters**
 
-        *index*: ``array or float``. Index or array of iteration indices where the interpolated error(s) should be calculated.
+        *index*: ``float``. Iteration index where the interpolated error should be calculated.
         """
 
         if self.true_signal is None:
