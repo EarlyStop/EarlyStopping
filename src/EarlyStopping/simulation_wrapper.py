@@ -14,7 +14,7 @@ from .conjugate_gradients import ConjugateGradients
 
 
 class SimulationData:
-
+    @staticmethod
     def diagonal_data(sample_size, type="supersmooth"):
         indices = np.arange(sample_size) + 1
         design = dia_matrix(np.diag(1 / np.sqrt(indices)))
@@ -30,6 +30,7 @@ class SimulationData:
         response_noiseless = design @ true_signal
         return design, response_noiseless, true_signal
 
+    @staticmethod
     def gravity(sample_size, a=0, b=1, d=0.25):
         # Parameter controlling the ill-posedness: the larger, the more ill-posed, default in regtools: d = 0.25
 
@@ -43,6 +44,7 @@ class SimulationData:
         response_noiseless = design @ true_signal
         return design, response_noiseless, true_signal
 
+    @staticmethod
     def heat(sample_size, kappa=1):
         """
         Test problem: inverse heat equation.
@@ -85,6 +87,7 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
+    @staticmethod
     def deriv2(sample_size, example=1):
         # Initialize variables and compute coefficients
         h = 1 / sample_size
@@ -148,6 +151,7 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
+    @staticmethod
     def phillips(sample_size):
         # Check if n is a multiple of 4
         if sample_size % 4 != 0:
@@ -464,6 +468,7 @@ class SimulationWrapper:
         model_conjugate_gradients = ConjugateGradients(
             design=self.design,
             response=self.response[:, m],
+            initial_value=None,
             true_signal=self.true_signal,
             true_noise_level=self.true_noise_level,
             computation_threshold=self.computation_threshold,
