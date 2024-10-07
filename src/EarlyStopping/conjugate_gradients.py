@@ -11,63 +11,63 @@ class ConjugateGradients:
     Consider the *linear model*
 
     .. math::
-        Y = Af + \delta Z,
+        Y = Af + \\delta Z,
 
-    where :math:`Z` is a :math:`D`-dimensional standard normal distribution. The conjugate gradient estimate :math:`\hat{f}^{(k)}` at the integer iteration index :math:`k` is iteratively calculated by the following algorithm:
+    where :math:`Z` is a :math:`n`-dimensional standard normal distribution.
+    The conjugate gradient estimate :math:`\\hat{f}^{(m)}` at the integer iteration index :math:`m` is iteratively calculated by the *conjugate gradients for the normal equation* algorithm with initial value :math:`\\hat{f}_0`,
+    see `Björck (1996, Algorithm 7.4.1) <https://doi.org/10.1137/1.9781611971484>`_.
 
     **Parameters**
 
-    *design*: ``array``. nxp design matrix of the linear model.
+    *design*: ``ndarray``. nxp design matrix of the linear model. ( :math:`A \\in \\mathbb{R}^{n \\times p}` )
 
-    *response*: ``array``. n-dim vector of the observed data in the linear model.
+    *response*: ``ndarray``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{n}` )
 
-    *true_signal*: ``array or None, default = None``. p-dim vector. For simulation purposes only. For simulated data the true signal can be included to compute additional quantities.
+    *initial_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\\hat{f}_0` )
 
-    *true_noise_level*: ``float or None, default = None``. For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable.
+    *true_signal*: ``ndarray, default = None``. p-dim vector for simulation purposes only. For simulated data the true signal can be included to compute additional quantities alongside the iterative procedure. ( :math:`f \\in \\mathbb{R}^{p}` )
 
-    *critical_value*: ``array or None, default = None``. Critical value for the early stopping rule.
-
-    *starting_value*: ``array or None, default = None``. Determines the zeroth step of the iterative procedure. Defaults to the zero vector.
-
-    *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the early stopping iteration index can be noninteger valued.
+    *true_noise_level*: ``float, default = None``. For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. ( :math:`\\delta \\geq 0` )
 
     *computation_threshold*: ``float, default = 10 ** (-8)``. Threshold used to terminate the conjugate gradients algorithm.
 
     **Attributes**
 
-    *sample_size*: ``int``. Sample size of the linear model.
+    *sample_size*: ``int``. Sample size of the linear model. ( :math:`n \\in \\mathbb{N}` )
 
-    *parameter_size*: ``int``. Parameter size of the linear model.
+    *parameter_size*: ``int``. Parameter size of the linear model. ( :math:`p \\in \\mathbb{N}` )
 
-    *iter*: ``int``. Current conjugate gradient iteration of the algorithm.
+    *iteration*: ``int``. Current conjugate gradient iteration of the algorithm. ( :math:`m \\in \\mathbb{N}` )
 
-    *conjugate_gradient_estimate*: ``array``. Conjugate gradient estimate at the current iteration for the data given in design and response.
+    *conjugate_gradient_estimate*: ``ndarray``. Conjugate gradient estimate at the current iteration for the data given in design and response. ( :math:`\\hat{f}^{(m)}` )
 
-    *early_stopping_index*: ``int or float or None``. Early Stopping iteration index. Is set to ``None`` if no early stopping is performed.
+    *conjugate_gradient_estimate_list*: ``list``. List containing the conjugate gradient estimates at integer iteration indices up to the current conjugate gradient iteration.
 
-    *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the conjugate gradient estimator.
+    *residuals*: ``ndarray``. Lists the sequence of the squared residuals between the observed data and the conjugate gradient estimator.
 
-    *strong_empirical_errors*: ``array``. Only exists if true_signal was given. Lists the values of the strong empirical error between the conjugate gradient estimator and the true signal up to the current conjugate gradient iteration.
+    *strong_empirical_risk*: ``ndarray``. Only exists if true_signal was given. Lists the values of the strong empirical error between the conjugate gradient estimator and the true signal up to the current conjugate gradient iteration.
 
-    *weak_empirical_errors*: ``array``. Only exists if true_signal was given. Lists the values of the weak empirical error between the conjugate gradient estimator and the true signal up to the current conjugate gradient iteration.
+    *weak_empirical_risk*: ``ndarray``. Only exists if true_signal was given. Lists the values of the weak empirical error between the conjugate gradient estimator and the true signal up to the current conjugate gradient iteration.
 
     **Methods**
 
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | iterate(``number_of_iterations = 1``)                   | Performs number_of_iterations of the conjugate gradients algorithm.                               |
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | discrepancy_stop(``max_iter``)                          | Stops the conjugate gradients algorithm based on the discrepancy principle.                       |
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | gather_all(``max_iter``)                                | Gathers all relevant simulation data.                                                             |
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | calculate_residual(``index``)                           | Calculates the interpolated squared residual(s) at a(n array of) noninteger index (indices).      |
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | calculate_strong_empirical_error(``index``)             | Calculates the interpolated strong empirical error(s) at a(n array of) noninteger index (indices).|
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | calculate_weak_empirical_error(``index``)               | Calculates the interpolated weak empirical error(s) at a(n array of) noninteger index (indices).  |
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
-    | calculate_empirical_oracles(``max_iter``)               | Calculates the strong and weak empirical oracle indices and errors.                               |
-    +---------------------------------------------------------+---------------------------------------------------------------------------------------------------+
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | iterate(``number_of_iterations = 1``)                                                 | Performs a specified number of iterations of the conjugate gradients algorithm.             |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_estimate(``iteration``)                                                           | Returns the conjugate gradient estimator at iteration.                                      |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_discrepancy_stop(``critical_value``, ``max_iteration``, ``interpolation = False``)| Returns the early stopping index according to the discrepancy principle with emergency stop.|
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_residual(``iteration``)                                                           | Returns the squared residual at iteration.                                                  |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_strong_empirical_risk(``iteration``)                                              | Returns the strong empirical error at iteration.                                            |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_weak_empirical_risk(``iteration``)                                                | Returns the weak empirical error at iteration.                                              |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_strong_empirical_oracle(``max_iteration``, ``interpolation = False``)             | Returns the strong empirical oracle up to max_iteration.                                    |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
+    | get_weak_empirical_oracle(``max_iteration``, ``interpolation = False``)               | Returns the weak empirical oracle up to max_iteration.                                      |
+    +---------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------+
     """
 
     def __init__(
@@ -152,7 +152,7 @@ class ConjugateGradients:
 
         **Returns**
 
-        *conjugate_gradient_estimate*: ``array``. The conjugate gradient estimate at iteration.
+        *conjugate_gradient_estimate*: ``ndarray``. The conjugate gradient estimate at iteration.
         """
 
         iteration_ceil = np.ceil(iteration).astype("int")
@@ -177,13 +177,13 @@ class ConjugateGradients:
         return conjugate_gradient_estimate
 
     def get_discrepancy_stop(self, critical_value, max_iteration, interpolation=False):
-        """Returns early stopping index based on discrepancy principle up to max_iteration.
+        """Returns early stopping index based on discrepancy principle up to max_iteration
 
         **Parameters**
 
         *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
-        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
-        where :math: `\\kappa` is the critical value.
+        :math:`\\Vert Y - A \\hat{f}^{(m)} \\Vert^{2} \\leq \\kappa^{2},`
+        where :math:`\\kappa` is the critical value.
 
         *max_iteration*: ``int``. The maximum number of total iterations to be considered.
 
@@ -191,13 +191,13 @@ class ConjugateGradients:
 
         **Returns**
 
-        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied or
-        :math: `\\Vert A^{\\top}(Y - A \hat{f}^{(m)}) \\Vert^{2} \leq C,` where `C` is the computation_threshold
+        *early_stopping_index*: ``int or float``. The first iteration at which the discrepancy principle is satisfied or
+        :math:`\\Vert A^{\\top}(Y - A \\hat{f}^{(m)}) \\Vert^{2} \\leq C,` where :math:`C` is the computation_threshold
         for the emergency stop.
         (``None`` is returned if the stopping index is not found.)
         """
 
-        # discrepancy stop on existing estimators
+        # Discrepancy stop on existing estimators
         if np.any(self.residuals <= critical_value):
             iteration = np.argmax(self.residuals <= critical_value)
             if interpolation is True and iteration > 0:
@@ -210,7 +210,7 @@ class ConjugateGradients:
             else:
                 early_stopping_index = iteration
             return early_stopping_index
-        # further iteration if necessary and possible
+        # Further iteration if necessary and possible
         elif self.__transformed_residuals[self.iteration] > self.computation_threshold:
             while (
                 self.residuals[self.iteration] > critical_value
@@ -219,12 +219,12 @@ class ConjugateGradients:
             ):
                 self.__conjugate_gradients_one_iteration()
 
-        # emergency stop
+        # Emergency stop
         if self.__transformed_residuals[self.iteration] <= self.computation_threshold:
             early_stopping_index = self.iteration
             return early_stopping_index
 
-        # discrepancy stop
+        # Discrepancy stop
         if self.residuals[self.iteration] <= critical_value:
             if interpolation is True and self.iteration > 0:
                 alpha = 1 - np.sqrt(
@@ -241,11 +241,15 @@ class ConjugateGradients:
             return None
 
     def get_residual(self, iteration):
-        """Returns the squared residual at a possibly noninteger iteration index.
+        """Returns the squared residual at a possibly noninteger iteration index
 
         **Parameters**
 
-        *iteration*: ``float``. Iteration index where the interpolated squared residual should be calculated.
+        *iteration*: ``int or float``. Iteration index where the squared residual should be calculated.
+
+        **Returns**
+
+        *residual*: ``float``. The squared residual at the requested iteration index.
         """
 
         iteration_ceil = np.ceil(iteration).astype("int")
@@ -269,11 +273,15 @@ class ConjugateGradients:
         return residual
 
     def get_strong_empirical_risk(self, iteration):
-        """Returns the strong empirical error at a possibly noninteger iteration index.
+        """Returns the strong empirical error at a possibly noninteger iteration index
 
         **Parameters**
 
-        *iteration*: ``float``. Iteration index where the interpolated error should be calculated.
+        *iteration*: ``int or float``. Iteration index where the error should be calculated.
+
+        **Returns**
+
+        *strong_empirical_risk*: ``float``. The strong empirical error at the requested iteration index.
         """
 
         if self.true_signal is None:
@@ -285,11 +293,15 @@ class ConjugateGradients:
         return strong_empirical_risk
 
     def get_weak_empirical_risk(self, iteration):
-        """Returns the weak empirical error at a possibly noninteger iteration index.
+        """Returns the weak empirical error at a possibly noninteger iteration index
 
         **Parameters**
 
-        *index*: ``float``. Iteration index where the interpolated error should be calculated.
+        *iteration*: ``int or float``. Iteration index where the error should be calculated.
+
+        **Returns**
+
+        *weak_empirical_risk*: ``float``. The weak empirical error at the requested iteration index.
         """
 
         if self.true_signal is None:
@@ -301,17 +313,17 @@ class ConjugateGradients:
         return weak_empirical_risk
 
     def get_strong_empirical_oracle(self, max_iteration, interpolation=False):
-        """Returns the strong empirical oracle up to max_iteration.
+        """Returns the strong empirical oracle up to max_iteration
 
         **Parameters**
 
-        *max_iteration*: ``int``. The maximum number of iterations to be considered.
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
 
-        *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the early stopping index can be noninteger valued.
+        *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the strong empirical oracle can be noninteger valued.
 
         **Returns**
 
-        *strong_empirical_oracle*: ``int``. The iteration at which the strong empirical risk is minimal along the iteration path up to max_iteration. If not unique, the smallest one is returned.
+        *strong_empirical_oracle*: ``int or float``. The iteration index at which the strong empirical error is minimal along the iteration path up to max_iteration. If not unique, the smallest one is returned.
         """
 
         if self.true_signal is None:
@@ -357,17 +369,17 @@ class ConjugateGradients:
         return strong_empirical_oracle
 
     def get_weak_empirical_oracle(self, max_iteration, interpolation=False):
-        """Returns the weak empirical oracle up to max_iteration.
+        """Returns the weak empirical oracle up to max_iteration
 
         **Parameters**
 
-        *max_iteration*: ``int``. The maximum number of iterations to be considered.
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
 
-        *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the early stopping index can be noninteger valued.
+        *interpolation*: ``boolean, default = False``. If interpolation is set to ``True``, the weak empirical oracle can be noninteger valued.
 
         **Returns**
 
-        *weak_empirical_oracle*: ``int``. The iteration at which the weak empirical risk is minimal along the iteration path up to max_iteration. If not unique, the smallest one is returned.
+        *weak_empirical_oracle*: ``int or float``. The iteration index at which the weak empirical error is minimal along the iteration path up to max_iteration. If not unique, the smallest one is returned.
         """
 
         if self.true_signal is None:
