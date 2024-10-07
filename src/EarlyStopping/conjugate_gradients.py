@@ -333,9 +333,12 @@ class ConjugateGradients:
             empirical_risk = self.strong_empirical_risk
             estimator_distances = self.__strong_estimator_distances
             for index in np.arange(max_iteration):
-                alpha = (empirical_risk[index] - empirical_risk[index + 1] + estimator_distances[index + 1]) / (
-                    2 * estimator_distances[index + 1]
-                )
+                if np.sqrt(estimator_distances[index + 1]) <= self.computation_threshold:
+                    alpha = 0
+                else:
+                    alpha = (empirical_risk[index] - empirical_risk[index + 1] + estimator_distances[index + 1]) / (
+                        2 * estimator_distances[index + 1]
+                    )
                 if alpha < 0:
                     optimal_index_candidate = index
                 elif alpha > 1:
@@ -386,9 +389,12 @@ class ConjugateGradients:
             empirical_risk = self.weak_empirical_risk
             estimator_distances = self.__weak_estimator_distances
             for index in np.arange(max_iteration):
-                alpha = (empirical_risk[index] - empirical_risk[index + 1] + estimator_distances[index + 1]) / (
-                    2 * estimator_distances[index + 1]
-                )
+                if np.sqrt(estimator_distances[index + 1]) <= self.computation_threshold:
+                    alpha = 0
+                else:
+                    alpha = (empirical_risk[index] - empirical_risk[index + 1] + estimator_distances[index + 1]) / (
+                        2 * estimator_distances[index + 1]
+                    )
                 if alpha < 0:
                     optimal_index_candidate = index
                 elif alpha > 1:
