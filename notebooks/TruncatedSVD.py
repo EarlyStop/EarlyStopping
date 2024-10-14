@@ -73,11 +73,13 @@ plt.ylim([0, 2])
 ---------------------------------------------------------------------------------
 
 # Two step procedure
-aic_index = alg.get_aic_iteration(4000)
+aic = alg.get_aic(2000)
+aic[0] 
+# Put + 1 there
 
-aic = alg.preliminary_aic + 2 * true_noise_level**2 * np.sum(alg.diagonal_design
-
-
+aic[1]
+plt.figure(figsize=(14, 4))
+plt.plot(aic[1])
 
 
 

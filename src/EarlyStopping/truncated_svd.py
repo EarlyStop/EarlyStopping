@@ -10,15 +10,16 @@ class TruncatedSVD:
 
     **Parameters**
 
-    *design*: ``array``. design matrix of the linear model. ( :math:`A \in \mathbb{R}^{D \\times p}` )
+    *design*: ``array``. Design matrix of the linear model. ( :math:`A \in \mathbb{R}^{D \\times p}` ).
 
-    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{D}` )
+    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{n}` ).
 
-    *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
+    *true_signal*: ``array, default = None``. p-dim vector of the true signal. For simulation purposes only. For simulated data, the true signal can be included to compute theoretical quantities such as the bias and the MSE alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` ).
 
-    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` )
+    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` ).
 
-    *diagonal*: ``bool, default = False'' The user may set this to true if the design matrix is diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal sequence space model.
+    *diagonal*: ``bool, default = False`` The user may set this to true if the design matrix is diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal sequence space model.
+    # 2024-10-14, Bernhard: Checked docu of the parameters. 
 
     **Attributes**
 
@@ -82,6 +83,7 @@ class TruncatedSVD:
 
         self.residuals = np.array([np.sum(self.response**2)])
         self.truncated_svd_estimate_list = [np.zeros(self.parameter_size)]
+        # Mo 14. Okt 14:48:06 CEST 2024, Bernhard: Checked __itit__ until here.
 
         # Initialize theoretical quantities
         if self.true_signal is not None:
@@ -242,6 +244,7 @@ class TruncatedSVD:
     def __truncated_SVD_one_iteration(self):
         # Get next singular triplet
         u, s, vh = svds(self.reduced_design, k=1)
+        # Mo 14. Okt 14:44:54 CEST 2024, Bernhard: Checked one_iteration until here.
 
         # Get diagonal sequence model quantities
         self.diagonal_design = np.append(self.diagonal_design, s)
