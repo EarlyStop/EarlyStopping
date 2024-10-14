@@ -30,6 +30,24 @@ plt.ylim([0, 1.6])
 plt.legend(loc="upper right")
 plt.show()
 
+# Monte-Carlo simulation (fuer alle oder fuer ein Signal)
+signal = ...
+
+
+for index in numRun:
+    do stuff
+
+    Return data.frame
+
+save.data.frame
+
+
+
+# Plots
+
+load.datat.frame
+
+
 # Display class functionality on an individual example
 # ------------------------------------------------------------------------------
 
