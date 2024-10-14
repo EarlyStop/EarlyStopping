@@ -35,6 +35,8 @@ class TruncatedSVD:
 
     *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current iteration.
 
+    # TODO: Strong quantities
+
     **Methods**
 
     +---------------------------------------------------------+--------------------------------------------------------------------------+
