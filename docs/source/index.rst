@@ -13,6 +13,7 @@ Welcome to EarlyStopping's documentation!
    L2-boosting 
    landweber
    conjugate_gradients
+   truncated_svd
    auto_examples/index
    :maxdepth: 2
    :caption: Contents:
