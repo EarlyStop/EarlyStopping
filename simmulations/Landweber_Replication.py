@@ -25,7 +25,7 @@ parameters_smooth = es.SimulationParameters(
     true_signal=true_signal_smooth,
     true_noise_level=0.01,
     max_iteration=1000,
-    monte_carlo_runs=500,
+    monte_carlo_runs=10,
     cores=12
 )
 
@@ -34,7 +34,7 @@ parameters_supersmooth = es.SimulationParameters(
     true_signal=true_signal_supersmooth,
     true_noise_level=0.01,
     max_iteration=1000,
-    monte_carlo_runs=500,
+    monte_carlo_runs=10, #500
     cores=12
 )
 
@@ -43,7 +43,7 @@ parameters_rough = es.SimulationParameters(
     true_signal=true_signal_rough,
     true_noise_level=0.01,
     max_iteration=1500,
-    monte_carlo_runs=500,
+    monte_carlo_runs=10,
     cores=12
 )
 
@@ -55,20 +55,20 @@ results_smooth = simulation_smooth.run_simulation_landweber() # use learning_rat
 results_supersmooth = simulation_supersmooth.run_simulation_landweber() # use learning_rate = "auto" for the best learning rate
 results_rough = simulation_rough.run_simulation_landweber() # use learning_rate = "auto" for the best learning rate
 
-weak_relative_efficiency_smooth = np.array([result[2] for result in results_smooth])[:,0]
-strong_relative_efficiency_smooth = np.array([result[3] for result in results_smooth])[:,0]
+weak_relative_efficiency_smooth = np.array([result[2] for result in results_smooth])
+strong_relative_efficiency_smooth = np.array([result[3] for result in results_smooth])
 stopping_iteration_landweber_smooth = np.array([result[11] for result in results_smooth])
 weak_balanced_oracle_iteration_smooth = np.array([result[12] for result in results_smooth])
 strong_balanced_oracle_iteration_smooth = np.array([result[13] for result in results_smooth])
 
-weak_relative_efficiency_supersmooth = np.array([result[2] for result in results_supersmooth])[:,0]
-strong_relative_efficiency_supersmooth = np.array([result[3] for result in results_supersmooth])[:,0]
+weak_relative_efficiency_supersmooth = np.array([result[2] for result in results_supersmooth])
+strong_relative_efficiency_supersmooth = np.array([result[3] for result in results_supersmooth])
 stopping_iteration_landweber_supersmooth = np.array([result[11] for result in results_supersmooth])
 weak_balanced_oracle_iteration_supersmooth = np.array([result[12] for result in results_supersmooth])
 strong_balanced_oracle_iteration_supersmooth = np.array([result[13] for result in results_supersmooth])
 
-weak_relative_efficiency_rough = np.array([result[2] for result in results_rough])[:,0]
-strong_relative_efficiency_rough = np.array([result[3] for result in results_rough])[:,0]
+weak_relative_efficiency_rough = np.array([result[2] for result in results_rough])
+strong_relative_efficiency_rough = np.array([result[3] for result in results_rough])
 stopping_iteration_landweber_rough = np.array([result[11] for result in results_rough])
 weak_balanced_oracle_iteration_rough = np.array([result[12] for result in results_rough])
 strong_balanced_oracle_iteration_rough = np.array([result[13] for result in results_rough])
@@ -146,7 +146,7 @@ labels = [
     "supersmooth", "smooth", "rough"
 ]
 
-fig_dir = '/Users/ratmir/Downloads'
+fig_dir = ""
 
 create_custom_boxplot(efficiency_to_plot, labels, y_lim_lower = 0.3, y_lim_upper=1.3, fig_dir=fig_dir, name='efficiency')
 
