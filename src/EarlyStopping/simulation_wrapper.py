@@ -285,7 +285,7 @@ class SimulationWrapper:
 
         info("Running Monte Carlo simulation.")
         self.results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_landweber)(m) for m in range(self.monte_carlo_runs)
         )
 
         return self.results
