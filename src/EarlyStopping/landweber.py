@@ -116,7 +116,7 @@ class Landweber:
             self.initial_value = np.zeros(self.parameter_size)
         else:
             if initial_value.size != self.parameter_size:
-                ValueError("The dimension of the initial_value should match paramter size!")
+                raise ValueError("The dimension of the initial_value should match paramter size!")
             self.initial_value = initial_value
 
         # Estimation quantities
@@ -240,7 +240,8 @@ class Landweber:
 
         if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
             while (
-                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
+                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]
+                and self.iteration <= max_iteration
             ):
                 self.__landweber_one_iteration()
 
@@ -248,7 +249,9 @@ class Landweber:
             weak_balanced_oracle = self.iteration
             return weak_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn(
+                "Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
+            )
             return None
 
     def get_strong_balanced_oracle(self, max_iteration):
@@ -278,7 +281,9 @@ class Landweber:
             strong_balanced_oracle = self.iteration
             return strong_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn(
+                "Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
+            )
             return None
 
     def __update_iterative_matrices(self):
