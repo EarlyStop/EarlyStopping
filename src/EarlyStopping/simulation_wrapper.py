@@ -3,6 +3,7 @@ from joblib import Parallel, delayed
 from scipy.linalg import toeplitz
 from scipy.sparse import dia_matrix
 from scipy.sparse.linalg import svds
+import pandas as pd
 
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
@@ -284,11 +285,29 @@ class SimulationWrapper:
             self.learning_rate = 1
 
         info("Running Monte Carlo simulation.")
-        self.results = Parallel(n_jobs=self.cores)(
+        results = Parallel(n_jobs=self.cores)(
             delayed(self.monte_carlo_wrapper_landweber)(m) for m in range(self.monte_carlo_runs)
         )
 
-        return self.results
+        column_names = [
+            "landweber_strong_empirical_risk_es",
+            "landweber_weak_empirical_risk_es",
+            "landweber_weak_relative_efficiency",
+            "landweber_strong_relative_efficiency",
+            "landweber_strong_bias",
+            "landweber_strong_variance",
+            "landweber_strong_risk",
+            "landweber_weak_bias",
+            "landweber_weak_variance",
+            "landweber_weak_risk",
+            "landweber_residuals",
+            "stopping_index_landweber",
+            "balanced_oracle_weak",
+            "balanced_oracle_strong",
+        ]
+
+        results_df = pd.DataFrame(results, columns=column_names)
+        return results_df
 
     def run_simulation_conjugate_gradients(self):
         info("Running simulation.")
