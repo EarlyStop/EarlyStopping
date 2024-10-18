@@ -272,7 +272,7 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
-    def run_simulation_landweber(self, learning_rate=None):
+    def run_simulation_landweber(self, learning_rate=None, data_set_name=None):
         info("Running simulation.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
@@ -307,6 +307,10 @@ class SimulationWrapper:
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
+
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
+
         return results_df
 
     def run_simulation_conjugate_gradients(self):

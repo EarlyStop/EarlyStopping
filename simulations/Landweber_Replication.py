@@ -52,9 +52,9 @@ simulation_smooth = es.SimulationWrapper(**parameters_smooth.__dict__)
 simulation_supersmooth = es.SimulationWrapper(**parameters_supersmooth.__dict__)
 simulation_rough = es.SimulationWrapper(**parameters_rough.__dict__)
 
-results_smooth = simulation_smooth.run_simulation_landweber() # use learning_rate = "auto" for the best learning rate
-results_supersmooth = simulation_supersmooth.run_simulation_landweber() # use learning_rate = "auto" for the best learning rate
-results_rough = simulation_rough.run_simulation_landweber() # use learning_rate = "auto" for the best learning rate
+results_smooth = simulation_smooth.run_simulation_landweber(data_set_name="landweber_simulation_smooth") # use learning_rate = "auto" for the best learning rate
+results_supersmooth = simulation_supersmooth.run_simulation_landweber(data_set_name="landweber_simulation_supersmooth") # use learning_rate = "auto" for the best learning rate
+results_rough = simulation_rough.run_simulation_landweber(data_set_name="landweber_simulation_rough") # use learning_rate = "auto" for the best learning rate
 
 weak_relative_efficiency_smooth = np.array(results_smooth["landweber_weak_relative_efficiency"])
 strong_relative_efficiency_smooth = np.array(results_smooth["landweber_strong_relative_efficiency"])
