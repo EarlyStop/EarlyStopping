@@ -105,7 +105,6 @@ class TruncatedSVD:
 
         self.residuals = np.array([np.sum(self.response**2)])
         self.truncated_svd_estimate_list = [np.zeros(self.parameter_size)]
-        # Mo 14. Okt 14:48:06 CEST 2024, Bernhard: Checked __itit__ until here.
 
         # Initialize theoretical quantities
         if self.true_signal is not None:
@@ -118,7 +117,7 @@ class TruncatedSVD:
             self.strong_mse      = np.array([0])
 
     def iterate(self, number_of_iterations):
-        """Performs number_of_iterations iterations of the algorithm
+        """Performs number_of_iterations iterations of the algorithm.
 
         **Parameters**
 
@@ -153,19 +152,18 @@ class TruncatedSVD:
 
         **Parameters**
 
-        *critical_value*: ``float``. The critical value for the discrepancy
-        principle. The algorithm stops when :math: `\\Vert Y - A \hat{f}^{(m)}
-        \\Vert^{2} \leq \\kappa^{2},` where :math: `\\kappa` is the critical
-        value.
+        *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm
+        stops when :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},` where
+        :math: `\\kappa` is the critical value.
 
         *max_iteration*: ``int``. The maximum number of total iterations to be considered.
 
         **Returns**
 
-        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.  (None is returned if the stopping index is not found.)
+        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is
+        satisfied. (None is returned if the stopping index is not found.)
         """
         if self.residuals[self.iteration] <= critical_value:
-
             # argmax takes the first instance of True in the true-false array
             early_stopping_index = np.argmax(self.residuals <= critical_value)
             return int(early_stopping_index)
@@ -198,10 +196,13 @@ class TruncatedSVD:
             self.iterate(max_iteration - self.iteration)
 
         if self.diagonal:
+            # It's allowed to overwrite this because it is not used if self.diagonal == True
             self.diagonal_response = self.response
 
-        data_fit_term = - np.cumsum(self.diagonal_response[:max_iteration]**2 / self.diagonal_design[:max_iteration]**2)
-        penalty_term  = K * self.true_noise_level**2 * np.cumsum(self.diagonal_design[:max_iteration]**(-2))
+        data_fit_term = - np.cumsum(self.diagonal_response[:max_iteration]**2 / \
+                                    self.diagonal_design[:max_iteration]**2)
+        penalty_term  = K * self.true_noise_level**2 * \
+                            np.cumsum(self.diagonal_design[:max_iteration]**(-2))
         aic           = data_fit_term + penalty_term 
         aic_index     = np.argmin(aic)
 
@@ -216,7 +217,8 @@ class TruncatedSVD:
 
         **Returns**
 
-        *weak_balanced_oracle*: ``int``. The first iteration at which the weak bias is smaller than the weak variance.
+        *weak_balanced_oracle*: ``int``. The first iteration at which the weak bias is smaller than
+        the weak variance.
         """
         if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
             # argmax takes the first instance of True in the true-false array
@@ -224,16 +226,17 @@ class TruncatedSVD:
             return int(weak_balanced_oracle)
 
         if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
-            while (
-                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
-            ):
+            while (self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and
+                   self.iteration <= max_iteration
+                  ):
                 self.iterate(1)
 
         if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
             weak_balanced_oracle = self.iteration
             return weak_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.",
+                          category=UserWarning)
             return None
 
     def get_strong_balanced_oracle(self, max_iteration):
@@ -245,7 +248,8 @@ class TruncatedSVD:
 
         **Returns**
 
-        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller than the strong variance.
+        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller
+        than the strong variance.
         """
         if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
             # argmax takes the first instance of True in the true-false array
@@ -253,17 +257,17 @@ class TruncatedSVD:
             return int(strong_balanced_oracle)
 
         if self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]:
-            while (
-                self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]
-                and self.iteration <= max_iteration
-            ):
+            while (self.strong_bias2[self.iteration] > self.strong_variance[self.iteration] and
+                   self.iteration <= max_iteration
+                  ):
                 self.iterate(1)
 
         if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
             strong_balanced_oracle = self.iteration
             return strong_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.",
+                          category=UserWarning)
             return None
 
     def __truncated_SVD_one_iteration(self):
@@ -311,7 +315,6 @@ class TruncatedSVD:
             self.strong_mse = np.append(self.strong_mse, new_strong_mse)
         
         self.iteration += 1
-        # Mo 21. Okt, Checked one_iteration until here.
 
     def __truncated_SVD_one_iteration_diagonal(self):
         s = self.design[self.iteration, self.iteration]
