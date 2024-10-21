@@ -6,7 +6,8 @@ import warnings
 
 class TruncatedSVD:
     """
-    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_ A class to perform estimation using truncated SVD estimation.
+    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_ 
+    A class to perform estimation using truncated SVD estimation.
 
     **Parameters**
 
@@ -14,11 +15,17 @@ class TruncatedSVD:
 
     *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{n}` ).
 
-    *true_signal*: ``array, default = None``. p-dim vector of the true signal. For simulation purposes only. For simulated data, the true signal can be included to compute theoretical quantities such as the bias and the MSE alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` ).
+    *true_signal*: ``array, default = None``. p-dim vector of the true signal. For simulation purposes only.
+    For simulated data, the true signal can be included to compute theoretical quantities such as
+    the bias and the MSE alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` ).
 
-    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` ).
+    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the
+    standard deviation of normally distributed noise contributing to the response variable. Allows
+    the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` ).
 
-    *diagonal*: ``bool, default = False`` The user may set this to true if the design matrix is diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal sequence space model.
+    *diagonal*: ``bool, default = False`` The user may set this to true if the design matrix is
+    diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal
+    sequence space model.
     # 2024-10-14, Bernhard: Checked docu of the parameters. 
 
     **Attributes**
@@ -29,13 +36,26 @@ class TruncatedSVD:
 
     *parameter_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
 
-    *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the estimator.
+    *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data
+    and the estimator.
 
-    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current iteration.
+    *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak
+    squared bias up to the current iteration.
 
-    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current iteration.
+    *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak
+    variance up to the current iteration.
 
-    # TODO: Strong quantities
+    *weak_mse*: ``array``. Only exists if true_signal was given. Lists the values of the weak
+    mean squared error up to the current iteration.
+
+    *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong
+    squared bias up to the current iteration.
+
+    *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the
+    strong variance up to the current iteration.
+
+    *strong_mse*: ``array``. Only exists if true_signal was given. Lists the values of the strong
+    mean squared error up to the current iteration.
 
     **Methods**
 
@@ -75,10 +95,10 @@ class TruncatedSVD:
         self.iteration = 0
 
         # Quantities in terms of the SVD
-        self.diagonal_design = np.array([])
-        self.diagonal_true_signal= np.array([])
-        self.diagonal_response = np.array([])
-        self.diagonal_estimate = np.array([])
+        self.diagonal_design      = np.array([])
+        self.diagonal_true_signal = np.array([])
+        self.diagonal_response    = np.array([])
+        self.diagonal_estimate    = np.array([])
 
         self.reduced_design = design
         self.eigenvector_matrix = np.empty((self.parameter_size, 0))
@@ -89,10 +109,13 @@ class TruncatedSVD:
 
         # Initialize theoretical quantities
         if self.true_signal is not None:
-            self.weak_bias2 = np.array([np.sum((self.design @ self.true_signal)**2)])
+            self.weak_bias2    = np.array([np.sum((self.design @ self.true_signal)**2)])
             self.weak_variance = np.array([0])
-            self.strong_bias2 = np.array([np.sum(self.true_signal**2)])
+            self.weak_mse      = np.array([0])
+
+            self.strong_bias2    = np.array([np.sum(self.true_signal**2)])
             self.strong_variance = np.array([0])
+            self.strong_mse      = np.array([0])
 
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the algorithm
@@ -246,20 +269,20 @@ class TruncatedSVD:
     def __truncated_SVD_one_iteration(self):
         # Get next singular triplet
         u, s, vh = svds(self.reduced_design, k=1)
-        # Mo 14. Okt 14:44:54 CEST 2024, Bernhard: Checked one_iteration until here.
 
         # Get diagonal sequence model quantities
-        self.diagonal_design = np.append(self.diagonal_design, s)
-        self.diagonal_response = np.append(self.diagonal_response, u.transpose() @ self.response)
+        self.diagonal_design    = np.append(self.diagonal_design, s)
+        self.diagonal_response  = np.append(self.diagonal_response, u.transpose() @ self.response)
         self.eigenvector_matrix = np.append(self.eigenvector_matrix, vh.transpose(), axis=1)
-        self.diagonal_estimate = np.append(self.diagonal_estimate,
-                                           self.diagonal_response[self.iteration] / s)
+        self.diagonal_estimate  = np.append(self.diagonal_estimate,
+                                            self.diagonal_response[self.iteration] / s)
 
         # Update full model quantities
-        new_truncated_svd_estimate = self.truncated_svd_estimate_list[self.iteration] + self.diagonal_estimate[self.iteration] * vh.flatten()
+        new_truncated_svd_estimate = self.truncated_svd_estimate_list[self.iteration] + \
+                                     self.diagonal_estimate[self.iteration] * vh.flatten()
         self.truncated_svd_estimate_list.append(new_truncated_svd_estimate) 
 
-        new_residual = self.residuals[self.iteration] - (u.transpose() @ self.response)**2
+        new_residual   = self.residuals[self.iteration] - (u.transpose() @ self.response)**2
         self.residuals = np.append(self.residuals, new_residual)
 
         # Reduce design by one eigen triplet 
@@ -269,44 +292,54 @@ class TruncatedSVD:
         if self.true_signal is not None:
             self.diagonal_true_signal = np.append(self.diagonal_true_signal, u.transpose() @ self.true_signal)
 
-            new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.diagonal_true_signal[self.iteration]**2
+            new_weak_bias2  = self.weak_bias2[self.iteration] - s**2 * self.diagonal_true_signal[self.iteration]**2
             self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
 
-            new_weak_variance = self.weak_variance[self.iteration] + self.true_noise_level**2
+            new_weak_variance  = self.weak_variance[self.iteration] + self.true_noise_level**2
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
-            new_strong_bias2 = self.strong_bias2[self.iteration] - self.diagonal_true_signal[self.iteration]**2
+            new_weak_mse = new_weak_bias2 + new_weak_variance
+            self.weak_mse = np.append(self.weak_mse, new_weak_mse)
+
+            new_strong_bias2  = self.strong_bias2[self.iteration] - self.diagonal_true_signal[self.iteration]**2
             self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
 
             new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
+
+            new_strong_mse = new_strong_bias2 + new_strong_variance
+            self.strong_mse = np.append(self.strong_mse, new_strong_mse)
         
         self.iteration += 1
+        # Mo 21. Okt, Checked one_iteration until here.
 
     def __truncated_SVD_one_iteration_diagonal(self):
         s = self.design[self.iteration, self.iteration]
         self.diagonal_design = np.append(self.diagonal_design, s)
 
-        standard_basis_vector = np.zeros(self.parameter_size)
+        # Estimator update
+        standard_basis_vector                 = np.zeros(self.parameter_size)
         standard_basis_vector[self.iteration] = 1.0
-        new_truncated_svd_estimate = self.truncated_svd_estimate_list[self.iteration] + self.response[self.iteration] / s * standard_basis_vector
+        new_truncated_svd_estimate            = self.truncated_svd_estimate_list[self.iteration] + \
+                                                self.response[self.iteration] / s * standard_basis_vector
         self.truncated_svd_estimate_list.append(new_truncated_svd_estimate) 
 
-        new_residual = self.residuals[self.iteration] - self.response[self.iteration]**2
+        # Residual update
+        new_residual   = self.residuals[self.iteration] - self.response[self.iteration]**2
         self.residuals = np.append(self.residuals, new_residual)
 
         # Updating theoretical quantities
         if self.true_signal is not None:
-            new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.true_signal[self.iteration]**2
+            new_weak_bias2  = self.weak_bias2[self.iteration] - s**2 * self.true_signal[self.iteration]**2
             self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
 
-            new_weak_variance = self.weak_variance[self.iteration] + self.true_noise_level**2
+            new_weak_variance  = self.weak_variance[self.iteration] + self.true_noise_level**2
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
-            new_strong_bias2 = self.strong_bias2[self.iteration] - self.true_signal[self.iteration]**2
+            new_strong_bias2  = self.strong_bias2[self.iteration] - self.true_signal[self.iteration]**2
             self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
 
-            new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
+            new_strong_variance  = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
         self.iteration += 1
