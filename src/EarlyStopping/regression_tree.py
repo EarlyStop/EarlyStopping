@@ -117,7 +117,6 @@ class DecisionTreeRegressor():
 
     def __init__(self, signal: np.array = None,
                  noise_vector: np.array = None,
-                 max_depth: int = None,
                  min_samples_split: int = 2,
                  kappa : [float, int] = None,
                  global_es: bool = False,
@@ -128,13 +127,11 @@ class DecisionTreeRegressor():
         Initializer
         Inputs:
             noise_vector      -> true noise
-            max_depth         -> maximum number in generations. The number of splits conducted is max_depth - 1.
             IMPORTANT: sklearn decision_tree uses #splits conducted = max_depth
             min_samples_split -> minimum number of samples required to split a node
         [...]
         """
         self.regression_tree = None
-        self.maximal_depth = max_depth
         self.signal = signal
         self.kappa = kappa
         self.minimal_samples_split = min_samples_split
@@ -598,13 +595,15 @@ class DecisionTreeRegressor():
         else:
             return self.__traverse(node.get_right_node(), design_row)
 
-    def train(self, design: pd.DataFrame | np.ndarray, response: pd.Series | np.ndarray | pd.DataFrame) -> None:
+    def iterate(self, design: pd.DataFrame | np.ndarray, response: pd.Series | np.ndarray | pd.DataFrame, max_depth: int = None,) -> None:
         """
         Train the CART model
 
         Inputs:
             design -> input set of predictor variables
             response -> input set of labels
+            max_depth -> maximum number in generations. The number of splits conducted is max_depth - 1.
+
         """
         # Convert pandas DataFrame/Series to numpy array if necessary
         if isinstance(design, pd.DataFrame):
@@ -612,6 +611,7 @@ class DecisionTreeRegressor():
         if isinstance(response, (pd.Series, pd.DataFrame)):
             response = response.to_numpy()
 
+        self.maximal_depth = max_depth
         self.response = response.reshape(-1, 1)
         # prepare the input data
         self.design_and_response = np.concatenate((design, self.response), axis=1)

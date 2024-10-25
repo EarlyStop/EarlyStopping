@@ -34,7 +34,7 @@ f, nuisance = data_generation.generate_data_from_X(X_train, noise_level=noise_le
 kappa = 1
 # Estimate the regression tree with and apply early stopping:
 # The f and the noise_train are given as input to calculate theoretical quantities:
-tree_es = RMG_runner.DecisionTreeRegressor(max_depth=35, loss='mse', global_es=True,
+tree_es = RMG_runner.DecisionTreeRegressor(loss='mse', global_es=True,
                                                min_samples_split=1,
                                                kappa=kappa,
                                                noise_vector=noise_train,
@@ -43,7 +43,7 @@ tree_es = RMG_runner.DecisionTreeRegressor(max_depth=35, loss='mse', global_es=T
                                                response=y_train)
 
 # Gives ES iteration; max_depth und kappa hier rein (dafür oben kappa weglassen und X_train, y_train oben rein in der object Erzeugung in welcher der contructor aufgerufen wird):
-tree_es.train(X_train, y_train) # TODO: analog zu landweber anpassen; evtl später 'übernamung' implementieren mit .train
+tree_es.iterate(X_train, y_train, max_depth=3000) # TODO: analog zu landweber anpassen; evtl später 'übernamung' implementieren mit .train
 # TODO: .get_discrepancy_stop ist das analog in landweber
 # TODO: Do it as close to landweber as possible.
 # TODO: minimal_example.py zu notebooks tun (NICHT zu Source!)
