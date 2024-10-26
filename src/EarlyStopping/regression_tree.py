@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 from queue import Queue
+import warnings
 
 
 # TODO: Can the usage of node and clone tree be simplified?
@@ -112,13 +113,11 @@ def clone_tree(node):
     return cloned_node
 
 
-
 class DecisionTreeRegressor():
 
     def __init__(self, signal: np.array = None,
                  noise_vector: np.array = None,
                  min_samples_split: int = 2,
-                 kappa : [float, int] = None,
                  global_es: bool = False,
                  loss: str = 'mse',
                  design:np.array = None,
@@ -133,7 +132,6 @@ class DecisionTreeRegressor():
         """
         self.regression_tree = None
         self.signal = signal
-        self.kappa = kappa
         self.minimal_samples_split = min_samples_split
         self.noise_vector = noise_vector
         self.trees_at_each_level = {}  # Dictionary to store tree copies at each level
@@ -230,7 +228,6 @@ class DecisionTreeRegressor():
         self.variance_collect = {}
         self.indices_collect= {}
         self.block_matrix_collect = {}
-        self.stopping_index = None
         self.get_balanced_oracle_iteration = None
 
         self.balanced_oracle_iteration_collect = {}
@@ -250,37 +247,26 @@ class DecisionTreeRegressor():
             print(self.level)
 
 
-            # # Store quantities at this level
+            # Store quantities at this level
             if self.level_indices:
-
-                # TODO: It works well:
                 # Processing of block matrix:
                 self._block_matrix_processing()
                 # Get the bias2 and the variance:
                 self._get_theoretical_quantities()
 
+                # Store the balanced oracle iteration
                 if self.get_balanced_oracle_iteration is None:
                     if self.bias2 <= self.variance:
                         self.get_balanced_oracle_iteration = self.level
 
 
-
-
             self.mse_per_level_collect.append(self.level_mse_sum)
-
-            # Check for early stopping condition based on MSE threshold `kappa`
-            if self.stopping_index is None:
-                if self.level_mse_sum < self.kappa:
-                    self.stopping_index = self.level
-                    print(self.level_mse_sum, self.kappa, self.level)
-
 
             # After processing the current level, store the tree state
             self.trees_at_each_level[self.level] = clone_tree(self.regression_tree)
 
             # Prepare for the next level of nodes
             self.queue = self.next_level_queue
-
 
     def _get_theoretical_quantities(self):
         if self.signal is not None and self.noise_vector is not None:
@@ -407,6 +393,55 @@ class DecisionTreeRegressor():
                     self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
                     self.node.is_terminal = True  # Mark as terminal
 
+    def get_discrepancy_stop(self, critical_value):
+        """Returns early stopping index based on discrepancy principle up to max_iteration
+
+        **Parameters**
+
+        *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
+        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
+        where :math: `\\kappa` is the critical value.
+
+        **Returns**
+
+        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.
+        (None is returned if the stopping index is not found.)
+        """
+        if np.any(np.array(self.mse_per_level_collect)<=critical_value):
+            # argmax takes the first instance of True in the true-false array
+            early_stopping_index = np.argmax(np.array(self.mse_per_level_collect) <= critical_value)
+            return early_stopping_index
+        else:
+            warnings.warn("Early stopping index not found. Returning None.", category=UserWarning)
+            return None
+
+    def get_strong_balanced_oracle(self, max_iteration):
+        """Returns strong balanced oracle if found up to max_iteration.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
+
+        **Returns**
+
+        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller than the strong variance.
+        """
+        # Transform the dictionary values to numpy arrays
+        # TODO: transform bias2_collect and variance_collect more clever to a numpy array before (fill initially an array maybe instead of disctionary)
+        bias2_values = np.array(list(self.bias2_collect.values()))
+        variance_values = np.array(list(self.variance_collect.values()))
+
+        # Perform element-wise comparison and check if at least one is True
+        if np.any(bias2_values < variance_values):
+            # argmax takes the first instance of True in the true-false array
+            balanced_oracle = np.argmax(bias2_values < variance_values)
+            return balanced_oracle
+
+        else:
+            warnings.warn(
+                "Balanced oracle not found. Returning None.", category=UserWarning
+            )
+            return None
 
 
     def _impurity(self, design_and_response_input: np.array) -> float:

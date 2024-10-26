@@ -60,12 +60,6 @@ models_smooth = es.Landweber(design_matrix, observation_smooth, true_signal=sign
 models_rough = es.Landweber(design_matrix, observation_rough, true_signal=signal_rough, learning_rate=1,
                             true_noise_level=NOISE_LEVEL)
 
-# models_supersmooth = es.Landweber(
-#     design_matrix, observation_supersmooth, true_noise_level=NOISE_LEVEL, true_signal=signal_supersmooth
-# )
-# models_smooth = es.Landweber(design_matrix, observation_smooth, true_noise_level=NOISE_LEVEL, true_signal=signal_smooth)
-# models_rough = es.Landweber(design_matrix, observation_rough, true_noise_level=NOISE_LEVEL, true_signal=signal_rough)
-
 max_iteration = 1500
 start = timeit.default_timer()
 models_supersmooth.iterate(max_iteration)
