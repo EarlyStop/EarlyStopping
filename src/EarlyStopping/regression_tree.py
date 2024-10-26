@@ -5,75 +5,6 @@ import pandas as pd
 from queue import Queue
 import warnings
 
-
-# TODO: Can the usage of node and clone tree be simplified?
-class Node(object):
-    """
-    Class to define & control tree nodes
-    """
-
-    def __init__(self) -> None:
-        """
-        Initializer for a Node class instance
-        """
-        self.split_threshold = None
-        self.variable = None
-        self._left = None
-        self._right = None
-        self.is_terminal = False
-        self.node_prediction = None
-        self.design_and_response  = None
-
-
-    def set_params(self, split_threshold: float, variable: int) -> None:
-        """
-        Set the split & variable parameters for this node
-
-        Input:
-            split   -> value to split variable on
-            variable -> index of variable to be used in splitting
-        """
-        self.split_threshold = split_threshold
-        self.variable = variable
-
-    def get_params(self) -> Tuple[float, int]:
-        """
-        Get the split & variable parameters for this node
-
-        Output:
-            Tuple containing (split,variable) pair
-        """
-        return (self.split_threshold, self.variable)
-
-    def set_children(self, left: Node, right: Node) -> None:
-        """
-        Set the left/right child nodes for the current node
-
-        Inputs:
-            left  -> LHS child node
-            right -> RHS child node
-        """
-        self._left = left
-        self._right = right
-
-    def get_left_node(self) -> Node:
-        """
-        Get the left child node
-
-        Output:
-            LHS child node
-        """
-        return self._left
-
-    def get_right_node(self) -> Node:
-        """
-        Get the RHS child node
-
-        Output:
-            RHS child node
-        """
-        return self._right
-
 def clone_tree(node):
     """
        Creates a deep copy of a binary tree rooted at the given `node`.
@@ -94,7 +25,7 @@ def clone_tree(node):
         return None
 
     # Create a new node and copy properties
-    cloned_node = Node()
+    cloned_node = DecisionTreeRegressor.Node()
     cloned_node.set_params(node.split_threshold, node.variable)
     cloned_node.is_terminal = node.is_terminal
     cloned_node.node_prediction = node.node_prediction
@@ -112,36 +43,66 @@ def clone_tree(node):
 
     return cloned_node
 
-
 class DecisionTreeRegressor():
 
-    def __init__(self, signal: np.array = None,
-                 noise_vector: np.array = None,
+    class Node:
+        def __init__(self):
+            self.split_threshold = None  # This can be a float or None
+            self.variable = None         # This can be an int or None
+            self._left = None            # This can be a Node or None
+            self._right = None           # This can be a Node or None
+            self.is_terminal = False     # Boolean indicating if the node is terminal
+            self.node_prediction = None  # Prediction at this node (float or None)
+            self.design_and_response = None  # This can be a NumPy array or None
+
+        def set_params(self, split_threshold: float, variable: int) -> None:
+            """ Set split and variable parameters for this node. """
+            self.split_threshold = split_threshold
+            self.variable = variable
+
+        def get_params(self):
+            """ Get the split and variable parameters for this node. """
+            return (self.split_threshold, self.variable)
+
+        def set_children(self, left, right) -> None:
+            """ Set left and right child nodes for the current node. """
+            self._left = left
+            self._right = right
+
+        def get_left_node(self):
+            """ Get the left child node. """
+            return self._left
+
+        def get_right_node(self):
+            """ Get the right child node. """
+            return self._right
+
+
+    def __init__(self,
+                 design: np.array = None,
+                 response: np.array = None,
                  min_samples_split: int = 2,
-                 global_es: bool = False,
-                 loss: str = 'mse',
-                 design:np.array = None,
-                 response:np.array = None):
+                 true_signal: np.array = None,
+                 true_noise_vector: np.array = None):
         """
         Initializer
         Inputs:
-            noise_vector      -> true noise
-            IMPORTANT: sklearn decision_tree uses #splits conducted = max_depth
+            true_noise_vector      -> true noise
             min_samples_split -> minimum number of samples required to split a node
         [...]
         """
         self.regression_tree = None
-        self.signal = signal
+        self.true_signal = true_signal
         self.minimal_samples_split = min_samples_split
-        self.noise_vector = noise_vector
+        self.true_noise_vector = true_noise_vector
         self.trees_at_each_level = {}  # Dictionary to store tree copies at each level
-        self.loss = loss
-        self.global_es = global_es
         self.design = design
         self.response = response
+
+        # Parameters of the model
         self.sample_size = self.design.shape[0]
 
-        # Projection matrix related:
+        # For theoretical quantities:
         self.observations_per_level = {}  # Dictionary to store observations count per level
         self.indices_per_level = {}
         self.block_matrix = {}
@@ -224,14 +185,16 @@ class DecisionTreeRegressor():
         self.terminal_indices = {}  # Dictionary to store indices for each terminal node
         self.block_matrices_full = {}
         self.indices_complete_all = {}
-        self.bias2_collect = {}
-        self.variance_collect = {}
+
+        self.bias2 = np.array([])
+        self.variance = np.array([])
+        self.risk = np.array([])
+
         self.indices_collect= {}
         self.block_matrix_collect = {}
-        self.get_balanced_oracle_iteration = None
 
         self.balanced_oracle_iteration_collect = {}
-        self.mse_per_level_collect = []
+        self.residuals = np.array([])
 
         while not self.queue.empty():
             self.level_mse_sum = 0  # Initialize the sum of MSE for the current level
@@ -244,9 +207,6 @@ class DecisionTreeRegressor():
             # Process all nodes at the current level (= perform 'one iteration'):
             self._grow_one_iteration()
 
-            print(self.level)
-
-
             # Store quantities at this level
             if self.level_indices:
                 # Processing of block matrix:
@@ -254,13 +214,7 @@ class DecisionTreeRegressor():
                 # Get the bias2 and the variance:
                 self._get_theoretical_quantities()
 
-                # Store the balanced oracle iteration
-                if self.get_balanced_oracle_iteration is None:
-                    if self.bias2 <= self.variance:
-                        self.get_balanced_oracle_iteration = self.level
-
-
-            self.mse_per_level_collect.append(self.level_mse_sum)
+            self.residuals = np.append(self.residuals, self.level_mse_sum)
 
             # After processing the current level, store the tree state
             self.trees_at_each_level[self.level] = clone_tree(self.regression_tree)
@@ -269,21 +223,27 @@ class DecisionTreeRegressor():
             self.queue = self.next_level_queue
 
     def _get_theoretical_quantities(self):
-        if self.signal is not None and self.noise_vector is not None:
+        if self.true_signal is not None and self.true_noise_vector is not None:
             if self.block_matrix[self.level].shape[0] == self.design_and_response.shape[0]:
-                self.bias2, self.variance = self._get_bias_and_variance(self.indices_processed[self.level],
+                self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_processed[self.level],
                                                               self.block_matrix[self.level], self.level)
                 self.balanced_oracle_iteration_collect[self.level] = self.balanced_oracle_iteration
-                self.bias2_collect[self.level] = self.bias2
-                self.variance_collect[self.level] = self.variance
+
+                self.bias2 = np.append(self.bias2, self.new_bias2)
+                self.variance = np.append(self.variance, self.new_variance)
+                self.risk = np.append(self.risk, self.level_mse_sum)
+
                 self.indices_collect[self.level] = self.indices_processed[self.level]
                 self.block_matrix_collect[self.level] = self.block_matrix[self.level]
             else:
-                self.bias2, self.variance = self._get_bias_and_variance(self.indices_complete,
+                self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_complete,
                                                               self.block_matrices_full[self.level], self.level)
                 self.balanced_oracle_iteration_collect[self.level] = self.balanced_oracle_iteration
-                self.bias2_collect[self.level] = self.bias2
-                self.variance_collect[self.level] = self.variance
+
+                self.bias2 = np.append(self.bias2, self.new_bias2)
+                self.variance = np.append(self.variance, self.new_variance)
+                self.risk = np.append(self.risk, self.level_mse_sum)
+
                 self.indices_collect[self.level] = self.indices_complete
                 self.block_matrix_collect[self.level] = self.block_matrices_full[self.level]
 
@@ -313,7 +273,6 @@ class DecisionTreeRegressor():
 
             self.indices_complete = np.append(indices_pre_append, indices_append)
             self.indices_complete_all[self.level] = self.indices_complete
-
 
     def _grow_one_iteration(self):
 
@@ -347,7 +306,7 @@ class DecisionTreeRegressor():
                     right_node_mask = ~left_node_mask
 
                     # Create left and right child nodes and set current node parameters
-                    self.left_node, self.right_node = Node(), Node()
+                    self.left_node, self.right_node = self.Node(), self.Node()
                     self.node.set_params(split_value, split_variable)
                     self.node.set_children(self.left_node, self.right_node)
 
@@ -407,15 +366,15 @@ class DecisionTreeRegressor():
         *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.
         (None is returned if the stopping index is not found.)
         """
-        if np.any(np.array(self.mse_per_level_collect)<=critical_value):
+        if np.any(self.residuals<=critical_value):
             # argmax takes the first instance of True in the true-false array
-            early_stopping_index = np.argmax(np.array(self.mse_per_level_collect) <= critical_value)
+            early_stopping_index = np.argmax(self.residuals <= critical_value)
             return early_stopping_index
         else:
             warnings.warn("Early stopping index not found. Returning None.", category=UserWarning)
             return None
 
-    def get_strong_balanced_oracle(self, max_iteration):
+    def get_balanced_oracle(self):
         """Returns strong balanced oracle if found up to max_iteration.
 
         **Parameters**
@@ -426,15 +385,10 @@ class DecisionTreeRegressor():
 
         *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller than the strong variance.
         """
-        # Transform the dictionary values to numpy arrays
-        # TODO: transform bias2_collect and variance_collect more clever to a numpy array before (fill initially an array maybe instead of disctionary)
-        bias2_values = np.array(list(self.bias2_collect.values()))
-        variance_values = np.array(list(self.variance_collect.values()))
 
-        # Perform element-wise comparison and check if at least one is True
-        if np.any(bias2_values < variance_values):
+        if np.any(self.bias2 <= self.variance):
             # argmax takes the first instance of True in the true-false array
-            balanced_oracle = np.argmax(bias2_values < variance_values)
+            balanced_oracle = np.argmax(self.bias2 <= self.variance)
             return balanced_oracle
 
         else:
@@ -442,7 +396,6 @@ class DecisionTreeRegressor():
                 "Balanced oracle not found. Returning None.", category=UserWarning
             )
             return None
-
 
     def _impurity(self, design_and_response_input: np.array) -> float:
 
@@ -545,10 +498,10 @@ class DecisionTreeRegressor():
 
            """
 
-        # Bias:
-        bias2 = np.mean(((np.eye(indices.shape[0]) - block_matrix) @ self.signal[indices]) ** 2)
+        # Squared Bias:
+        bias2 = np.mean(((np.eye(indices.shape[0]) - block_matrix) @ self.true_signal[indices]) ** 2)
         # Variance:
-        variance = np.mean((block_matrix @ self.noise_vector[indices]) ** 2)
+        variance = np.mean((block_matrix @ self.true_noise_vector[indices]) ** 2)
 
         return bias2, variance
 
@@ -651,7 +604,7 @@ class DecisionTreeRegressor():
         # prepare the input data
         self.design_and_response = np.concatenate((design, self.response), axis=1)
         # set the root node of the tree
-        self.regression_tree = Node()
+        self.regression_tree = self.Node()
         # build the tree
         self.initial_indices = np.arange(self.sample_size)  # Initial indices for the entire dataset
         self.__grow_regression_tree_breadth_first(node=self.regression_tree, current_indices=self.initial_indices)  # Initial indices for the entire dataset
@@ -665,22 +618,26 @@ class DecisionTreeRegressor():
                 - Each row represents a sample.
                 - Each column represents a feature.
             depth (int): The depth of the tree to use for making predictions.
-                - If `depth` is 0, the function returns the unconditional mean of the response variable.
+                - If `depth` is 1, the function returns the unconditional mean of the response variable.
 
         Returns:
             np.array: An array of predicted values corresponding to each input sample.
 
         """
-
-        if isinstance(design, pd.DataFrame):
-            design = design.to_numpy()
-        # Unconditional mean prediction for depth=0
-        if depth == 0:
-            return np.repeat(np.mean(self.response), design.shape[0])
+        if depth <= self.maximal_depth:
+            if isinstance(design, pd.DataFrame):
+                design = design.to_numpy()
+            # Unconditional mean prediction for depth=0
+            if depth == 0:
+                return np.repeat(np.mean(self.response), design.shape[0])
+            else:
+                tree = self.trees_at_each_level[depth] # self.trees_at_each_level does not include unconditional mean
+                predictions = []
+                for r in range(design.shape[0]):
+                    predictions.append(self.__traverse(tree, design[r, :]))
+                return np.array(predictions)
         else:
-            tree = self.trees_at_each_level[depth]
-            predictions = []
-            for r in range(design.shape[0]):
-                predictions.append(self.__traverse(tree, design[r, :]))
-            return np.array(predictions)
+            warnings.warn("'Depth' can not exceed 'max_depth'. Returning None.", category=UserWarning)
+            return None
+
 
