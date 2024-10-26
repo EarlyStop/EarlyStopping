@@ -7,12 +7,13 @@ import pandas as pd
 
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
+from .truncated_svd import TruncatedSVD
 
 # import matplotlib.pyplot as plt
 # from matplotlib.ticker import FixedLocator
 # import seaborn as sns
 # import pandas as pd
-
+# TODO: Update bias2 vs. bias/ mse vs risk, landweber empirical vs. non-empirical quantities for replication study
 
 class SimulationData:
     @staticmethod
@@ -312,6 +313,96 @@ class SimulationWrapper:
             results_df.to_csv(f"{data_set_name}.csv", index=False)
 
         return results_df
+
+    def run_simulation_truncated_svd(self, diagonal=False, data_set_name=None):
+        self.diagonal = diagonal
+        info("Running simulation.")
+        if self.noise is None:
+            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
+        
+        self.response = self.noise + (self.response_noiseless)[:, None]
+        info("Running Monte-Carlo simulation.")
+
+        results = Parallel(n_jobs=self.cores)(
+            delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
+        )
+
+        column_names = [
+            "strong_bias",
+            "strong_variance",
+            "strong_mse",
+            "weak_bias",
+            "weak_variance",
+            "weak_mse",
+            "residuals",
+            "discrepancy_stop",
+            "weak_balanced_oracle",
+            "strong_balanced_oracle",
+            "weak_classical_oracle",
+            "strong_classical_oracle",
+            "weak_relative_efficiency",
+            "strong_relative_efficiency"
+        ]
+
+        results_df = pd.DataFrame(results, columns=column_names)
+
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
+
+        return results_df
+
+    def monte_carlo_wrapper_truncated_svd(self, m):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+        model_truncated_svd = TruncatedSVD(
+            design=self.design,
+            response=self.response[:, m],
+            true_signal=self.true_signal,
+            true_noise_level=self.true_noise_level,
+            diagonal=self.diagonal
+        )
+
+        model_truncated_svd.iterate(self.max_iteration)
+
+        strong_bias = model_truncated_svd.strong_bias2
+        strong_variance = model_truncated_svd.strong_variance
+        strong_mse = model_truncated_svd.strong_mse
+        weak_bias = model_truncated_svd.weak_bias2
+        weak_variance = model_truncated_svd.weak_variance
+        weak_mse = model_truncated_svd.weak_mse
+        residuals = model_truncated_svd.residuals
+
+        discrepancy_stop = model_truncated_svd.get_discrepancy_stop(
+            self.sample_size * (self.true_noise_level**2), self.max_iteration
+        )
+        weak_balanced_oracle = model_truncated_svd.get_weak_balanced_oracle(self.max_iteration)
+        strong_balanced_oracle = model_truncated_svd.get_strong_balanced_oracle(self.max_iteration)
+
+        weak_classical_oracle = np.argmin(weak_mse)
+        strong_classical_oracle = np.argmin(strong_mse)
+
+        weak_relative_efficiency = np.sqrt(
+            np.min(weak_mse) / weak_mse[discrepancy_stop]
+        )
+        strong_relative_efficiency = np.sqrt(
+            np.min(strong_mse) / strong_mse[discrepancy_stop]
+        )
+
+        return (
+            strong_bias,
+            strong_variance,
+            strong_mse,
+            weak_bias,
+            weak_variance,
+            weak_mse,
+            residuals,
+            discrepancy_stop,
+            weak_balanced_oracle,
+            strong_balanced_oracle,
+            weak_classical_oracle,
+            strong_classical_oracle,
+            weak_relative_efficiency,
+            strong_relative_efficiency
+        )
 
     def run_simulation_conjugate_gradients(self):
         info("Running simulation.")

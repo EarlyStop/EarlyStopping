@@ -110,11 +110,11 @@ class TruncatedSVD:
         if self.true_signal is not None:
             self.weak_bias2    = np.array([np.sum((self.design @ self.true_signal)**2)])
             self.weak_variance = np.array([0])
-            self.weak_mse      = np.array([0])
+            self.weak_mse      = np.array([np.sum((self.design @ self.true_signal)**2)])
 
             self.strong_bias2    = np.array([np.sum(self.true_signal**2)])
             self.strong_variance = np.array([0])
-            self.strong_mse      = np.array([0])
+            self.strong_mse      = np.array([np.sum(self.true_signal**2)])
 
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the algorithm.

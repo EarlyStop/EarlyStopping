@@ -8,96 +8,62 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
+import pandas as pd
+
+sample_size  = 10000
+indices      = np.arange(sample_size) + 1
+eigenvalues  = indices**(-0.5)
+design       = np.diag(eigenvalues)
+
+true_signal_supersmooth = 5    * np.exp(-0.1 * indices)
+true_signal_smooth      = 5000 * np.abs(np.sin(0.01  * indices))  * indices**(-1.6)
+true_signal_rough       = 250  * np.abs(np.sin(0.002 * indices))  * indices**(-0.8)
 
 
-# Plot different signals
-# ------------------------------------------------------------------------------
+response_noiseless_rough = eigenvalues * true_signal_rough
+response_noiseless_smooth = eigenvalues * true_signal_smooth
+response_noiseless_supersmooth = eigenvalues * true_signal_supersmooth
 
-D = 10000
-indices = np.arange(D) + 1
+# design_smooth, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(sample_size=10000, type = 'smooth')
+# design_supersmooth, response_noiseless_supersmooth, true_signal_supersmooth = es.SimulationData.diagonal_data(sample_size=10000, type = 'supersmooth')
+# design_rough, response_noiseless_rough, true_signal_rough = es.SimulationData.diagonal_data(sample_size=10000, type = 'rough')
 
-signal_supersmooth = 5    * np.exp(-0.1 * indices)
-signal_smooth      = 5000 * np.abs(np.sin(0.01  * indices))  * indices**(-1.6)
-signal_rough       = 250  * np.abs(np.sin(0.002 * indices))  * indices**(-0.8)
+parameters_smooth = es.SimulationParameters(
+    design=design,
+    true_signal=true_signal_smooth,
+    true_noise_level=0.01,
+    max_iteration=1000,
+    monte_carlo_runs=10,
+    cores=12
+)
 
-plt.figure(figsize=(14, 4))
-plt.plot(indices, signal_supersmooth, label="supersmooth signal")
-plt.plot(indices, signal_smooth, label="smooth signal")
-plt.plot(indices, signal_rough, label="rough signal")
-plt.ylabel("Signal")
-plt.xlabel("Index")
-plt.ylim([0, 1.6])
-plt.legend(loc="upper right")
-plt.show()
+parameters_supersmooth = es.SimulationParameters(
+    design=design,
+    true_signal=true_signal_supersmooth,
+    true_noise_level=0.01,
+    max_iteration=1000,
+    monte_carlo_runs=10, #500
+    cores=12
+)
 
-# Monte-Carlo simulation (fuer alle oder fuer ein Signal)
-signal = ...
+parameters_rough = es.SimulationParameters(
+    design=design,
+    true_signal=true_signal_rough,
+    true_noise_level=0.01,
+    max_iteration=3000,
+    monte_carlo_runs=10,
+    cores=12
+)
+
+simulation_smooth = es.SimulationWrapper(**parameters_smooth.__dict__)
+simulation_supersmooth = es.SimulationWrapper(**parameters_supersmooth.__dict__)
+simulation_rough = es.SimulationWrapper(**parameters_rough.__dict__)
+
+results_smooth = simulation_smooth.run_simulation_truncated_svd(diagonal=True, data_set_name="truncated_svd_simulation_smooth")
+results_supersmooth = simulation_supersmooth.run_simulation_truncated_svd(diagonal=True, data_set_name="truncated_svd_simulation_supersmooth")
+results_rough = simulation_rough.run_simulation_truncated_svd(diagonal=True, data_set_name="truncated_svd_simulation_rough")
 
 
-for index in numRun:
-    do stuff
-
-    Return data.frame
-
-save.data.frame
-
-
-
-# Plots
-
-load.datat.frame
-
-
-# Display class functionality on an individual example
-# ------------------------------------------------------------------------------
-
-# Choose true model quantities
-true_signal      = signal_rough
-eigenvalues      = indices**(-0.5)
-design           = np.diag(eigenvalues)
-true_noise_level = 0.01
-
-# Simulate data
-response = eigenvalues * true_signal + \
-           true_noise_level * np.random.normal(0, 1, D)
-
-# Initialize TruncatedSVD class and iterate
-alg = es.TruncatedSVD(design, response, true_signal, true_noise_level,
-                      diagonal = True)
-
-# Bias-variance decomposition and oracle quantities
-alg.iterate(3000)
-
-plt.figure()
-plt.plot(indices[0: alg.iteration + 1], alg.weak_variance, label="Variance")
-plt.plot(indices[0: alg.iteration + 1], alg.weak_bias2, label="Bias")
-alg.get_weak_balanced_oracle(3000)
-
-plt.figure()
-plt.plot(indices[0: alg.iteration + 1], alg.strong_variance, label="Variance")
-plt.plot(indices[0: alg.iteration + 1], alg.strong_bias2, label="Bias")
-alg.get_strong_balanced_oracle(3000)
-
-# Early stopping w/ discrepancy principle
-critical_value   = D * true_noise_level**2
-discrepancy_time = alg.get_discrepancy_stop(critical_value, 3000)
-estimated_signal = alg.get_estimate(discrepancy_time)
-
-plt.figure(figsize=(14, 4))
-plt.plot(indices, estimated_signal)
-plt.plot(indices, true_signal)
-plt.ylim([0, 2])
-
----------------------------------------------------------------------------------
-
-# Two step procedure
-aic = alg.get_aic(2000)
-aic[0] 
-# Put + 1 there
-
-aic[1]
-plt.figure(figsize=(14, 4))
-plt.plot(aic[1])
 
 
 
