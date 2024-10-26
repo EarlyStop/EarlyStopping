@@ -1,18 +1,21 @@
-################################################################################
-#             Usage example for landweber estimation                #
-################################################################################
+"""
+Usage example for landweber estimation 
+======================================
 
-# Imports
-# ------------------------------------------------------------------------------
-
+We illustrate the usage and available methods of the Landweber class via a
+small example.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
 from scipy.sparse import dia_matrix
 
 
-# Plot different signals
-# ------------------------------------------------------------------------------
+# %%
+# Generating synthetic data
+# -------------------------
+# To simulate some data we consider the signals from `Blanchard, Hoffmann and Reiß (2018) <https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-12/issue-2/Early-stopping-for-statistical-inverse-problems-via-truncated-SVD-estimation/10.1214/18-EJS1482.full>`_.
+sample_size = 10000
 
 sample_size = 10000
 indices = np.arange(sample_size) + 1
@@ -33,10 +36,8 @@ plt.ylim([0, 0.4])
 plt.legend(loc="upper right")
 plt.show()
 
-# Display class functionality on an individual example
-# ------------------------------------------------------------------------------
-
-# Choose true model quantities
+# %%
+# We simulate data from a prototypical inverse problem based on one of the signals
 true_noise_level = 0.01
 noise = true_noise_level * np.random.normal(0, 1, sample_size)
 
