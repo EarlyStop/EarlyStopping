@@ -1,6 +1,6 @@
 """
 Usage example for global early stopping for the regression tree
-======================================
+===============================================================
 
 We illustrate the usage and available methods of the regression tree class via a
 small example.
