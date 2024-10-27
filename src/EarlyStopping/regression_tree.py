@@ -5,45 +5,7 @@ import pandas as pd
 from queue import Queue
 import warnings
 
-def clone_tree(node):
-    """
-       Creates a deep copy of a binary tree rooted at the given `node`.
-
-       This function recursively clones each node and its children, ensuring that the new tree
-       is a completely separate object from the original. All attributes and properties of each
-       node are copied over to their corresponding cloned nodes.
-
-       Parameters:
-           node (Node): The root node of the tree or subtree to clone.
-
-       Returns:
-           Node: The root node of the cloned tree or subtree. If the input `node` is `None`, returns `None`.
-
-       """
-
-    if node is None:
-        return None
-
-    # Create a new node and copy properties
-    cloned_node = DecisionTreeRegressor.Node()
-    cloned_node.set_params(node.split_threshold, node.variable)
-    cloned_node.is_terminal = node.is_terminal
-    cloned_node.node_prediction = node.node_prediction
-    cloned_node.design_and_response  = node.design_and_response
-
-    # Recursively clone children
-    left_cloned = clone_tree(node.get_left_node())
-    right_cloned = clone_tree(node.get_right_node())
-    cloned_node.set_children(left_cloned, right_cloned)
-
-    # Set the node as terminal if it has no children
-    if left_cloned is None and right_cloned is None:
-        cloned_node.is_terminal = True
-
-
-    return cloned_node
-
-class DecisionTreeRegressor():
+class RegressionTree:
 
     class Node:
         def __init__(self):
@@ -62,7 +24,7 @@ class DecisionTreeRegressor():
 
         def get_params(self):
             """ Get the split and variable parameters for this node. """
-            return (self.split_threshold, self.variable)
+            return self.split_threshold, self.variable
 
         def set_children(self, left, right) -> None:
             """ Set left and right child nodes for the current node. """
@@ -77,6 +39,42 @@ class DecisionTreeRegressor():
             """ Get the right child node. """
             return self._right
 
+    def clone_tree(self, node):
+        """
+           Creates a deep copy of a binary tree rooted at the given `node`.
+
+           This function recursively clones each node and its children, ensuring that the new tree
+           is a completely separate object from the original. All attributes and properties of each
+           node are copied over to their corresponding cloned nodes.
+
+           Parameters:
+               node (Node): The root node of the tree or subtree to clone.
+
+           Returns:
+               Node: The root node of the cloned tree or subtree. If the input `node` is `None`, returns `None`.
+
+           """
+
+        if node is None:
+            return None
+
+        # Create a new node and copy properties
+        cloned_node = self.Node()
+        cloned_node.set_params(node.split_threshold, node.variable)
+        cloned_node.is_terminal = node.is_terminal
+        cloned_node.node_prediction = node.node_prediction
+        cloned_node.design_and_response = node.design_and_response
+
+        # Recursively clone children
+        left_cloned = self.clone_tree(node.get_left_node())
+        right_cloned = self.clone_tree(node.get_right_node())
+        cloned_node.set_children(left_cloned, right_cloned)
+
+        # Set the node as terminal if it has no children
+        if left_cloned is None and right_cloned is None:
+            cloned_node.is_terminal = True
+
+        return cloned_node
 
     def __init__(self,
                  design: np.array = None,
@@ -134,11 +132,13 @@ class DecisionTreeRegressor():
                 right_design_and_response = design_and_response[right_node_mask]
 
                 # Ensure non-empty arrays
-                if (left_design_and_response.shape[0]>= self.minimal_samples_split and
-                        right_design_and_response.shape[0]>= self.minimal_samples_split):
+                if (left_design_and_response.shape[0] >= self.minimal_samples_split and
+                        right_design_and_response.shape[0] >= self.minimal_samples_split):
                     # Calculate the impurity
-                    impurity_candidate = (left_design_and_response.shape[0] / self.sample_size) * self._impurity(left_design_and_response) + \
-                         (right_design_and_response.shape[0] / self.sample_size) * self._impurity(right_design_and_response)
+                    impurity_candidate = ((left_design_and_response.shape[0] / self.sample_size) *
+                                          self._impurity(left_design_and_response) +
+                                          (right_design_and_response.shape[0] / self.sample_size) *
+                                          self._impurity(right_design_and_response))
 
                     # Update the impurity and choice of variable/split
                     if impurity_node is None or impurity_candidate < impurity_node:
@@ -163,7 +163,6 @@ class DecisionTreeRegressor():
 
             Parameters:
                 node (Node): The root node of the tree or subtree to grow.
-                design_and_response (np.array): A NumPy array containing both the design (features)
                     and the response (target variable). Each row corresponds to a sample, and columns
                     include both features and the response variable.
                 current_indices (np.array): An array of indices corresponding to the samples
@@ -190,7 +189,7 @@ class DecisionTreeRegressor():
         self.variance = np.array([])
         self.risk = np.array([])
 
-        self.indices_collect= {}
+        self.indices_collect = {}
         self.block_matrix_collect = {}
 
         self.balanced_oracle_iteration_collect = {}
@@ -212,21 +211,21 @@ class DecisionTreeRegressor():
                 # Processing of block matrix:
                 self._block_matrix_processing()
                 # Get the bias2 and the variance:
-                self._get_theoretical_quantities()
+                self._update_theoretical_quantities()
 
             self.residuals = np.append(self.residuals, self.level_mse_sum)
 
             # After processing the current level, store the tree state
-            self.trees_at_each_level[self.level] = clone_tree(self.regression_tree)
+            self.trees_at_each_level[self.level] = self.clone_tree(self.regression_tree)
 
             # Prepare for the next level of nodes
             self.queue = self.next_level_queue
 
-    def _get_theoretical_quantities(self):
+    def _update_theoretical_quantities(self):
         if self.true_signal is not None and self.true_noise_vector is not None:
             if self.block_matrix[self.level].shape[0] == self.design_and_response.shape[0]:
                 self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_processed[self.level],
-                                                              self.block_matrix[self.level], self.level)
+                                                                                self.block_matrix[self.level])
                 self.balanced_oracle_iteration_collect[self.level] = self.balanced_oracle_iteration
 
                 self.bias2 = np.append(self.bias2, self.new_bias2)
@@ -237,7 +236,7 @@ class DecisionTreeRegressor():
                 self.block_matrix_collect[self.level] = self.block_matrix[self.level]
             else:
                 self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_complete,
-                                                              self.block_matrices_full[self.level], self.level)
+                                                                                self.block_matrices_full[self.level])
                 self.balanced_oracle_iteration_collect[self.level] = self.balanced_oracle_iteration
 
                 self.bias2 = np.append(self.bias2, self.new_bias2)
@@ -246,33 +245,6 @@ class DecisionTreeRegressor():
 
                 self.indices_collect[self.level] = self.indices_complete
                 self.block_matrix_collect[self.level] = self.block_matrices_full[self.level]
-
-    def _block_matrix_processing(self):
-        self.indices_per_level[self.level] = self.level_indices
-        # Store the observations data for the entire level
-        self.observations_per_level[self.level] = self.current_level_observations
-        # Process observations after completing the level
-        self.block_matrix[self.level] = self._process_level_observations(self.current_level_observations)
-        # Process indices after completing the level
-        self.indices_processed[self.level] = np.concatenate(self.level_indices)
-
-        if self.block_matrix[self.level].shape[0] < self.design_and_response.shape[0]:
-            indices_pre_append = self.indices_processed[self.level]
-            filtered_indices = {k: v for k, v in self.terminal_indices.items() if k != self.level}
-
-            # Check if filtered_indices is None or empty
-            if not filtered_indices:
-                print("No indices to concatenate.")
-                # Handle the case where there is nothing to concatenate
-                return
-
-            self.block_matrices_full[self.level] = self.append_block_matrix(self.block_matrix[self.level],
-                                                                            filtered_indices)
-            indices_append = np.concatenate(
-                [idx for self.level in range(1, self.level) for idx in self.terminal_indices.get(self.level, [])])
-
-            self.indices_complete = np.append(indices_pre_append, indices_append)
-            self.indices_complete_all[self.level] = self.indices_complete
 
     def _grow_one_iteration(self):
 
@@ -293,6 +265,7 @@ class DecisionTreeRegressor():
             terminal_due_to_samples = self.design_and_response_queue.shape[0] <= (self.minimal_samples_split * 2)
             terminal_due_to_depth = self.maximal_depth is not None and self.level >= self.maximal_depth
 
+            # If the terminal condition is satisfied, the node is not added to the next level queue.
             if terminal_due_to_samples or terminal_due_to_depth:
                 self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
                 self.node.is_terminal = True
@@ -314,8 +287,9 @@ class DecisionTreeRegressor():
                     self.left_indices = self.current_indices[left_node_mask]
                     self.right_indices = self.current_indices[right_node_mask]
 
-                    self.left_design_and_response, self.right_design_and_response = (self.design_and_response_queue[left_node_mask],
-                                                                           self.design_and_response_queue[right_node_mask])
+                    self.left_design_and_response, self.right_design_and_response = \
+                        (self.design_and_response_queue[left_node_mask],
+                         self.design_and_response_queue[right_node_mask])
                     if self.left_design_and_response.size > 0 and self.right_design_and_response.size > 0:
                         self.level_indices.extend([self.left_indices, self.right_indices])  # Storing global indices
 
@@ -352,21 +326,37 @@ class DecisionTreeRegressor():
                     self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
                     self.node.is_terminal = True  # Mark as terminal
 
+
+    def _block_matrix_processing(self):
+        self.indices_per_level[self.level] = self.level_indices
+        # Store the observations data for the entire level
+        self.observations_per_level[self.level] = self.current_level_observations
+        # Process observations after completing the level
+        self.block_matrix[self.level] = self._process_level_observations(self.current_level_observations)
+        # Process indices after completing the level
+        self.indices_processed[self.level] = np.concatenate(self.level_indices)
+
+        if self.block_matrix[self.level].shape[0] < self.design_and_response.shape[0]:
+            indices_pre_append = self.indices_processed[self.level]
+            filtered_indices = {k: v for k, v in self.terminal_indices.items() if k != self.level}
+
+            # Check if filtered_indices is None or empty
+            if not filtered_indices:
+                print("No indices to concatenate.")
+                # Handle the case where there is nothing to concatenate
+                return
+
+            self.block_matrices_full[self.level] = self.append_block_matrix(self.block_matrix[self.level],
+                                                                            filtered_indices)
+            indices_append = np.concatenate(
+                [idx for self.level in range(1, self.level) for idx in self.terminal_indices.get(self.level, [])])
+
+            self.indices_complete = np.append(indices_pre_append, indices_append)
+            self.indices_complete_all[self.level] = self.indices_complete
+
     def get_discrepancy_stop(self, critical_value):
-        """Returns early stopping index based on discrepancy principle up to max_iteration
-
-        **Parameters**
-
-        *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
-        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
-        where :math: `\\kappa` is the critical value.
-
-        **Returns**
-
-        *early_stopping_index*: ``int``. The first iteration at which the discrepancy principle is satisfied.
-        (None is returned if the stopping index is not found.)
-        """
-        if np.any(self.residuals<=critical_value):
+        """Returns the first generation at which the discrepancy principle is satisfied."""
+        if np.any(self.residuals <= critical_value):
             # argmax takes the first instance of True in the true-false array
             early_stopping_index = np.argmax(self.residuals <= critical_value)
             return early_stopping_index
@@ -383,7 +373,8 @@ class DecisionTreeRegressor():
 
         **Returns**
 
-        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias is smaller than the strong variance.
+        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias
+        is smaller than the strong variance.
         """
 
         if np.any(self.bias2 <= self.variance):
@@ -404,7 +395,7 @@ class DecisionTreeRegressor():
         # compute the mean squared error wrt the mean
         mse = np.sum((design_and_response_input[:, -1] - response_node_mean) ** 2) / design_and_response_input.shape[0]
         # return results
-        return (mse)
+        return mse
 
     def _node_prediction_value(self, design_and_response: np.array) -> float:
         """
@@ -415,20 +406,25 @@ class DecisionTreeRegressor():
         Output:
             Mean of design_and_response
         """
-        return (np.mean(design_and_response[:, -1]))
+        return np.mean(design_and_response[:, -1])
 
     def append_block_matrix(self, existing_matrix, filtered_indices):
         """
-            Appends new block matrices to an existing block-diagonal matrix to create an expanded block-diagonal matrix.
+            Appends new block matrices to an existing block-diagonal
+            matrix to create an expanded block-diagonal matrix.
 
-            This method constructs a larger block-diagonal matrix by appending new blocks derived from `filtered_indices`
-            to an `existing_matrix`. Each new block corresponds to the size of index arrays provided in `filtered_indices`
+            This method constructs a larger block-diagonal matrix by appending
+            new blocks derived from `filtered_indices`
+            to an `existing_matrix`. Each new block corresponds to the size of
+            index arrays provided in `filtered_indices`
             and contains entries that are the reciprocal of the block size (1/size).
 
             Parameters:
-                existing_matrix (np.ndarray or None): The existing block-diagonal matrix to which new blocks will be appended.
+                existing_matrix (np.ndarray or None): The existing block-diagonal matrix
+                to which new blocks will be appended.
                     - If `None` or an empty array, a new block-diagonal matrix is created from the new blocks alone.
-                filtered_indices (dict): A dictionary where each key corresponds to a level or identifier, and each value
+                filtered_indices (dict): A dictionary where each key corresponds to a level
+                or identifier, and each value
                     is a list of NumPy arrays. Each array represents indices of data points, and its size determines
                     the dimensions of the corresponding block matrix.
 
@@ -480,18 +476,18 @@ class DecisionTreeRegressor():
 
             return full_matrix
 
-    def _get_bias_and_variance(self, indices, block_matrix, level):
+    def _get_bias_and_variance(self, indices, block_matrix):
         """
-           Calculates the bias squared and variance for a given iteration level to determine the balanced oracle iteration.
+           Calculates the bias squared and variance for a given iteration level to
+           determine the balanced oracle iteration.
 
            Parameters:
                indices (np.ndarray): An array of indices corresponding to the data points being considered.
                block_matrix (np.ndarray): A matrix used in the computation of bias and variance.
-               level (int): The current iteration level in the tree-growing process.
-
            Returns:
                tuple:
-                   balanced_oracle_iteration (int or None): The current `level` if `bias2` is less than or equal to `variance`;
+                   balanced_oracle_iteration (int or None): The current `level` if `bias2` is less than
+                   or equal to `variance`;
                        otherwise, `None`.
                    bias2 (float): The computed bias squared value.
                    variance (float): The computed variance value.
@@ -583,7 +579,7 @@ class DecisionTreeRegressor():
         else:
             return self.__traverse(node.get_right_node(), design_row)
 
-    def iterate(self, design: pd.DataFrame | np.ndarray, response: pd.Series | np.ndarray | pd.DataFrame, max_depth: int = None,) -> None:
+    def iterate(self, max_depth: int = None,) -> None:
         """
         Train the CART model
 
@@ -593,21 +589,16 @@ class DecisionTreeRegressor():
             max_depth -> maximum number in generations. The number of splits conducted is max_depth - 1.
 
         """
-        # Convert pandas DataFrame/Series to numpy array if necessary
-        if isinstance(design, pd.DataFrame):
-            design = design.to_numpy()
-        if isinstance(response, (pd.Series, pd.DataFrame)):
-            response = response.to_numpy()
 
         self.maximal_depth = max_depth
-        self.response = response.reshape(-1, 1)
+        response = self.response.reshape(-1, 1)
         # prepare the input data
-        self.design_and_response = np.concatenate((design, self.response), axis=1)
+        self.design_and_response = np.concatenate((self.design, response), axis=1)
         # set the root node of the tree
         self.regression_tree = self.Node()
         # build the tree
         self.initial_indices = np.arange(self.sample_size)  # Initial indices for the entire dataset
-        self.__grow_regression_tree_breadth_first(node=self.regression_tree, current_indices=self.initial_indices)  # Initial indices for the entire dataset
+        self.__grow_regression_tree_breadth_first(node=self.regression_tree, current_indices=self.initial_indices)
 
     def predict(self, design: pd.DataFrame | np.ndarray, depth: int) -> np.array:
         """
@@ -631,7 +622,7 @@ class DecisionTreeRegressor():
             if depth == 0:
                 return np.repeat(np.mean(self.response), design.shape[0])
             else:
-                tree = self.trees_at_each_level[depth] # self.trees_at_each_level does not include unconditional mean
+                tree = self.trees_at_each_level[depth]
                 predictions = []
                 for r in range(design.shape[0]):
                     predictions.append(self.__traverse(tree, design[r, :]))
@@ -639,5 +630,3 @@ class DecisionTreeRegressor():
         else:
             warnings.warn("'Depth' can not exceed 'max_depth'. Returning None.", category=UserWarning)
             return None
-
-
