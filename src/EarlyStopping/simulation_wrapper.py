@@ -3,15 +3,17 @@ from joblib import Parallel, delayed
 from scipy.linalg import toeplitz
 from scipy.sparse import dia_matrix
 from scipy.sparse.linalg import svds
+import pandas as pd
 
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
+from .truncated_svd import TruncatedSVD
 
 # import matplotlib.pyplot as plt
 # from matplotlib.ticker import FixedLocator
 # import seaborn as sns
 # import pandas as pd
-
+# TODO: Update bias2 vs. bias/ mse vs risk, landweber empirical vs. non-empirical quantities for replication study
 
 class SimulationData:
     @staticmethod
@@ -271,64 +273,136 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
-    # def run_simulation(self, learning_rate=None):
-    #     info("Running simulation.")
-    #     if self.noise is None:
-    #         self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-    #     self.response = self.noise + (self.response_noiseless)[:, None]
+    def run_simulation_landweber(self, learning_rate=None, data_set_name=None):
+        info("Running simulation.")
+        if self.noise is None:
+            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
+        self.response = self.noise + (self.response_noiseless)[:, None]
 
-    #     if learning_rate == "auto":
-    #         info("Searching for viable learning rates.")
-    #         self.learning_rate = self.__search_learning_rate(search_depth=10)
-    #     else:
-    #         self.learning_rate = 1
+        if learning_rate == "auto":
+            info("Searching for viable learning rates.")
+            self.learning_rate = self.__search_learning_rate(search_depth=10)
+        else:
+            self.learning_rate = 1
 
-    #     info("Running Monte Carlo simulation.")
-    #     self.results = Parallel(n_jobs=self.cores)(
-    #         delayed(self.monte_carlo_wrapper)(m) for m in range(self.monte_carlo_runs)
-    #     )
+        info("Running Monte Carlo simulation.")
+        results = Parallel(n_jobs=self.cores)(
+            delayed(self.monte_carlo_wrapper_landweber)(m) for m in range(self.monte_carlo_runs)
+        )
 
-    #     (
-    #         strong_errors,
-    #         weak_errors,
-    #         weak_relative_efficiency,
-    #         strong_relative_efficiency,
-    #         landweber_strong_bias,
-    #         landweber_strong_variance,
-    #         landweber_strong_error,
-    #         landweber_weak_bias,
-    #         landweber_weak_variance,
-    #         landweber_weak_error,
-    #         landweber_residuals,
-    #         stopping_index_landweber,
-    #         balanced_oracle_weak,
-    #         balanced_oracle_strong,
-    #     ) = zip(*self.results)
+        column_names = [
+            "landweber_strong_empirical_risk_es",
+            "landweber_weak_empirical_risk_es",
+            "landweber_weak_relative_efficiency",
+            "landweber_strong_relative_efficiency",
+            "landweber_strong_bias",
+            "landweber_strong_variance",
+            "landweber_strong_risk",
+            "landweber_weak_bias",
+            "landweber_weak_variance",
+            "landweber_weak_risk",
+            "landweber_residuals",
+            "stopping_index_landweber",
+            "balanced_oracle_weak",
+            "balanced_oracle_strong",
+        ]
 
-    #     self.__visualise_boxplot(np.vstack(strong_errors), "Strong Empirical Error at $\\tau$")
-    #     self.__visualise_boxplot(np.vstack(weak_errors), "Weak Empirical Error at $\\tau$")
-    #     self.__visualise_boxplot(
-    #         np.vstack(weak_relative_efficiency), quantity_name="Weak relative efficiency at $\\tau$"
-    #     )
-    #     self.__visualise_boxplot(
-    #         np.vstack(strong_relative_efficiency), quantity_name="Strong relative efficiency at $\\tau$"
-    #     )
+        results_df = pd.DataFrame(results, columns=column_names)
 
-    #     np.vstack(
-    #         (np.mean(landweber_residuals, axis=0), np.mean(landweber_strong_bias, axis=0)),
-    #     )
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
 
-    #     self.__visualise_bias_variance_tradeoff(
-    #         residuals_mean=np.mean(landweber_residuals, axis=0),
-    #         strong_bias2_mean=np.mean(landweber_strong_bias, axis=0),
-    #         strong_variance_mean=np.mean(landweber_strong_variance, axis=0),
-    #         strong_error_mean=np.mean(landweber_strong_error, axis=0),
-    #         weak_bias2_mean=np.mean(landweber_weak_bias, axis=0),
-    #         weak_variance_mean=np.mean(landweber_weak_variance, axis=0),
-    #         weak_error_mean=np.mean(landweber_weak_error, axis=0),
-    #     )
+        return results_df
 
-    #     return self.results
+    def run_simulation_truncated_svd(self, diagonal=False, data_set_name=None):
+        self.diagonal = diagonal
+        info("Running simulation.")
+        if self.noise is None:
+            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
+        
+        self.response = self.noise + (self.response_noiseless)[:, None]
+        info("Running Monte-Carlo simulation.")
+
+        results = Parallel(n_jobs=self.cores)(
+            delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
+        )
+
+        column_names = [
+            "strong_bias",
+            "strong_variance",
+            "strong_mse",
+            "weak_bias",
+            "weak_variance",
+            "weak_mse",
+            "residuals",
+            "discrepancy_stop",
+            "weak_balanced_oracle",
+            "strong_balanced_oracle",
+            "weak_classical_oracle",
+            "strong_classical_oracle",
+            "weak_relative_efficiency",
+            "strong_relative_efficiency"
+        ]
+
+        results_df = pd.DataFrame(results, columns=column_names)
+
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
+
+        return results_df
+
+    def monte_carlo_wrapper_truncated_svd(self, m):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+        model_truncated_svd = TruncatedSVD(
+            design=self.design,
+            response=self.response[:, m],
+            true_signal=self.true_signal,
+            true_noise_level=self.true_noise_level,
+            diagonal=self.diagonal
+        )
+
+        model_truncated_svd.iterate(self.max_iteration)
+
+        strong_bias = model_truncated_svd.strong_bias2
+        strong_variance = model_truncated_svd.strong_variance
+        strong_mse = model_truncated_svd.strong_mse
+        weak_bias = model_truncated_svd.weak_bias2
+        weak_variance = model_truncated_svd.weak_variance
+        weak_mse = model_truncated_svd.weak_mse
+        residuals = model_truncated_svd.residuals
+
+        discrepancy_stop = model_truncated_svd.get_discrepancy_stop(
+            self.sample_size * (self.true_noise_level**2), self.max_iteration
+        )
+        weak_balanced_oracle = model_truncated_svd.get_weak_balanced_oracle(self.max_iteration)
+        strong_balanced_oracle = model_truncated_svd.get_strong_balanced_oracle(self.max_iteration)
+
+        weak_classical_oracle = np.argmin(weak_mse)
+        strong_classical_oracle = np.argmin(strong_mse)
+
+        weak_relative_efficiency = np.sqrt(
+            np.min(weak_mse) / weak_mse[discrepancy_stop]
+        )
+        strong_relative_efficiency = np.sqrt(
+            np.min(strong_mse) / strong_mse[discrepancy_stop]
+        )
+
+        return (
+            strong_bias,
+            strong_variance,
+            strong_mse,
+            weak_bias,
+            weak_variance,
+            weak_mse,
+            residuals,
+            discrepancy_stop,
+            weak_balanced_oracle,
+            strong_balanced_oracle,
+            weak_classical_oracle,
+            strong_classical_oracle,
+            weak_relative_efficiency,
+            strong_relative_efficiency
+        )
 
     def run_simulation_conjugate_gradients(self):
         info("Running simulation.")
@@ -343,124 +417,102 @@ class SimulationWrapper:
 
         return self.results
 
-    # def __search_learning_rate(self, search_depth):
-    #     u, s, vh = svds(self.design, k=1)
-    #     largest_singular_value = s[0]
-    #     initial_guess_learning_rate = 2 / largest_singular_value**2
-    #     self.learning_rate_candidates = np.array([initial_guess_learning_rate / (2**i) for i in range(search_depth)])
-    #     info("Determine learning rate candidates based on search depth.")
+    def __search_learning_rate(self, search_depth):
+        u, s, vh = svds(self.design, k=1)
+        largest_singular_value = s[0]
+        initial_guess_learning_rate = 2 / largest_singular_value**2
+        self.learning_rate_candidates = np.array([initial_guess_learning_rate / (2**i) for i in range(search_depth)])
+        info("Determine learning rate candidates based on search depth.")
 
-    #     results = Parallel(n_jobs=self.cores)(
-    #         delayed(self.search_learning_rate_wrapper)(m) for m in range(search_depth)
-    #     )
+        results = Parallel(n_jobs=self.cores)(
+            delayed(self.search_learning_rate_wrapper)(m) for m in range(search_depth)
+        )
 
-    #     learning_rate_candidates_evaluation, strong_errors = zip(*results)
+        learning_rate_candidates_evaluation, strong_errors = zip(*results)
 
-    #     true_false_vector = np.array(np.vstack(learning_rate_candidates_evaluation).flatten())
-    #     accepted_candidates = self.learning_rate_candidates[true_false_vector]
-    #     accepted_errors = np.array(strong_errors)[true_false_vector]
-    #     return accepted_candidates[np.argmin(accepted_errors)]
+        true_false_vector = np.array(np.vstack(learning_rate_candidates_evaluation).flatten())
+        accepted_candidates = self.learning_rate_candidates[true_false_vector]
+        accepted_errors = np.array(strong_errors)[true_false_vector]
+        return accepted_candidates[np.argmin(accepted_errors)]
 
-    # def search_learning_rate_wrapper(self, m):
-    #     model_landweber = Landweber(
-    #         design=self.design,
-    #         response=self.response[:, 0],
-    #         true_signal=self.true_signal,
-    #         true_noise_level=self.true_noise_level,
-    #         learning_rate=self.learning_rate_candidates[m],
-    #     )
+    def search_learning_rate_wrapper(self, m):
+        model_landweber = Landweber(
+            design=self.design,
+            response=self.response[:, 0],
+            true_signal=self.true_signal,
+            true_noise_level=self.true_noise_level,
+            learning_rate=self.learning_rate_candidates[m],
+        )
 
-    #     model_landweber.iterate(self.max_iteration)
-    #     stopping_index_landweber = model_landweber.get_discrepancy_stop(
-    #         self.sample_size * (self.true_noise_level**2), self.max_iteration
-    #     )
+        model_landweber.iterate(self.max_iteration)
+        stopping_index_landweber = model_landweber.get_discrepancy_stop(
+            self.sample_size * (self.true_noise_level**2), self.max_iteration
+        )
 
-    #     converges = True
-    #     for k in range((self.max_iteration - 1)):
-    #         if model_landweber.residuals[k] < model_landweber.residuals[(k + 1)]:
-    #             converges = False
+        converges = True
+        for k in range((self.max_iteration - 1)):
+            if model_landweber.residuals[k] < model_landweber.residuals[(k + 1)]:
+                converges = False
 
-    #     if converges is False:
-    #         info(f"The estimator does not converge for learning rate: {self.learning_rate_candidates[m]}", color="red")
+        if converges is False:
+            info(f"The estimator does not converge for learning rate: {self.learning_rate_candidates[m]}", color="red")
 
-    #     if stopping_index_landweber == None:
-    #         stopping_index_landweber = self.max_iteration
+        if stopping_index_landweber == None:
+            stopping_index_landweber = self.max_iteration
 
-    #     return converges, model_landweber.strong_empirical_risk[stopping_index_landweber]
+        return converges, model_landweber.strong_empirical_risk[stopping_index_landweber]
 
-    # def monte_carlo_wrapper(self, m):
-    #     info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
-    #     model_landweber = Landweber(
-    #         design=self.design,
-    #         response=self.response[:, m],
-    #         true_signal=self.true_signal,
-    #         true_noise_level=self.true_noise_level,
-    #         learning_rate=self.learning_rate,
-    #     )
-    #     model_conjugate_gradients = ConjugateGradients(
-    #         design=self.design,
-    #         response=self.response[:, m],
-    #         true_signal=self.true_signal,
-    #         true_noise_level=self.true_noise_level,
-    #     )
+    def monte_carlo_wrapper_landweber(self, m):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+        model_landweber = Landweber(
+            design=self.design,
+            response=self.response[:, m],
+            true_signal=self.true_signal,
+            true_noise_level=self.true_noise_level,
+            learning_rate=self.learning_rate,
+        )
 
-    #     model_conjugate_gradients.gather_all(self.max_iteration)
-    #     model_landweber.iterate(self.max_iteration)
+        model_landweber.iterate(self.max_iteration)
 
-    #     landweber_strong_bias = model_landweber.strong_bias2
-    #     landweber_strong_variance = model_landweber.strong_variance
-    #     landweber_strong_risk = model_landweber.strong_risk
-    #     landweber_weak_bias = model_landweber.weak_bias2
-    #     landweber_weak_variance = model_landweber.weak_variance
-    #     landweber_weak_risk = model_landweber.weak_risk
-    #     landweber_residuals = model_landweber.residuals
+        landweber_strong_bias = model_landweber.strong_bias2
+        landweber_strong_variance = model_landweber.strong_variance
+        landweber_strong_risk = model_landweber.strong_risk
+        landweber_weak_bias = model_landweber.weak_bias2
+        landweber_weak_variance = model_landweber.weak_variance
+        landweber_weak_risk = model_landweber.weak_risk
+        landweber_residuals = model_landweber.residuals
 
-    #     stopping_index_landweber = model_landweber.get_discrepancy_stop(
-    #         self.sample_size * (self.true_noise_level**2), self.max_iteration
-    #     )
-    #     balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(self.max_iteration)
-    #     balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(self.max_iteration)
+        stopping_index_landweber = model_landweber.get_discrepancy_stop(
+            self.sample_size * (self.true_noise_level**2), self.max_iteration
+        )
+        balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(self.max_iteration)
+        balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(self.max_iteration)
 
-    #     landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
-    #     conjugate_gradients_strong_empirical_error_es = model_conjugate_gradients.strong_empirical_errors[
-    #         model_conjugate_gradients.early_stopping_index
-    #     ]
+        landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
+        landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
+        landweber_weak_relative_efficiency = np.sqrt(
+            np.min(model_landweber.weak_empirical_risk) / landweber_weak_empirical_risk_es
+        )
+        landweber_strong_relative_efficiency = np.sqrt(
+            np.min(model_landweber.strong_empirical_risk) / landweber_strong_empirical_risk_es
+        )
 
-    #     landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
-    #     conjugate_gradients_weak_empirical_error_es = model_conjugate_gradients.weak_empirical_errors[
-    #         model_conjugate_gradients.early_stopping_index
-    #     ]
-
-    #     landweber_weak_relative_efficiency = np.sqrt(
-    #         np.min(model_landweber.weak_empirical_risk) / landweber_weak_empirical_risk_es
-    #     )
-    #     landweber_strong_relative_efficiency = np.sqrt(
-    #         np.min(model_landweber.strong_empirical_risk) / landweber_strong_empirical_risk_es
-    #     )
-
-    #     conjugate_gradients_weak_relative_efficiency = np.sqrt(
-    #         np.min(model_conjugate_gradients.weak_empirical_errors) / conjugate_gradients_weak_empirical_error_es
-    #     )
-    #     conjugate_gradients_strong_relative_efficiency = np.sqrt(
-    #         np.min(model_conjugate_gradients.strong_empirical_errors) / conjugate_gradients_strong_empirical_error_es
-    #     )
-
-    #     return (
-    #         np.array([landweber_strong_empirical_risk_es, conjugate_gradients_strong_empirical_error_es]),
-    #         np.array([landweber_weak_empirical_risk_es, conjugate_gradients_weak_empirical_error_es]),
-    #         np.array([landweber_weak_relative_efficiency, conjugate_gradients_weak_relative_efficiency]),
-    #         np.array([landweber_strong_relative_efficiency, conjugate_gradients_strong_relative_efficiency]),
-    #         landweber_strong_bias,
-    #         landweber_strong_variance,
-    #         landweber_strong_risk,
-    #         landweber_weak_bias,
-    #         landweber_weak_variance,
-    #         landweber_weak_risk,
-    #         landweber_residuals,
-    #         stopping_index_landweber,
-    #         balanced_oracle_weak,
-    #         balanced_oracle_strong,
-    #     )
+        return (
+            landweber_strong_empirical_risk_es,
+            landweber_weak_empirical_risk_es,
+            landweber_weak_relative_efficiency,
+            landweber_strong_relative_efficiency,
+            landweber_strong_bias,
+            landweber_strong_variance,
+            landweber_strong_risk,
+            landweber_weak_bias,
+            landweber_weak_variance,
+            landweber_weak_risk,
+            landweber_residuals,
+            stopping_index_landweber,
+            balanced_oracle_weak,
+            balanced_oracle_strong,
+        )
 
     def monte_carlo_wrapper_conjugate_gradients(self, m):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
@@ -510,115 +562,6 @@ class SimulationWrapper:
             weak_relative_efficiency,
             terminal_iteration,
         )
-
-    # def __visualise_bias_variance_tradeoff(
-    #     self,
-    #     residuals_mean,
-    #     strong_bias2_mean,
-    #     strong_variance_mean,
-    #     strong_error_mean,
-    #     weak_bias2_mean,
-    #     weak_variance_mean,
-    #     weak_error_mean,
-    # ):
-
-    #     fig, axs = plt.subplots(3, 1, figsize=(14, 12))
-
-    #     axs[0].plot(range(0, self.max_iteration + 1), residuals_mean / np.max(residuals_mean))
-    #     # axs[0].axvline(x=supersmooth_m, color="red", linestyle="--")
-    #     axs[0].set_xlim([0, 50])
-    #     axs[0].set_ylim([0, 1])
-    #     axs[0].set_xlabel("Iteration")
-    #     axs[0].set_ylabel("Normalised Residuals")
-
-    #     axs[1].plot(
-    #         range(0, self.max_iteration + 1),
-    #         strong_error_mean / np.max(strong_error_mean),
-    #         color="orange",
-    #         label="Error",
-    #     )
-    #     axs[1].plot(
-    #         range(0, self.max_iteration + 1),
-    #         strong_bias2_mean / np.max(strong_bias2_mean),
-    #         label="$Bias^2$",
-    #         color="grey",
-    #     )
-    #     axs[1].plot(
-    #         range(0, self.max_iteration + 1),
-    #         strong_variance_mean / np.max(strong_variance_mean),
-    #         label="Variance",
-    #         color="blue",
-    #     )
-    #     # axs[1].axvline(x=supersmooth_m, color="red", linestyle="--")
-    #     # axs[1].axvline(x=supersmooth_strong_oracle, color="green", linestyle="--")
-    #     axs[1].set_xlim([0, 50])
-    #     axs[1].set_ylim([0, 0.5])
-    #     axs[1].set_xlabel("Iteration")
-    #     axs[1].set_ylabel("Normalised Strong Quantities")
-
-    #     axs[2].plot(
-    #         range(0, self.max_iteration + 1), weak_error_mean / np.max(weak_error_mean), color="orange", label="Error"
-    #     )
-    #     axs[2].plot(
-    #         range(0, self.max_iteration + 1),
-    #         weak_bias2_mean / np.max(weak_bias2_mean),
-    #         label="$Bias^2$",
-    #         color="grey",
-    #     )
-    #     axs[2].plot(
-    #         range(0, self.max_iteration + 1),
-    #         weak_variance_mean / np.max(weak_variance_mean),
-    #         label="Variance",
-    #         color="blue",
-    #     )
-    #     # axs[2].axvline(x=supersmooth_m, color="red", linestyle="--", label=r"$\tau$")
-    #     # axs[2].axvline(x=supersmooth_weak_oracle, color="green", linestyle="--", label="$t$ (oracle)")
-    #     axs[2].set_xlim([0, 50])
-    #     axs[2].set_ylim([0, 0.5])
-    #     axs[2].set_xlabel("Iteration")
-    #     axs[2].set_ylabel("Normalised Weak Quantities")
-    #     axs[2].legend()
-
-    #     plt.tight_layout()
-
-    #     plt.show()
-
-    # def __visualise_boxplot(self, quantity_to_visualise, quantity_name):
-
-    #     comparison_table_quantity = pd.DataFrame(
-    #         {"conjugate_gradient": quantity_to_visualise[:, 1], "landweber": quantity_to_visualise[:, 0]}
-    #     )
-
-    #     comparison_table_quantity = pd.melt(
-    #         comparison_table_quantity,
-    #         value_vars=["conjugate_gradient", "landweber"],
-    #     )
-
-    #     plt.figure(figsize=(14, 12))
-    #     quantity_boxplot = sns.boxplot(
-    #         x="variable",
-    #         y="value",
-    #         hue="variable",
-    #         data=comparison_table_quantity,
-    #         width=0.8,
-    #         palette=["tab:purple", "tab:purple"],
-    #     )
-    #     quantity_boxplot.set_ylabel(f"{quantity_name}", fontsize=24)  # Increase fontsize
-    #     quantity_boxplot.set_xlabel("Data generating processes", fontsize=24)  # Increase fontsize
-
-    #     # Get current tick locations and labels
-    #     locations = quantity_boxplot.get_xticks()
-    #     labels = [item.get_text() for item in quantity_boxplot.get_xticklabels()]
-    #     # Set fixed locator and labels
-    #     quantity_boxplot.xaxis.set_major_locator(FixedLocator(locations))
-    #     quantity_boxplot.set_xticklabels(labels, rotation=45)
-
-    #     quantity_boxplot.tick_params(axis="both", which="major", labelsize=24)  # Increase fontsize
-    #     plt.title(f"Comparison of {quantity_name}", fontsize=28)  # Increase title fontsize
-    #     plt.tight_layout()
-    #     plt.legend([], [], frameon=False)
-    #     plt.show()
-
 
 def info(message, color="green"):
     if color == "green":
