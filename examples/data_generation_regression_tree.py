@@ -1,3 +1,11 @@
+"""
+This module generates data for the regression tree example.
+
+It provides functions to create synthetic datasets that can be used
+to test and visualize the performance of regression trees in an
+early stopping context.
+"""
+
 import numpy as np
 
 def generate_data_from_X(X, noise_level, dgp_name, n_points=None, add_noise=True):

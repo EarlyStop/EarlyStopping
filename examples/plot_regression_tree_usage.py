@@ -13,9 +13,7 @@ for name in list(globals()):
 import importlib
 import numpy as np
 import EarlyStopping as es
-import examples.data_generation_regression_tree as data_generation
 importlib.reload(es)
-importlib.reload(data_generation)
 
 
 # %%
@@ -28,12 +26,24 @@ true_noise_level = 1
 X_train = np.random.uniform(0, 1, size=(sample_size, para_size))
 X_test = np.random.uniform(0, 1, size=(sample_size, para_size))
 
-response_train, noise_train = data_generation.generate_data_from_X(X_train, true_noise_level, dgp_name='rectangular',
-                                                                   add_noise=True)
-response_test, noise_test = data_generation.generate_data_from_X(X_test, true_noise_level, dgp_name='rectangular',
-                                                                 add_noise=True)
-f, _ = data_generation.generate_data_from_X(X_train, noise_level = true_noise_level, dgp_name='rectangular',
-                                            add_noise=False)
+def generate_rectangular(X, noise_level, add_noise=True):
+    n = X.shape[0]
+    if add_noise:
+        noise = np.random.normal(0, noise_level, n)
+    else:
+        noise = np.zeros(n)
+
+    # For X uniform:
+    y_temp = ((1 / 3 <= X[:, 0]) * (X[:, 0] <= 2 * 1 / 3) * (1 / 3 <= X[:, 1]) * (X[:, 1] <= 2 * 1 / 3))
+
+    y = y_temp.astype(int) + noise
+    return y, noise
+
+
+
+response_train, noise_train = generate_rectangular(X_train, true_noise_level, add_noise=True)
+response_test, noise_test = generate_rectangular(X_test, true_noise_level, add_noise=True)
+f, _ = generate_rectangular(X_train, true_noise_level, add_noise=False)
 
 
 # %%
