@@ -13,8 +13,11 @@ for name in list(globals()):
 import importlib
 import numpy as np
 import EarlyStopping as es
-import matplotlib.pyplot as plt
 importlib.reload(es)
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_theme()
+
 
 
 # %%
@@ -50,6 +53,7 @@ def generate_smooth_signal(design, noise_level, add_noise=True):
     return y, noise
 
 def generate_sine_cosine(design, noise_level, add_noise=True):
+
     sample_size = design.shape[0]
     if add_noise:
         noise = np.random.normal(0, noise_level, sample_size)
@@ -70,22 +74,15 @@ alg = es.RegressionTree(design=design, response=response, min_samples_split=1, t
                         true_noise_vector=noise)
 alg.iterate(max_depth=20)
 
-# Bias-variance decomposition
-alg.bias2
-alg.variance
-
 plt.figure(figsize=(8, 6))
-plt.plot(alg.risk, marker='o', label='Risk')
-plt.plot(alg.bias2, marker='o', label='Bias')
-plt.plot(alg.variance, marker='o', label='Variance')
+plt.plot(alg.risk, label='Risk')
+plt.plot(alg.bias2, label='Bias')
+plt.plot(alg.variance, label='Variance')
 plt.xlabel('Generation')
 plt.grid(True)
-plt.legend()
+x_ticks = np.arange(0, len(alg.risk) + 1, step=3)  # Adjust 'step' for tick frequency
+plt.xticks(x_ticks)
 plt.show()
-
-
-alg.residuals
-
 
 
 
@@ -93,8 +90,10 @@ alg.residuals
 # Early stopping via the discrepancy principle
 # --------------------------------------------------
 # Stop the breadth-first search growth of the tree when the residuals become smaller than the critical value.
-tau = alg.get_discrepancy_stop(critical_value=1)
-balanced_oracle_iteration = alg.get_balanced_oracle()
+stopping_iteration = alg.get_discrepancy_stop(critical_value=1, max_depth=10)
+balanced_oracle_iteration = alg.get_balanced_oracle(max_depth=20)
+print("The discrepancy based early stopping generation is given by", stopping_iteration)
+
 
 # %%
 # Prediction
