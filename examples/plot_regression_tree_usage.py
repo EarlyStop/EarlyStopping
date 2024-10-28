@@ -55,7 +55,6 @@ alg.iterate(max_depth=20)
 # Bias-variance decomposition and oracle quantities
 alg.bias2
 alg.variance
-# TODO: Why is risk and residuals the same ?
 alg.risk
 alg.residuals
 

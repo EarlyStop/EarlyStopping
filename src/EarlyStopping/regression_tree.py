@@ -213,8 +213,6 @@ class RegressionTree:
                 # Get the bias2 and the variance:
                 self._update_theoretical_quantities()
 
-            self.residuals = np.append(self.residuals, self.level_mse_sum)
-
             # After processing the current level, store the tree state
             self.trees_at_each_level[self.level] = self.clone_tree(self.regression_tree)
 
@@ -230,7 +228,8 @@ class RegressionTree:
 
                 self.bias2 = np.append(self.bias2, self.new_bias2)
                 self.variance = np.append(self.variance, self.new_variance)
-                self.risk = np.append(self.risk, self.level_mse_sum)
+                self.new_risk = self.new_bias2 + self.new_variance
+                self.risk = np.append(self.risk, self.new_risk)
 
                 self.indices_collect[self.level] = self.indices_processed[self.level]
                 self.block_matrix_collect[self.level] = self.block_matrix[self.level]
@@ -241,7 +240,8 @@ class RegressionTree:
 
                 self.bias2 = np.append(self.bias2, self.new_bias2)
                 self.variance = np.append(self.variance, self.new_variance)
-                self.risk = np.append(self.risk, self.level_mse_sum)
+                self.new_risk = self.new_bias2 + self.new_variance
+                self.risk = np.append(self.risk, self.new_risk)
 
                 self.indices_collect[self.level] = self.indices_complete
                 self.block_matrix_collect[self.level] = self.block_matrices_full[self.level]
@@ -326,6 +326,8 @@ class RegressionTree:
                     self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
                     self.node.is_terminal = True  # Mark as terminal
 
+        # Update the residuals
+        self.residuals = np.append(self.residuals, self.level_mse_sum)
 
     def _block_matrix_processing(self):
         self.indices_per_level[self.level] = self.level_indices
