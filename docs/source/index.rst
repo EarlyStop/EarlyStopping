@@ -8,20 +8,14 @@ Welcome to EarlyStopping's documentation!
 
 **EarlyStopping** is a Python library.
 
+Early stopping is a python library implementing computationally efficient model selection methods for iterative estimation procedures.
+
 .. toctree::
-   installation
-   L2-boosting 
-   landweber
-   conjugate_gradients
-   truncated_svd
-   simulation_data
-   simulation_wrapper
-   simulation_parameters
+   classes/installation
+   classes/documentation
    auto_examples/index
    :maxdepth: 2
    :caption: Contents:
-
-
 
 Indices and tables
 ==================
