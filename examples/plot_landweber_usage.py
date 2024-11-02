@@ -53,14 +53,14 @@ alg.iterate(3000)
 # Bias-variance decomposition and oracle quantities
 plt.figure()
 plt.plot(indices[0 : alg.iteration + 1], alg.weak_variance, label="Variance")
-plt.plot(indices[0 : alg.iteration + 1], alg.weak_bias2, label="Bias")
+plt.plot(indices[0 : alg.iteration + 1], alg.weak_bias2, label="Bias2")
 plt.show()
 
 alg.get_weak_balanced_oracle(3000)
 
 plt.figure()
 plt.plot(indices[0 : alg.iteration + 1], alg.strong_variance, label="Variance")
-plt.plot(indices[0 : alg.iteration + 1], alg.strong_bias2, label="Bias")
+plt.plot(indices[0 : alg.iteration + 1], alg.strong_bias2, label="Bias2")
 plt.show()
 
 alg.get_strong_balanced_oracle(3000)

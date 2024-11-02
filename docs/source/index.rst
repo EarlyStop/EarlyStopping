@@ -14,6 +14,9 @@ Welcome to EarlyStopping's documentation!
    landweber
    conjugate_gradients
    truncated_svd
+   simulation_data
+   simulation_wrapper
+   simulation_parameters
    auto_examples/index
    :maxdepth: 2
    :caption: Contents:
