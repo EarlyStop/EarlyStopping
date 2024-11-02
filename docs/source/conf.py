@@ -45,10 +45,8 @@ html_static_path = ["_static"]
 
 
 
-# html_theme_options = {
-#   "external_links": [
-#       {"name": "link-one-name", "url": "https://www.google.com/maps"},
-#       {"name": "link-two-name", "url": "https://www.google.com/maps"}
-#   ],
-#   "navbar_center": ["version-switcher", "navbar-nav"]
-# }
+html_theme_options = {
+  "external_links": [
+      {"name": "Github", "url": "https://github.com/EarlyStop/EarlyStopping"},
+  ],
+}
