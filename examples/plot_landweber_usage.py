@@ -1,10 +1,11 @@
 """
-Usage example for landweber estimation 
+Usage of the Landweber class 
 ======================================
 
 We illustrate the usage and available methods of the Landweber class via a
 small example.
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es

@@ -44,9 +44,8 @@ html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 
 
-
 html_theme_options = {
-  "external_links": [
-      {"name": "Github", "url": "https://github.com/EarlyStop/EarlyStopping"},
-  ],
+    "external_links": [
+        {"name": "Github", "url": "https://github.com/EarlyStop/EarlyStopping"},
+    ],
 }
