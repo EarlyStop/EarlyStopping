@@ -15,7 +15,8 @@ from .truncated_svd import TruncatedSVD
 # import pandas as pd
 # TODO: Update bias2 vs. bias/ mse vs risk, landweber empirical vs. non-empirical quantities for replication study
 # bias2
-# risk 
+# risk
+
 
 class SimulationData:
     """
@@ -43,6 +44,7 @@ class SimulationData:
     | phillips(``sample_size``)                          | Create data based on the famous Phillips example                                             |
     +----------------------------------------------------+----------------------------------------------------------------------------------------------+
     """
+
     @staticmethod
     def diagonal_data(sample_size, type="supersmooth"):
         indices = np.arange(sample_size) + 1
@@ -67,10 +69,10 @@ class SimulationData:
         component of the gravity field :math:`g(s)` is measured at the surface.
 
         The resulting problem is a first-kind Fredholm integral equation  with kernel
-        
+
         .. math::
             K(s,t) = d(d^2 + (s-t)^2)^{-3/2},
-        
+
         with the right-hand side given by
 
         .. math::
@@ -94,9 +96,8 @@ class SimulationData:
 
         *response_noiseless*: ``ndarray``. The noiseless response. The response is produced by applying the design to the signal.
 
-        *true_signal*: ``ndarray``. The true signal. 
+        *true_signal*: ``ndarray``. The true signal.
         """
-
 
         # Parameter controlling the ill-posedness: the larger, the more ill-posed, default in regtools: d = 0.25
 
@@ -114,10 +115,10 @@ class SimulationData:
     def heat(sample_size, kappa=1):
         """
         A first kind Volterra integral equation with :math:`[0,1]` as integration interval. The kernel is :math:`K(s,t) = k(s-t)` with the heat kernel
-        
+
         .. math::
             k(t) = \\frac{t^{-1/2}}{2\\kappa \\sqrt{\\pi}}\\exp\\left(-\\frac{1}{4 \\kappa^2 t}\\right) .
-        
+
         **Parameters**
 
         *sample_size*: ``int``. Specifies the size of the design matrix to be generated.
@@ -125,16 +126,16 @@ class SimulationData:
         *kappa*: ``int``. Here, kappa controls the ill-conditioning of the matrix:
 
         - :math:`\\kappa = 5` gives a well-conditioned problem.
-        
+
         - :math:`\\kappa = 1` gives an ill-conditioned problem.
-        
+
         **Returns**
 
         *design*: ``ndarray``. The design matrix.
 
         *response_noiseless*: ``ndarray``. The noiseless response. An exact soltuion is constructed, and the response is produced by applying the design to the signal.
 
-        *true_signal*: ``ndarray``. The true signal. 
+        *true_signal*: ``ndarray``. The true signal.
         """
 
         # Initialization
@@ -179,11 +180,11 @@ class SimulationData:
         The right hand side :math:`g` and the solution :math:`f` can be chosen as follows:
 
         1. :math:`g(s) = (s^3 - s)/6` and :math:`f(t) = t`.
-        
+
         2. :math:`g(s) = \\exp(s) + (1-e)s - 1` and :math:`f(t) = \\exp(t)`.
 
         3. :math:`g(s) = \\begin{cases}(4s^3 - 3s)/24,  &s <  0.5,\\\\(-4s^3 + 12s^2 - 9s + 1)/24,  &s \\geq 0.5.\\end{cases}` and :math:`f(t) = \\begin{cases}t,  &t <  0.5,\\\\1-t,  &t \\geq 0.5.\\end{cases}`.
-            
+
 
         **Parameters**
 
@@ -197,8 +198,8 @@ class SimulationData:
 
         *response_noiseless*: ``ndarray``. The noiseless response. (Based on discretisation).
 
-        *true_signal*: ``ndarray``. The true signal. 
-         """
+        *true_signal*: ``ndarray``. The true signal.
+        """
         # Initialize variables and compute coefficients
         h = 1 / sample_size
         sqh = np.sqrt(h)
@@ -264,8 +265,8 @@ class SimulationData:
     @staticmethod
     def phillips(sample_size):
         """
-        Discretization of the *famous* first-kind Fredholm integral equation deviced by D. L. Phillips.  
-        
+        Discretization of the *famous* first-kind Fredholm integral equation deviced by D. L. Phillips.
+
         Define the function
 
         .. math::
@@ -278,13 +279,13 @@ class SimulationData:
         - :math:`f(t) = \\phi(t)`
 
         - :math:`g(s) = (6-|s|)(1+0.5 \\cos(s\\pi/3)) + 9/(2\\pi)\\sin(|s|\\pi/3)`
-        
+
         Both integration intervals are [-6,6].
 
         **Parameters**
 
         *sample_size*: ``int``. Specifies the size of the design matrix to be generated. Must be a multiple of 4.
-        
+
         **Returns**
 
         *design*: ``ndarray``. The design matrix.
@@ -343,8 +344,8 @@ class SimulationParameters:
     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/simulation_wrapper.py>`_
 
 
-    A class for managing and validating the parameters for simulation in the `SimulationWrapper` class. This class 
-    ensures the validity of input parameters required for performing simulation tasks and manages attributes 
+    A class for managing and validating the parameters for simulation in the `SimulationWrapper` class. This class
+    ensures the validity of input parameters required for performing simulation tasks and manages attributes
     such as design matrix, noise level, iteration limits, and parallel processing settings.
 
     **Parameters**
@@ -359,21 +360,22 @@ class SimulationParameters:
 
     *monte_carlo_runs*: ``int``. Defines the number of Monte-Carlo runs to perform in the simulation.
 
-    *noise*: ``ndarray, optional``. Specifies an initial noise matrix; defaults to `None`, in which case noise will 
+    *noise*: ``ndarray, optional``. Specifies an initial noise matrix; defaults to `None`, in which case noise will
     be generated as needed.
 
     *response_noiseless*: ``ndarray, optional``. Represents the noiseless response vector, if available. Default is `None`.
 
-    *critical_value*: ``float, optional``. A critical threshold value for the simulation, used in criteria like 
+    *critical_value*: ``float, optional``. A critical threshold value for the simulation, used in criteria like
     early stopping. Default is `None`.
 
     *interpolation*: ``bool, default=False``. Specifies whether to use interpolation techniques within the simulation.
 
-    *computation_threshold*: ``float, default=10 ** (-8)``. A small threshold to control numerical computations 
+    *computation_threshold*: ``float, default=10 ** (-8)``. A small threshold to control numerical computations
     in the simulation procedures.
 
-    *cores*: ``int, default=5``. Specifies the number of processor cores to use for parallel execution.    
+    *cores*: ``int, default=5``. Specifies the number of processor cores to use for parallel execution.
     """
+
     def __init__(
         self,
         design,
@@ -429,7 +431,7 @@ class SimulationWrapper:
 
     *monte_carlo_runs*: ``int``. Defines the number of Monte-Carlo runs to perform in the simulation.
 
-    *noise*: ``ndarray, optional``. Specifies an initial noise matrix; defaults to `None`, in which case noise will 
+    *noise*: ``ndarray, optional``. Specifies an initial noise matrix; defaults to `None`, in which case noise will
     be generated as needed.
 
     *response_noiseless*: ``ndarray, optional``. Represents the noiseless response vector, if available. Default is `None`.
@@ -438,11 +440,11 @@ class SimulationWrapper:
 
     *interpolation*: ``bool, default=False``. Specifies whether to use interpolation within the simulation.
 
-    *computation_threshold*: ``float, default=10 ** (-8)``. A small threshold to control numerical computations 
+    *computation_threshold*: ``float, default=10 ** (-8)``. A small threshold to control numerical computations
     in the simulation procedures.
 
     **Methods**
-    
+
     +-----------------------------------------------------------------+---------------------------------------------------------+
     |  run_simulation_truncated_svd(``diagonal``, ``data_set_name``)  | Run montecarlo simulation for truncated SVD.            |
     +-----------------------------------------------------------------+---------------------------------------------------------+
@@ -451,6 +453,7 @@ class SimulationWrapper:
     |  run_simulation_conjugate_gradients()                           | Run montecarlo simulation for conjugate gradients.      |
     +-----------------------------------------------------------------+---------------------------------------------------------+
     """
+
     def __init__(
         self,
         design,
@@ -465,7 +468,6 @@ class SimulationWrapper:
         computation_threshold=10 ** (-8),
         cores=5,
     ):
-
 
         self.design = design
         self.true_signal = true_signal
@@ -488,12 +490,12 @@ class SimulationWrapper:
     def run_simulation_landweber(self, learning_rate=None, data_set_name=None):
         """
         Runs a simulation for an inverse problem using the Landweber iteration method.
-        The function generates a noisy response based on the specified noise level and and performs a Monte-Carlo 
+        The function generates a noisy response based on the specified noise level and and performs a Monte-Carlo
         simulation to collect various metrics related to the estimator's performance.
 
         **Parameters**
 
-        *learning_rate*: ``float`` or ``str``, optional. Specifies the learning rate for the Landweber iteration. 
+        *learning_rate*: ``float`` or ``str``, optional. Specifies the learning rate for the Landweber iteration.
         If set to `"auto"`, the method will search for an optimal learning rate. Default is 1.
 
         *data_set_name*: ``str``, optional. If specified, the results are saved to a CSV file with this name.
@@ -509,13 +511,13 @@ class SimulationWrapper:
 
         if learning_rate == "auto":
             info("Searching for viable learning rates.")
-            self.learning_rate = self.__search_learning_rate(search_depth=10)
+            self.learning_rate = self.search_learning_rate(search_depth=10)
         else:
             self.learning_rate = 1
 
         info("Running Monte Carlo simulation.")
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.__monte_carlo_wrapper_landweber)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_landweber)(m) for m in range(self.monte_carlo_runs)
         )
 
         column_names = [
@@ -544,8 +546,8 @@ class SimulationWrapper:
 
     def run_simulation_truncated_svd(self, diagonal=False, data_set_name=None):
         """
-        Runs a simulation for an inverse problem using truncated Singular Value Decomposition (SVD). 
-        The function generates a noisy response based on the specified noise level and performs a Monte-Carlo 
+        Runs a simulation for an inverse problem using truncated Singular Value Decomposition (SVD).
+        The function generates a noisy response based on the specified noise level and performs a Monte-Carlo
         simulation to collect various metrics related to the estimator's performance.
 
         **Parameters**
@@ -564,12 +566,12 @@ class SimulationWrapper:
         info("Running simulation.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-        
+
         self.response = self.noise + (self.response_noiseless)[:, None]
         info("Running Monte-Carlo simulation.")
 
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.__monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
         )
 
         column_names = [
@@ -586,7 +588,7 @@ class SimulationWrapper:
             "weak_classical_oracle",
             "strong_classical_oracle",
             "weak_relative_efficiency",
-            "strong_relative_efficiency"
+            "strong_relative_efficiency",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -596,14 +598,14 @@ class SimulationWrapper:
 
         return results_df
 
-    def __monte_carlo_wrapper_truncated_svd(self, m):
+    def monte_carlo_wrapper_truncated_svd(self, m):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_truncated_svd = TruncatedSVD(
             design=self.design,
             response=self.response[:, m],
             true_signal=self.true_signal,
             true_noise_level=self.true_noise_level,
-            diagonal=self.diagonal
+            diagonal=self.diagonal,
         )
 
         model_truncated_svd.iterate(self.max_iteration)
@@ -625,12 +627,8 @@ class SimulationWrapper:
         weak_classical_oracle = np.argmin(weak_mse)
         strong_classical_oracle = np.argmin(strong_mse)
 
-        weak_relative_efficiency = np.sqrt(
-            np.min(weak_mse) / weak_mse[discrepancy_stop]
-        )
-        strong_relative_efficiency = np.sqrt(
-            np.min(strong_mse) / strong_mse[discrepancy_stop]
-        )
+        weak_relative_efficiency = np.sqrt(np.min(weak_mse) / weak_mse[discrepancy_stop])
+        strong_relative_efficiency = np.sqrt(np.min(strong_mse) / strong_mse[discrepancy_stop])
 
         return (
             strong_bias2,
@@ -646,13 +644,13 @@ class SimulationWrapper:
             weak_classical_oracle,
             strong_classical_oracle,
             weak_relative_efficiency,
-            strong_relative_efficiency
+            strong_relative_efficiency,
         )
 
     def run_simulation_conjugate_gradients(self):
         """
         Runs a simulation for an inverse problem using the Conjugate Gradients method.
-        This function generates a noisy response based on the specified noise level and performs a 
+        This function generates a noisy response based on the specified noise level and performs a
         Monte-Carlo simulation to collect various metrics related to the estimator's performance.
 
         **Parameters**
@@ -670,12 +668,12 @@ class SimulationWrapper:
 
         info("Running Monte-Carlo simulation.")
         self.results = Parallel(n_jobs=self.cores)(
-            delayed(self.__monte_carlo_wrapper_conjugate_gradients)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m) for m in range(self.monte_carlo_runs)
         )
 
         return self.results
 
-    def __search_learning_rate(self, search_depth):
+    def search_learning_rate(self, search_depth):
         u, s, vh = svds(self.design, k=1)
         largest_singular_value = s[0]
         initial_guess_learning_rate = 2 / largest_singular_value**2
@@ -683,7 +681,7 @@ class SimulationWrapper:
         info("Determine learning rate candidates based on search depth.")
 
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.__search_learning_rate_wrapper)(m) for m in range(search_depth)
+            delayed(self.search_learning_rate_wrapper)(m) for m in range(search_depth)
         )
 
         learning_rate_candidates_evaluation, strong_errors = zip(*results)
@@ -693,7 +691,7 @@ class SimulationWrapper:
         accepted_errors = np.array(strong_errors)[true_false_vector]
         return accepted_candidates[np.argmin(accepted_errors)]
 
-    def __search_learning_rate_wrapper(self, m):
+    def search_learning_rate_wrapper(self, m):
         model_landweber = Landweber(
             design=self.design,
             response=self.response[:, 0],
@@ -720,7 +718,7 @@ class SimulationWrapper:
 
         return converges, model_landweber.strong_empirical_risk[stopping_index_landweber]
 
-    def __monte_carlo_wrapper_landweber(self, m):
+    def monte_carlo_wrapper_landweber(self, m):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_landweber = Landweber(
             design=self.design,
@@ -772,7 +770,7 @@ class SimulationWrapper:
             balanced_oracle_strong,
         )
 
-    def __monte_carlo_wrapper_conjugate_gradients(self, m):
+    def monte_carlo_wrapper_conjugate_gradients(self, m):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
 
         model_conjugate_gradients = ConjugateGradients(
@@ -820,6 +818,7 @@ class SimulationWrapper:
             weak_relative_efficiency,
             terminal_iteration,
         )
+
 
 def info(message, color="green"):
     if color == "green":
