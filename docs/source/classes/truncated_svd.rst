@@ -1,5 +1,5 @@
-Truncated SVD estimation
-========================
+Truncated SVD
+==============
 
 .. autoclass:: EarlyStopping.TruncatedSVD
 .. automethod:: EarlyStopping.TruncatedSVD.iterate

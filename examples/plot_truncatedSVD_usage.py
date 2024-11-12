@@ -1,11 +1,12 @@
 """
-Usage and methods of the TruncatedSVD class 
+Usage of the TruncatedSVD class 
 ===========================================
 
 
 We illustrate the usage and available methods of the TruncatedSVD class via a
 small example.
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -19,11 +20,11 @@ sns.set_theme()
 # -------------------------
 # To simulate some data we consider the signals from `Blanchard, Hoffmann and Reiß (2018) <https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-12/issue-2/Early-stopping-for-statistical-inverse-problems-via-truncated-SVD-estimation/10.1214/18-EJS1482.full>`_.
 sample_size = 10000
-indices     = np.arange(sample_size) + 1
+indices = np.arange(sample_size) + 1
 
-signal_supersmooth = 5    * np.exp(-0.1 * indices)
-signal_smooth      = 5000 * np.abs(np.sin(0.01  * indices))  * indices**(-1.6)
-signal_rough       = 250  * np.abs(np.sin(0.002 * indices))  * indices**(-0.8)
+signal_supersmooth = 5 * np.exp(-0.1 * indices)
+signal_smooth = 5000 * np.abs(np.sin(0.01 * indices)) * indices ** (-1.6)
+signal_rough = 250 * np.abs(np.sin(0.002 * indices)) * indices ** (-0.8)
 
 plt.figure(figsize=(10, 4))
 plt.xlabel("Index")
@@ -38,24 +39,22 @@ plt.show()
 
 # %%
 # We simulate data from a prototypical inverse problem based on one of the signals
-true_signal      = signal_rough
-eigenvalues      = indices**(-0.5)
-design           = np.diag(eigenvalues)
+true_signal = signal_rough
+eigenvalues = indices ** (-0.5)
+design = np.diag(eigenvalues)
 true_noise_level = 0.01
-response         = eigenvalues * true_signal + \
-                   true_noise_level * np.random.normal(0, 1, sample_size)
+response = eigenvalues * true_signal + true_noise_level * np.random.normal(0, 1, sample_size)
 
 # %%
 # Theoretical bias-variance decomposition
 # ---------------------------------------
 # By giving the true function f to the class, we can track the theoretical bias-variance decomposition and the balanced oracle.
-alg = es.TruncatedSVD(design, response, true_signal, true_noise_level,
-                      diagonal = True)
+alg = es.TruncatedSVD(design, response, true_signal, true_noise_level, diagonal=True)
 alg.iterate(3000)
 
 plt.figure()
-plt.plot(indices[0: alg.iteration + 1], alg.weak_variance, label="Weak variance")
-plt.plot(indices[0: alg.iteration + 1], alg.weak_bias2, label="Weak squared bias")
+plt.plot(indices[0 : alg.iteration + 1], alg.weak_variance, label="Weak variance")
+plt.plot(indices[0 : alg.iteration + 1], alg.weak_bias2, label="Weak squared bias")
 plt.legend(loc="upper right")
 plt.show()
 weak_balanced_oracle = alg.get_weak_balanced_oracle(3000)
@@ -69,11 +68,11 @@ print(f"The weakly balanced oracle is given by {weak_balanced_oracle} with mse =
 # strong_balanced_oracle = alg.get_strong_balanced_oracle(3000)
 # strong_balanced_oracle_mse = alg.strong_bias2[strong_balanced_oracle] + alg.strong_variance[strong_balanced_oracle]
 # print(f"The strongly balanced oracle is given by {strong_balanced_oracle} with mse = {strong_balanced_oracle_mse}.")
-# 
+#
 # # %%
 # # Early stopping via the discrepancy principle
 # # --------------------------------------------
-# # The TruncatedSVD class provides a data driven method to choose an iteration making the right tradeoff between bias and variance. 
+# # The TruncatedSVD class provides a data driven method to choose an iteration making the right tradeoff between bias and variance.
 # # It is based on the discrepancy principle, which stops when the residuals become smaller than a critical value.
 # # Theoretically this critical value should be chosen depending on the noise level of the model, which, in the inverse problem setting, can be assumed to be known.
 # critical_value   = sample_size * true_noise_level**2
@@ -86,7 +85,7 @@ print(f"The weakly balanced oracle is given by {weak_balanced_oracle} with mse =
 # plt.ylim([0, 2])
 # plt.xlim([0, 5000])
 # print(f"The discrepancy based early stopping time is given by {stopping_time} with mse = {early_stopping_mse}.")
-# 
+#
 # # %%
 # # A two-step procedure
 # # ----------------------
