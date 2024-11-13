@@ -10,15 +10,15 @@ class RegressionTree:
 
     **Parameters**
 
-    *design*: ``np.array``. The design matrix for the regression tree.
+    *design*: ``array``. The design matrix for the regression tree.
 
-    *response*: ``np.array``. The response variable values.
+    *response*: ``array``. The response variable values.
 
     *min_samples_split*: ``int``. The number of samples that the terminal node can have at maximum.
 
-    *true_signal*: ``np.array or None``. Used only in simulation contexts for computing theoretical quantities.
+    *true_signal*: ``array or None``. Used only in simulation contexts for computing theoretical quantities.
 
-    *true_noise_vector*: ``np.array or None``. Used only in simulation contexts for theoretical quantities.
+    *true_noise_vector*: ``array or None``. Used only in simulation contexts for theoretical quantities.
 
     **Attributes**
 
@@ -28,13 +28,13 @@ class RegressionTree:
 
     *regression_tree*: ``Node``. The root node of the regression tree.
 
-    *residuals*: ``np.array``. Stores the mean squared error residuals at each level of the tree.
+    *residuals*: ``array``. Stores the mean squared error residuals at each level of the tree.
 
-    *bias2*: ``np.array``. Stores the squared bias values at each level of the tree.
+    *bias2*: ``array``. Stores the squared bias values at each level of the tree.
 
-    *variance*: ``np.array``. Stores the variance values at each level of the tree.
+    *variance*: ``array``. Stores the variance values at each level of the tree.
 
-    *risk*: ``np.array``. Risk based on bias and variance.
+    *risk*: ``array``. Risk based on bias and variance.
 
     **Methods**
 
@@ -212,13 +212,13 @@ class RegressionTree:
 
         return best_split
 
-    def predict(self, design: pd.DataFrame | np.ndarray, depth: int) -> np.array:
+    def predict(self, design: pd.DataFrame | np.ndarray, depth: int):
         """
         Predicts target values for the given design data using the decision tree at the specified depth.
 
         **Parameters**
 
-        *design*: ``pd.DataFrame or np.ndarray``. Input design matrix for predictions.
+        *design*: ``array``. Input design matrix for predictions.
 
         *depth*: ``int``. Depth level of the tree to use for predictions. If 0, returns the unconditional mean.
         """
@@ -298,7 +298,7 @@ class RegressionTree:
 
          *critical_value*: ``float``. Threshold for discrepancy-based stopping.
 
-         *max_depth*: ``int or None``. Maximum depth for the tree if it has not been grown yet.
+         *max_depth*: ``None``. Maximum depth for the tree if it has not been grown yet.
          """
 
         # If no iteration done before, grow the tree until max_depth
@@ -321,7 +321,7 @@ class RegressionTree:
 
         **Parameters**
 
-        *max_depth*: ``int or None``. Maximum depth for the tree if it has not been grown yet.
+        *max_depth*: ``None``. Maximum depth for the tree if it has not been grown yet.
         """
 
         # If no iteration done before, grow the tree until max_depth
