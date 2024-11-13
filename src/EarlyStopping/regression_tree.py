@@ -1,134 +1,111 @@
 from __future__ import annotations
-from typing import Tuple
 import numpy as np
 import pandas as pd
 from queue import Queue
 import warnings
 
 class RegressionTree:
+    """
+    A class for constructing a regression tree and computing theoretical quantities.
+
+    **Parameters**
+
+    *design*: ``np.array``. The design matrix for the regression tree.
+
+    *response*: ``np.array``. The response variable values.
+
+    *min_samples_split*: ``int``. The number of samples that the terminal node can have at maximum.
+
+    *true_signal*: ``np.array or None``. Used only in simulation contexts for computing theoretical quantities.
+
+    *true_noise_vector*: ``np.array or None``. Used only in simulation contexts for theoretical quantities.
+
+    **Attributes**
+
+    *sample_size*: ``int``. The number of samples in the data.
+
+    *dimension*: ``int``. The number of variables in the design matrix.
+
+    *regression_tree*: ``Node``. The root node of the regression tree.
+
+    *residuals*: ``np.array``. Stores the mean squared error residuals at each level of the tree.
+
+    *bias2*: ``np.array``. Stores the squared bias values at each level of the tree.
+
+    *variance*: ``np.array``. Stores the variance values at each level of the tree.
+
+    *risk*: ``np.array``. Theoretical risk values based on bias and variance.
+
+    **Methods**
+
+    +-------------------------------------------+--------------------------------------------------------------------+
+    | iterate( ``max_depth=None`` )             | Grows a regression tree up to the specified depth.                 |
+    +-------------------------------------------+--------------------------------------------------------------------+
+    | predict( ``design, depth`` )              | Predicts target values using the regression tree at a given depth. |
+    +-------------------------------------------+--------------------------------------------------------------------+
+    | get_discrepancy_stop( ``crit, max_depth``)| Finds the first generation satisfying the discrepancy principle.   |
+    +-------------------------------------------+--------------------------------------------------------------------+
+    | get_balanced_oracle( ``max_depth`` )      | Computes the balanced oracle generation.                           |
+    +-------------------------------------------+--------------------------------------------------------------------+
+    """
 
     class Node:
+        """
+        A class representing a node of the regression tree.
+        """
         def __init__(self):
-            self.split_threshold = None  # This can be a float or None
-            self.variable = None         # This can be an int or None
-            self._left = None            # This can be a Node or None
-            self._right = None           # This can be a Node or None
-            self.is_terminal = False     # Boolean indicating if the node is terminal
-            self.node_prediction = None  # Prediction at this node (float or None)
-            self.design_and_response = None  # This can be a NumPy array or None
+            self.split_threshold = None
+            self.variable = None
+            self.left_child = None
+            self.right_child = None
+            self.is_terminal = False
+            self.node_prediction = None
 
         def set_params(self, split_threshold: float, variable: int) -> None:
             """ Set split and variable parameters for this node. """
             self.split_threshold = split_threshold
             self.variable = variable
 
-        def get_params(self):
-            """ Get the split and variable parameters for this node. """
-            return self.split_threshold, self.variable
-
-        def set_children(self, left, right) -> None:
-            """ Set left and right child nodes for the current node. """
-            self._left = left
-            self._right = right
-
-        def get_left_node(self):
-            """ Get the left child node. """
-            return self._left
-
-        def get_right_node(self):
-            """ Get the right child node. """
-            return self._right
-
-    def clone_tree(self, node):
-        """
-           Creates a deep copy of a binary tree rooted at the given `node`.
-
-           This function recursively clones each node and its children, ensuring that the new tree
-           is a completely separate object from the original. All attributes and properties of each
-           node are copied over to their corresponding cloned nodes.
-
-           Parameters:
-               node (Node): The root node of the tree or subtree to clone.
-
-           Returns:
-               Node: The root node of the cloned tree or subtree. If the input `node` is `None`, returns `None`.
-
-           """
-
-        if node is None:
-            return None
-
-        # Create a new node and copy properties
-        cloned_node = self.Node()
-        cloned_node.set_params(node.split_threshold, node.variable)
-        cloned_node.is_terminal = node.is_terminal
-        cloned_node.node_prediction = node.node_prediction
-        cloned_node.design_and_response = node.design_and_response
-
-        # Recursively clone children
-        left_cloned = self.clone_tree(node.get_left_node())
-        right_cloned = self.clone_tree(node.get_right_node())
-        cloned_node.set_children(left_cloned, right_cloned)
-
-        # Set the node as terminal if it has no children
-        if left_cloned is None and right_cloned is None:
-            cloned_node.is_terminal = True
-
-        return cloned_node
-
     def __init__(self,
-                 design: np.array = None,
-                 response: np.array = None,
-                 min_samples_split: int = 2,
+                 design: np.array,
+                 response: np.array,
+                 min_samples_split: int,
                  true_signal: np.array = None,
                  true_noise_vector: np.array = None):
 
-        self.regression_tree = None
         self.true_signal = true_signal
         self.minimal_samples_split = min_samples_split
         self.true_noise_vector = true_noise_vector
-        self.trees_at_each_level = {}  # Dictionary to store tree copies at each level
         self.design = design
         self.response = response
-        self.residuals = np.array([])
         self.sample_size = self.design.shape[0]
-
-        # For theoretical quantities:
-        self.observations_per_level = {}  # Dictionary to store observations count per level
-        self.indices_per_level = {}
-        self.block_matrix = {}
-        self.indices_processed = {}
-        self.block_matrices_full = {}
-        self.indices_complete_all = {}
-
-        self.bias2 = np.array([])
-        self.variance = np.array([])
-        self.risk = np.array([])
-        self.indices_collect = {}
-        self.block_matrix_collect = {}
-        self.balanced_oracle_iteration_collect = {}
-        self.balanced_oracle_iteration = None
-        self.block_matrices_full = {}
-        self.indices_complete_all = {}
-
-        # prepare the input data
-        self.design_and_response = np.concatenate((self.design, self.response.reshape(-1, 1)), axis=1)
-        # set the root node of the tree
-        self.regression_tree = self.Node()
-        # Initial indices for the entire dataset
-        self.initial_indices = np.arange(self.sample_size)
-
-        # Initialize inputs for the queue
-        self.queue = Queue()
-        self.level = 1
-        self.current_indices = self.initial_indices
-        self.queue.put((self.regression_tree, self.design_and_response, self.current_indices, self.level))
-        # Dictionary to store indices for each terminal node
-        self.terminal_indices = {}
+        self.dimension = self.design.shape[1]
 
 
 
     def iterate(self, max_depth: int = None):
+        """
+        Grows the regression tree up to the specified depth.
+
+        **Parameters**
+
+        *max_depth*: ``int or None``. Maximum depth to which the tree should grow. If None, the tree grows fully.
+        """
+
+        self.residuals = np.array([])
+        # For theoretical quantities:
+        self.block_matrix = {}
+        self.indices_processed = {}
+        self.block_matrices_full = {}
+        self.bias2 = np.array([])
+        self.variance = np.array([])
+        self.risk = np.array([])
+
+        # Initialize root node of the tree
+        self.regression_tree = self.Node()
+        self.queue = Queue()
+        self.queue.put((self.regression_tree, np.arange(self.sample_size), 1)) # start with level 1
+        self.terminal_indices = {}
 
         # Process all nodes at the current level (= perform 'one iteration'):
         self.maximal_depth = max_depth
@@ -137,145 +114,192 @@ class RegressionTree:
 
     def _grow_one_iteration(self):
         """
-            Grows one iteration of the regression tree using a breadth-first approach.
+        Grows one iteration of the regression tree using a breadth-first approach.
+        """
 
-            This method constructs a regression tree by expanding nodes level by level,
-            starting from the root node. It uses a queue to manage the nodes at each level
-            and applies splitting criteria to decide whether to split a node or make it terminal.
-
-            """
-
-        level_mse_sum = 0  # Initialize the sum of MSE for the current level
-        level_node_count = 0  # Initialize the count of nodes for the current level
-        next_level_queue = Queue()  # Queue for storing nodes of the next level
-
-        self.level_indices = []  # List to store all indices for this level
-        self.current_level_observations = {}  # Dictionary to store the number of observations for the current level
+        #Initialize:
+        level_mse_sum = 0
+        level_node_count = 0
+        next_level_queue = Queue()
+        self.level_indices = []
+        current_level_observations = {}
 
         # Process all nodes at the current level
         for _ in range(self.queue.qsize()):
-            self.node, self.design_and_response_queue, self.current_indices, self.level = self.queue.get()
+            self.node, parent_indices, level = self.queue.get()
+            number_observations_node = len(self.response[parent_indices])
+            self.node.node_prediction = np.mean(self.response[parent_indices])
 
-            # Always calculate and update node_prediction, not just for terminal nodes
-            self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
-            self.node.design_and_matrix = self.design_and_response_queue
-
-            # Calculate MSE for the current node and update level statistics
-            node_mse = self._impurity(self.design_and_response_queue)
-            level_mse_sum += node_mse * (self.design_and_response_queue.shape[0] / self.sample_size)
+            # Calculate MSE for the current node and update level MSE
+            level_mse_sum += self._impurity(parent_indices) * (number_observations_node / self.sample_size)
             level_node_count += 1
 
             # Check termination conditions
-            terminal_due_to_samples = self.design_and_response_queue.shape[0] <= (self.minimal_samples_split * 2)
-            terminal_due_to_depth = self.maximal_depth is not None and self.level >= self.maximal_depth
+            terminal_due_to_samples = number_observations_node == self.minimal_samples_split
+            terminal_due_to_depth = self.maximal_depth is not None and level >= self.maximal_depth
 
             # If the terminal condition is satisfied, the node is not added to the next level queue.
             if terminal_due_to_samples or terminal_due_to_depth:
-                self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
                 self.node.is_terminal = True
                 continue
 
             else:
-                split_params = self._find_best_split(self.design_and_response_queue)
-                if split_params is not None:
-                    split_variable, split_value = split_params
-                    left_node_mask = self.design_and_response_queue[:, split_variable] <= split_value
-                    right_node_mask = ~left_node_mask
+                split_variable, split_value, left_indices, right_indices = self._find_best_split_parent(indices=parent_indices)
 
-                    # Create left and right child nodes and set current node parameters
-                    self.left_node, self.right_node = self.Node(), self.Node()
-                    self.node.set_params(split_value, split_variable)
-                    self.node.set_children(self.left_node, self.right_node)
+                # ILeft and right child node
+                self.node.left_child = self.Node()
+                self.node.right_child = self.Node()
+                self.node.left_child.node_prediction = np.mean(self.response[left_indices])
+                self.node.right_child.node_prediction = np.mean(self.response[right_indices])
+                self.node.set_params(split_value, split_variable)
+                self.level_indices.extend([left_indices, right_indices])
 
-                    # Update indices for left and right children
-                    self.left_indices = self.current_indices[left_node_mask]
-                    self.right_indices = self.current_indices[right_node_mask]
+                # Add child nodes to the next level queue
+                next_level_queue.put((self.node.left_child, left_indices, level + 1))
+                next_level_queue.put((self.node.right_child, right_indices, level + 1))
 
-                    self.left_design_and_response, self.right_design_and_response = \
-                        (self.design_and_response_queue[left_node_mask],
-                         self.design_and_response_queue[right_node_mask])
-                    if self.left_design_and_response.size > 0 and self.right_design_and_response.size > 0:
-                        self.level_indices.extend([self.left_indices, self.right_indices])  # Storing global indices
+                # Store observations for each node
+                current_level_observations[self.node.left_child] = len(self.response[left_indices])
+                current_level_observations[self.node.right_child] = len(self.response[right_indices])
 
-                        # Assign data to child nodes before recursion or further processing
-                        self.left_node.design_and_response = self.left_design_and_response
-                        self.right_node.design_and_response = self.right_design_and_response
-                        self.left_node.node_prediction = self._node_prediction_value(self.left_design_and_response)
-                        self.right_node.node_prediction = self._node_prediction_value(self.right_design_and_response)
+                if len(left_indices) == self.minimal_samples_split:
+                    if level not in self.terminal_indices:
+                        self.terminal_indices[level] = []
+                    self.terminal_indices[level].append(left_indices)
 
-                    # Add child nodes to the next level queue for further exploration
-                    next_level_queue.put(
-                        (self.left_node, self.left_design_and_response, self.left_indices, self.level + 1))
-                    next_level_queue.put(
-                        (self.right_node, self.right_design_and_response, self.right_indices, self.level + 1))
+                if len(right_indices) == self.minimal_samples_split:
+                    if level not in self.terminal_indices:
+                        self.terminal_indices[level] = []
+                    self.terminal_indices[level].append(right_indices)
 
-                    # Store observations for each node
-                    self.current_level_observations[self.left_node] = self.left_design_and_response.shape[0]
-                    self.current_level_observations[self.right_node] = self.right_design_and_response.shape[0]
 
-                    if self.left_design_and_response.shape[0] <= (
-                            self.minimal_samples_split * 2):  # No further splits possible.
-                        if self.level not in self.terminal_indices:
-                            self.terminal_indices[self.level] = []
-                        self.terminal_indices[self.level].append(self.left_indices)
-
-                    if self.right_design_and_response.shape[0] <= (
-                            self.minimal_samples_split * 2):  # No further splits possible.
-                        if self.level not in self.terminal_indices:
-                            self.terminal_indices[self.level] = []
-                        self.terminal_indices[self.level].append(self.right_indices)
-
-                else:
-                    # If no valid split is found, make current node a leaf
-                    self.node.node_prediction = self._node_prediction_value(self.design_and_response_queue)
-                    self.node.is_terminal = True  # Mark as terminal
-
-        # Update the residuals
+        # Update the residuals, theoretical quantities, and queue for the next level
         self.residuals = np.append(self.residuals, level_mse_sum)
-        # Get the bias2 and the variance:
-        self._update_theoretical_quantities()
-        # After processing the current level, store the tree state (used for prediction)
-        self.trees_at_each_level[self.level] = self.clone_tree(self.regression_tree)
-
-        # Prepare for the next level of nodes
+        self._update_theoretical_quantities(current_level_observations, level)
         self.queue = next_level_queue
 
-    def _update_theoretical_quantities(self):
-        # Exit the function if self.level_indices is empty
+
+    def _find_best_split_parent(self, indices):
+        """
+        Finds the best split based on impurity reduction.
+
+        **Parameters**
+
+        *indices*: ``list``. Indices of samples to be split.
+        """
+        best_impurity = float("inf")
+        best_split = (None, None, [], [])
+        range_variables = range(self.dimension)
+
+        # Iterate through the possible variable/split combinations
+        for variable in range_variables:
+            thresholds = np.unique(self.design[indices, variable])
+            for split_threshold in thresholds:
+                left_node_indices = [i for i in indices if self.design[i, variable] <= split_threshold]
+                right_node_indices = [i for i in indices if self.design[i, variable] > split_threshold]
+
+                if len(left_node_indices) == 0 or len(right_node_indices) == 0:
+                    continue
+                impurity = (
+                            len(self.design[left_node_indices]) * self._impurity(left_node_indices)
+                            + len(self.design[right_node_indices]) * self._impurity(right_node_indices)
+                           ) / self.sample_size
+
+                # Update the impurity and choice of variable/split
+                if impurity < best_impurity:
+                    best_impurity = impurity
+                    best_split = (variable, split_threshold, np.array(left_node_indices), np.array(right_node_indices))
+
+        return best_split
+
+    def predict(self, design: pd.DataFrame | np.ndarray, depth: int) -> np.array:
+        """
+        Predicts target values for the given design data using the decision tree at the specified depth.
+
+        **Parameters**
+
+        *design*: ``pd.DataFrame or np.ndarray``. Input design matrix for predictions.
+
+        *depth*: ``int``. Depth level of the tree to use for predictions. If 0, returns the unconditional mean.
+        """
+
+        if isinstance(design, pd.DataFrame):
+            design = design.to_numpy()
+
+        # Handle depth = 0 case by returning the unconditional mean
+        if depth == 0:
+            return np.repeat(np.mean(self.response), design.shape[0])
+        if depth > self.maximal_depth:
+            warnings.warn("Depth can not exceed max_depth. Returning None.", category=UserWarning)
+            return None
+
+        predictions = []
+        for sample in design:
+            current_node = self.regression_tree  # Start at the root
+            current_depth = 1
+
+            # Traverse the tree based on stored nodes up to the specified depth
+            while not current_node.is_terminal and current_depth <= depth:
+                # Find the current node's split criteria based on the level structure
+                split_feature = current_node.variable
+                split_threshold = current_node.split_threshold
+
+                # Decide which child node to move to based on split criteria
+                if sample[split_feature] <= split_threshold:
+                    current_node = current_node.left_child
+                else:
+                    current_node = current_node.right_child
+
+                current_depth += 1
+
+            # When reaching the terminal node or max depth, take the prediction value
+            predictions.append(current_node.node_prediction)
+
+        return np.array(predictions)
+
+    def _update_theoretical_quantities(self, current_level_observations, level):
+        """
+        Updates theoretical quantities (bias, variance, risk) at each level.
+
+        **Parameters**
+
+        *current_level_observations*: ``dict``. Observations at the current tree level.
+
+        *level*: ``int``. Current level of the tree.
+        """
+        # Exit the function if empty
         if not self.level_indices:
             return
 
         # Processing of block matrix:
-        self._block_matrix_processing()
-
+        self._block_matrix_processing(current_level_observations, level)
         if self.true_signal is not None and self.true_noise_vector is not None:
-            if self.block_matrix[self.level].shape[0] == self.design_and_response.shape[0]:
-                self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_processed[self.level],
-                                                                                self.block_matrix[self.level])
-                self.balanced_oracle_iteration_collect[self.level] = self.balanced_oracle_iteration
-
+            if self.block_matrix[level].shape[0] == self.sample_size:
+                self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_processed[level],
+                                                                                self.block_matrix[level])
                 self.bias2 = np.append(self.bias2, self.new_bias2)
                 self.variance = np.append(self.variance, self.new_variance)
                 self.new_risk = self.new_bias2 + self.new_variance
                 self.risk = np.append(self.risk, self.new_risk)
 
-                self.indices_collect[self.level] = self.indices_processed[self.level]
-                self.block_matrix_collect[self.level] = self.block_matrix[self.level]
             else:
                 self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_complete,
-                                                                                self.block_matrices_full[self.level])
-                self.balanced_oracle_iteration_collect[self.level] = self.balanced_oracle_iteration
-
+                                                                                self.block_matrices_full[level])
                 self.bias2 = np.append(self.bias2, self.new_bias2)
                 self.variance = np.append(self.variance, self.new_variance)
                 self.new_risk = self.new_bias2 + self.new_variance
                 self.risk = np.append(self.risk, self.new_risk)
 
-                self.indices_collect[self.level] = self.indices_complete
-                self.block_matrix_collect[self.level] = self.block_matrices_full[self.level]
-
     def get_discrepancy_stop(self, critical_value, max_depth = None):
-        """Returns the first generation at which the discrepancy principle is satisfied."""
+        """
+         Finds the first generation where the discrepancy principle is met.
+
+         **Parameters**
+
+         *critical_value*: ``float``. Threshold for discrepancy-based stopping.
+
+         *max_depth*: ``int or None``. Maximum depth for the tree if it has not been grown yet.
+         """
 
         # If no iteration done before, grow the tree until max_depth
         if self.residuals.size == 0:
@@ -292,17 +316,14 @@ class RegressionTree:
             return None
 
     def get_balanced_oracle(self, max_depth = None):
-        """Returns strong balanced oracle if found up to max_iteration.
+        """
+        Computes the balanced oracle iteration based on the bias and variance.
 
         **Parameters**
 
-        *max_iteration*: ``int``. The maximum number of total iterations to be considered.
-
-        **Returns**
-
-        *strong_balanced_oracle*: ``int``. The first iteration at which the strong bias
-        is smaller than the strong variance.
+        *max_depth*: ``int or None``. Maximum depth for the tree if it has not been grown yet.
         """
+
         # If no iteration done before, grow the tree until max_depth
         if self.residuals.size == 0:
             self.maximal_depth = max_depth
@@ -320,99 +341,37 @@ class RegressionTree:
             )
             return None
 
+    def _block_matrix_processing(self, current_level_observations, level):
+        # Process observations and indices after completing the level
+        self.block_matrix[level] = self._process_level_observations(current_level_observations)
+        self.indices_processed[level] = np.concatenate(self.level_indices)
 
-
-
-    def _find_best_split(self, design_and_response: np.array) -> Tuple[int, float] | None:
-        """
-        Protected function to find the best split for a node
-
-        Input:
-            design_and_response -> data to find the best split for
-        Output:
-            Tuple containing the index of the variable and the value to split on,
-            or None if no valid split is found
-        """
-        impurity_node = None
-        best_variable = None
-        best_split_threshold = None
-
-        # Iterate through the possible variable/split combinations
-        for variable in range(design_and_response.shape[1] - 1):
-            for split_threshold in np.unique(design_and_response[:, variable]):
-                # Split the dataset
-                left_node_mask = design_and_response[:, variable] <= split_threshold
-                right_node_mask = ~left_node_mask
-                left_design_and_response = design_and_response[left_node_mask]
-                right_design_and_response = design_and_response[right_node_mask]
-
-                # Ensure non-empty arrays
-                if (left_design_and_response.shape[0] >= self.minimal_samples_split and
-                        right_design_and_response.shape[0] >= self.minimal_samples_split):
-                    # Calculate the impurity
-                    impurity_candidate = ((left_design_and_response.shape[0] / self.sample_size) *
-                                          self._impurity(left_design_and_response) +
-                                          (right_design_and_response.shape[0] / self.sample_size) *
-                                          self._impurity(right_design_and_response))
-
-                    # Update the impurity and choice of variable/split
-                    if impurity_node is None or impurity_candidate < impurity_node:
-                        impurity_node = impurity_candidate
-                        best_variable = variable
-                        best_split_threshold = split_threshold
-
-        # Return the best variable and split
-        if best_variable is not None and best_split_threshold is not None:
-            return best_variable, best_split_threshold
-        else:
-            return None
-
-    def _block_matrix_processing(self):
-        self.indices_per_level[self.level] = self.level_indices
-        # Store the observations data for the entire level
-        self.observations_per_level[self.level] = self.current_level_observations
-        # Process observations after completing the level
-        self.block_matrix[self.level] = self._process_level_observations(self.current_level_observations)
-        # Process indices after completing the level
-        self.indices_processed[self.level] = np.concatenate(self.level_indices)
-
-        if self.block_matrix[self.level].shape[0] < self.design_and_response.shape[0]:
-            indices_pre_append = self.indices_processed[self.level]
-            filtered_indices = {k: v for k, v in self.terminal_indices.items() if k != self.level}
+        if self.block_matrix[level].shape[0] < self.sample_size:
+            indices_pre_append = self.indices_processed[level]
+            filtered_indices = {k: v for k, v in self.terminal_indices.items() if k != level}
 
             # Check if filtered_indices is None or empty
             if not filtered_indices:
                 print("No indices to concatenate.")
-                # Handle the case where there is nothing to concatenate
                 return
 
-            self.block_matrices_full[self.level] = self.append_block_matrix(self.block_matrix[self.level],
+            self.block_matrices_full[level] = self.append_block_matrix(self.block_matrix[level],
                                                                             filtered_indices)
             indices_append = np.concatenate(
-                [idx for self.level in range(1, self.level) for idx in self.terminal_indices.get(self.level, [])])
-
+                [idx for level in range(1, level) for idx in self.terminal_indices.get(level, [])])
             self.indices_complete = np.append(indices_pre_append, indices_append)
-            self.indices_complete_all[self.level] = self.indices_complete
 
-    def _impurity(self, design_and_response_input: np.array) -> float:
+    def _impurity(self, indices) -> float:
+        """
+        Computes the mean squared error impurity for the response at the given set of indices.
 
-        # compute the mean target for the node
-        response_node_mean = np.mean(design_and_response_input[:, -1])
-        # compute the mean squared error wrt the mean
-        mse = np.sum((design_and_response_input[:, -1] - response_node_mean) ** 2) / design_and_response_input.shape[0]
-        # return results
+        **Parameters**
+
+        *indices*: ``list``. Indices of samples to compute impurity on.
+        """
+        response_node = self.response[indices]
+        mse = np.sum((response_node -  np.mean(response_node)) ** 2) / len(response_node)
         return mse
-
-    def _node_prediction_value(self, design_and_response: np.array) -> float:
-        """
-        Protected function to compute the value at a leaf node
-
-        Input:
-            design_and_response -> data to compute the leaf value
-        Output:
-            Mean of design_and_response
-        """
-        return np.mean(design_and_response[:, -1])
 
     def append_block_matrix(self, existing_matrix, filtered_indices):
         """
@@ -528,87 +487,30 @@ class RegressionTree:
 
             """
 
-        if len(observations) == 0:
-            return None  # If there are no observations, nothing to process
 
-        # Initialize the list for storing block matrices and their dimensions
         block_matrices = []
         dimensions = []
 
         # Iterate over each node's observations to create individual block matrices
         for node, count in observations.items():
             if count > 0:
-                entry = 1 / count  # Calculate the entry value
+                entry = 1 / count  #
                 block_matrix = np.full((count, count), entry)  # Create a block matrix for the node
                 block_matrices.append(block_matrix)
                 dimensions.append(count)
 
         # Combine the block matrices into a single large block matrix
-        if block_matrices:
-            total_dim = sum(dimensions)
-            full_matrix = np.zeros((total_dim, total_dim))  # Initialize the full block matrix
+        total_dim = sum(dimensions)
+        full_matrix = np.zeros((total_dim, total_dim))
 
-            # Populate the full matrix with individual block matrices
-            current_position = 0
-            for i, block in enumerate(block_matrices):
-                dim = dimensions[i]
-                full_matrix[current_position:current_position + dim, current_position:current_position + dim] = block
-                current_position += dim
+        # Populate the full matrix with individual block matrices
+        current_position = 0
+        for i, block in enumerate(block_matrices):
+            dim = dimensions[i]
+            full_matrix[current_position:current_position + dim, current_position:current_position + dim] = block
+            current_position += dim
 
-            return full_matrix  # Return the assembled block matrix
-        else:
-            print("No valid block matrices were created.")
-            return np.array([])  # Return an empty array if no blocks were created
+        return full_matrix
 
-    def __traverse(self, node, design_row):
-        """
-           Recursively traverses the decision tree to make a prediction for a single data point.
 
-           Parameters:
-               node (Node): The current node in the decision tree.
-               design_row (array-like): A single sample's feature values.
-                   - Should be indexed such that `design_row[f]` accesses the feature at index `f`.
 
-           Returns:
-               float: The predicted value obtained from the terminal node corresponding to the input sample.
-
-           """
-        if node.is_terminal:
-            return node.node_prediction
-
-        s, f = node.get_params()
-        if design_row[f] <= s:
-            return self.__traverse(node.get_left_node(), design_row)
-        else:
-            return self.__traverse(node.get_right_node(), design_row)
-
-    def predict(self, design: pd.DataFrame | np.ndarray, depth: int) -> np.array:
-        """
-        Predicts target values for the given design data using the decision tree at the specified depth.
-
-        Parameters:
-            design (pd.DataFrame or np.ndarray): The input feature data for which predictions are to be made.
-                - Each row represents a sample.
-                - Each column represents a feature.
-            depth (int): The depth of the tree to use for making predictions.
-                - If `depth` is 1, the function returns the unconditional mean of the response variable.
-
-        Returns:
-            np.array: An array of predicted values corresponding to each input sample.
-
-        """
-        if depth <= self.maximal_depth:
-            if isinstance(design, pd.DataFrame):
-                design = design.to_numpy()
-            # Unconditional mean prediction for depth=0
-            if depth == 0:
-                return np.repeat(np.mean(self.response), design.shape[0])
-            else:
-                tree = self.trees_at_each_level[depth]
-                predictions = []
-                for r in range(design.shape[0]):
-                    predictions.append(self.__traverse(tree, design[r, :]))
-                return np.array(predictions)
-        else:
-            warnings.warn("'Depth' can not exceed 'max_depth'. Returning None.", category=UserWarning)
-            return None
