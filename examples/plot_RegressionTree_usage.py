@@ -1,12 +1,11 @@
 """
-Usage example for regression trees estimation
+Usage of the RegressionTree class
 ===============================================================
 
 We illustrate the usage and available methods of the regression tree class via a
 small example.
 """
 
-# TODO: Next step: Run docu locally and/or merge with the new updates of eric.
 for name in list(globals()):
     if not name.startswith('_'):
         del globals()[name]
@@ -68,7 +67,7 @@ f, _ = generate_sine_cosine(design, true_noise_level, add_noise=False)
 
 
 # %%
-# Theoretical bias-variance decomposition
+# Bias-variance decomposition
 # ------------------------------
 # Decompose the risk into squared bias and variance.
 alg = es.RegressionTree(design=design, response=response, min_samples_split=1, true_signal=f,
@@ -93,7 +92,7 @@ plt.show()
 # Stop the breadth-first search growth of the tree when the residuals become smaller than the critical value.
 stopping_iteration = alg.get_discrepancy_stop(critical_value=1, max_depth=10)
 balanced_oracle_iteration = alg.get_balanced_oracle(max_depth=20)
-print("The discrepancy based early stopping generation is given by", stopping_iteration, balanced_oracle_iteration)
+print("The discrepancy based early stopping generation and the balanced oracle generation are given by", stopping_iteration, balanced_oracle_iteration)
 
 
 # %%

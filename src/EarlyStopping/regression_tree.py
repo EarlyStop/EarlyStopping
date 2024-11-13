@@ -34,7 +34,7 @@ class RegressionTree:
 
     *variance*: ``np.array``. Stores the variance values at each level of the tree.
 
-    *risk*: ``np.array``. Theoretical risk values based on bias and variance.
+    *risk*: ``np.array``. Risk based on bias and variance.
 
     **Methods**
 
@@ -62,16 +62,16 @@ class RegressionTree:
             self.node_prediction = None
 
         def set_params(self, split_threshold: float, variable: int) -> None:
-            """ Set split and variable parameters for this node. """
+            """ Set splitting observation and splitting variable for this node. """
             self.split_threshold = split_threshold
             self.variable = variable
 
     def __init__(self,
                  design: np.array,
                  response: np.array,
-                 min_samples_split: int,
-                 true_signal: np.array = None,
-                 true_noise_vector: np.array = None):
+                 min_samples_split,
+                 true_signal = None,
+                 true_noise_vector = None):
 
         self.true_signal = true_signal
         self.minimal_samples_split = min_samples_split
@@ -355,7 +355,7 @@ class RegressionTree:
                 print("No indices to concatenate.")
                 return
 
-            self.block_matrices_full[level] = self.append_block_matrix(self.block_matrix[level],
+            self.block_matrices_full[level] = self._append_block_matrix(self.block_matrix[level],
                                                                             filtered_indices)
             indices_append = np.concatenate(
                 [idx for level in range(1, level) for idx in self.terminal_indices.get(level, [])])
@@ -373,7 +373,7 @@ class RegressionTree:
         mse = np.sum((response_node -  np.mean(response_node)) ** 2) / len(response_node)
         return mse
 
-    def append_block_matrix(self, existing_matrix, filtered_indices):
+    def _append_block_matrix(self, existing_matrix, filtered_indices):
         """
             Appends new block matrices to an existing block-diagonal
             matrix to create an expanded block-diagonal matrix.

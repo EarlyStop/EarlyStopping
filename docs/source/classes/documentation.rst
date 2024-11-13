@@ -11,6 +11,7 @@ Iterative estimation procedures
    landweber
    conjugate_gradients
    truncated_svd
+   regression_tree
    :maxdepth: 2
 
 Montecarlo simulations
@@ -28,4 +29,5 @@ Examples
    ../auto_examples/plot_L2boost_usage
    ../auto_examples/plot_landweber_usage
    ../auto_examples/plot_SimmulationWrapper_usage
+   ../auto_examples/plot_RegressionTree_usage
    :maxdepth: 1
