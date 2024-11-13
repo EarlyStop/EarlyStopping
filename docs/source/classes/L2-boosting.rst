@@ -1,5 +1,5 @@
-L2-boosting for high-dimensional linear models
-==============================================
+L2-boosting
+============
 
 .. autoclass:: EarlyStopping.L2_boost
 .. automethod:: EarlyStopping.L2_boost.iterate

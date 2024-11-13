@@ -1,5 +1,5 @@
-Conjugate gradients for the normal equation
-===========================================
+Conjugate gradients
+====================
 
 .. autoclass:: EarlyStopping.ConjugateGradients
 .. automethod:: EarlyStopping.ConjugateGradients.iterate
