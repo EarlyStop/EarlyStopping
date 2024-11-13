@@ -206,7 +206,6 @@ class Landweber:
         (None is returned if the stopping index is not found.)
         """
         if self.residuals[self.iteration] <= critical_value:
-
             # argmax takes the first instance of True in the true-false array
             early_stopping_index = np.argmax(self.residuals <= critical_value)
             return early_stopping_index
