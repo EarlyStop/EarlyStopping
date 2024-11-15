@@ -10,6 +10,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
 from scipy.sparse import dia_matrix
+import seaborn as sns
+
+np.random.seed(42)
+sns.set_theme()
 
 
 # %%
