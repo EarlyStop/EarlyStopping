@@ -25,6 +25,12 @@ Early stopping is a python library implementing computationally efficient model 
   </a>.
   In: <em>Journal of Econometrics</em> 234(2), 714-731 (2023).
 
+- L. Hucker, M. Reiß.
+  <a href="https://arxiv.org/pdf/2406.15001">
+    "Early stopping for conjugate gradients in statistical inverse problems"
+  </a>.
+  arXiv:2406.15001 [math.ST] (2024).
+
 Check out the [documentation](https://earlystop.github.io/EarlyStopping/) for more information.
 
 ## Development notes
