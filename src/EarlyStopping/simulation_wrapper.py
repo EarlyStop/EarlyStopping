@@ -627,8 +627,13 @@ class SimulationWrapper:
         weak_classical_oracle = np.argmin(weak_mse)
         strong_classical_oracle = np.argmin(strong_mse)
 
-        weak_relative_efficiency = np.sqrt(np.min(weak_mse) / weak_mse[discrepancy_stop])
-        strong_relative_efficiency = np.sqrt(np.min(strong_mse) / strong_mse[discrepancy_stop])
+
+        weak_error_vector_at_stopping_time = model_truncated_svd.design @ (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal)
+        weak_error_at_stopping_time        = np.sum(weak_error_vector_at_stopping_time**2)
+        weak_relative_efficiency           = np.sqrt(np.min(weak_mse) / weak_error_at_stopping_time)
+
+        strong_error_at_stopping_time = np.sum((model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal)**2)
+        strong_relative_efficiency    = np.sqrt(np.min(strong_mse) / strong_error_at_stopping_time)
 
         return (
             strong_bias2,
