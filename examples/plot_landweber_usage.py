@@ -21,8 +21,6 @@ sns.set_theme()
 # -------------------------
 # To simulate some data we consider the signals from `Blanchard, Hoffmann and Reiß (2018) <https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-12/issue-2/Early-stopping-for-statistical-inverse-problems-via-truncated-SVD-estimation/10.1214/18-EJS1482.full>`_.
 sample_size = 10000
-
-sample_size = 10000
 indices = np.arange(sample_size) + 1
 
 signal_supersmooth = 5 * np.exp(-0.1 * indices)
@@ -55,21 +53,25 @@ response = eigenvalues * true_signal + noise
 alg = es.Landweber(design, response, learning_rate=1, true_signal=true_signal, true_noise_level=true_noise_level)
 alg.iterate(3000)
 
-# Bias-variance decomposition and oracle quantities
+# %%
+# Bias-variance decomposition (weak)
 plt.figure()
 plt.plot(indices[0 : alg.iteration + 1], alg.weak_variance, label="Variance")
 plt.plot(indices[0 : alg.iteration + 1], alg.weak_bias2, label="Bias2")
 plt.show()
 
-alg.get_weak_balanced_oracle(3000)
+print(f"Weak balanced oracle: {alg.get_weak_balanced_oracle(3000)}")
 
+# %%
+# Bias-variance decomposition (strong)
 plt.figure()
 plt.plot(indices[0 : alg.iteration + 1], alg.strong_variance, label="Variance")
 plt.plot(indices[0 : alg.iteration + 1], alg.strong_bias2, label="Bias2")
 plt.show()
 
-alg.get_strong_balanced_oracle(3000)
+print(f"Strong balanced oracle: {alg.get_strong_balanced_oracle(3000)}")
 
+# %%
 # Early stopping w/ discrepancy principle
 critical_value = sample_size * true_noise_level**2
 discrepancy_time = alg.get_discrepancy_stop(critical_value, 3000)
