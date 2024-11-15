@@ -199,7 +199,6 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
-
 class SimulationParameters:
     def __init__(
         self,
@@ -237,7 +236,6 @@ class SimulationParameters:
         if not isinstance(self.max_iteration, int) or self.max_iteration < 0:
             raise ValueError("max_iteration must be a nonnegative integer.")
         # add more cases to validate (e.g. for noise)
-
 
 class SimulationWrapper:
     def __init__(
@@ -327,6 +325,8 @@ class SimulationWrapper:
             delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
         )
 
+
+        # TODO-BS-2024-11-02: Add AIC stop, classical oracles, etc. as column
         column_names = [
             "strong_bias",
             "strong_variance",
