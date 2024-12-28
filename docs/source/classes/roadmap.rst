@@ -2,5 +2,5 @@ Roadmap
 ============
 Here is the roadmap for the *EarlyStopping*-package.
 
-- [x] Include sample splitting
-- [x] Include gradient boosting
+- :white_large_square Include sample splitting
+- :white_large_square Include gradient boosting
