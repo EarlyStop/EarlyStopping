@@ -26,9 +26,9 @@ Early stopping is a Python library implementing computationally efficient model 
 
 .. toctree::
    classes/installation
-   classes/roadmap
    classes/documentation
    auto_examples/index
+   classes/roadmap
    :maxdepth: 1
    :caption: Contents
 
