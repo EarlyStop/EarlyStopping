@@ -8,7 +8,7 @@ EarlyStopping
 Early stopping is a Python library implementing computationally efficient model selection methods for iterative estimation procedures.
 
 
-.. image:: extra_files/tree_heatmaps.gif
+.. image:: tree_heatmaps.gif
    :alt: EarlyStopping Animation
    :align: center
    :width: 100%
