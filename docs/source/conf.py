@@ -9,7 +9,7 @@
 project = "EarlyStopping"
 copyright = "2023, Bernhard Stankewitz, Eric Ziebell, Laura Hucker, Ratmir Miftachov"
 author = "Bernhard Stankewitz, Eric Ziebell, Laura Hucker, Ratmir Miftachov"
-release = "0.1"
+release = "0.0.2"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
