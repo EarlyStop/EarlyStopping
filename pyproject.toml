@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EarlyStopping"
-version = "0.0.2"
+version = "0.0.1"
 authors = [
-  { name="Eric Ziebell, Bernhard Stankewitz, Laura Hucker, Ratmir Miftachov", email="author@example.com" },
+  { name="Example Author", email="author@example.com" },
 ]
-description = "Early Stopping for Statistical Learning Procedures in Python"
+description = "A small example package"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
