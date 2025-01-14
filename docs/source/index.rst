@@ -2,7 +2,21 @@
 #####################
 EarlyStopping
 #####################
-Early stopping is a Python library implementing computationally efficient model selection methods for iterative estimation procedures based on the theory in:
+
+
+
+Early stopping is a Python library implementing computationally efficient model selection methods for iterative estimation procedures.
+
+
+.. image:: extra_files/tree_heatmaps.gif
+   :alt: EarlyStopping Animation
+   :align: center
+   :width: 100%
+
+
+
+
+The library is based on the following literature:
 
 - `Early stopping for statistical inverse problems via truncated SVD estimation <https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-12/issue-2/Early-stopping-for-statistical-inverse-problems-via-truncated-SVD-estimation/10.1214/18-EJS1482.full>`_.
   
@@ -32,9 +46,3 @@ Early stopping is a Python library implementing computationally efficient model 
    :maxdepth: 1
    :caption: Contents
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
