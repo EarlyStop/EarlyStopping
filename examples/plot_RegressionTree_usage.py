@@ -95,9 +95,10 @@ balanced_oracle_iteration = alg.get_balanced_oracle(max_depth=20)
 print("The discrepancy based early stopping generation is given by", stopping_iteration)
 print("The balanced oracle generation is given by", balanced_oracle_iteration)
 
+
 # %%
 # Prediction
 # ------------
 # The class has a method to predict the response for new design points.
-prediction_new = alg.predict(design, depth=20)
+prediction = alg.predict(design, depth=20)
 

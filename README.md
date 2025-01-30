@@ -25,6 +25,12 @@ Early stopping is a python library implementing computationally efficient model 
   </a>.
   In: <em>Journal of Econometrics</em> 234(2), 714-731 (2023).
 
+- L. Hucker, M. Reiß.
+  <a href="https://arxiv.org/pdf/2406.15001">
+    "Early stopping for conjugate gradients in statistical inverse problems"
+  </a>.
+  arXiv:2406.15001 [math.ST] (2024).
+
 Check out the [documentation](https://earlystop.github.io/EarlyStopping/) for more information.
 
 ## Development notes
@@ -46,7 +52,7 @@ python3 -m ipykernel install --user --name=myenv      # Create Jupyter kernel fr
 From the notebooks directory open the Jupyter notebook example.ipynb with the kernel myenv and run the code!
 
 ### Installation from Python Package Index
-[https://test.pypi.org/project/EarlyStopping/0.0.1/](https://test.pypi.org/project/EarlyStopping/0.0.1/)
+[https://test.pypi.org/project/EarlyStopping](https://test.pypi.org/project/EarlyStopping)
 
 ### Creating documentation locally
 The online documentation is not built until it has been merged into main. To build documentation locally and check how things look run
