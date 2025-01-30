@@ -30,6 +30,7 @@ class L2_boost():
 
     *stoch_error*: ``array``. Only exists if true_signal was given. Lists the values of a stochastic error term up to current boosting iteration.
 
+    # TODO-BS-2024-11-02: Change to "risk" name convention.
     *mse*: ``array``. Only exists if true_signal was given. Lists the values of the mean squared error betwean the boosting estimator and the true signal up to current boosting iteration.
 
     **Methods**

@@ -338,7 +338,6 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
-
 class SimulationParameters:
     """
     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/simulation_wrapper.py>`_
@@ -413,7 +412,6 @@ class SimulationParameters:
             raise ValueError("max_iteration must be a nonnegative integer.")
         # add more cases to validate (e.g. for noise)
         # TODO: Catch the case for truncated SVD that you have more iterations as max iterations in your simmulation than dimensions
-
 
 class SimulationWrapper:
     """
@@ -574,6 +572,8 @@ class SimulationWrapper:
             delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
         )
 
+
+        # TODO-BS-2024-11-02: Add AIC stop, classical oracles, etc. as column
         column_names = [
             "strong_bias2",
             "strong_variance",
@@ -627,8 +627,13 @@ class SimulationWrapper:
         weak_classical_oracle = np.argmin(weak_mse)
         strong_classical_oracle = np.argmin(strong_mse)
 
-        weak_relative_efficiency = np.sqrt(np.min(weak_mse) / weak_mse[discrepancy_stop])
-        strong_relative_efficiency = np.sqrt(np.min(strong_mse) / strong_mse[discrepancy_stop])
+
+        weak_error_vector_at_stopping_time = model_truncated_svd.design @ (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal)
+        weak_error_at_stopping_time        = np.sum(weak_error_vector_at_stopping_time**2)
+        weak_relative_efficiency           = np.sqrt(np.min(weak_mse) / weak_error_at_stopping_time)
+
+        strong_error_at_stopping_time = np.sum((model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal)**2)
+        strong_relative_efficiency    = np.sqrt(np.min(strong_mse) / strong_error_at_stopping_time)
 
         return (
             strong_bias2,
