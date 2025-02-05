@@ -6,11 +6,9 @@
 # ------------------------------------------------------------------------------
 import numpy             as np
 import matplotlib.pyplot as plt
-import pandas            as pd
-import seaborn           as sns   
-sns.set_theme()
 import EarlyStopping     as es
-
+import pandas as pd
+import os
 
 # Signals and design
 # ------------------------------------------------------------------------------
@@ -84,30 +82,102 @@ supersmooth_strong_relative_efficiency = results_supersmooth["strong_relative_ef
 smooth_strong_relative_efficiency      = results_smooth["strong_relative_efficiency"]
 rough_strong_relative_efficiency       = results_rough["strong_relative_efficiency"]
 
-data = {'supersmooth': supersmooth_strong_relative_efficiency,
-        'smooth':      smooth_strong_relative_efficiency,
-        'rough':       rough_strong_relative_efficiency}
-df   = pd.DataFrame(data)   
+# Weak relative efficiency
+supersmooth_weak_relative_efficiency = results_supersmooth["weak_relative_efficiency"]
+smooth_weak_relative_efficiency      = results_smooth["weak_relative_efficiency"]
+rough_weak_relative_efficiency       = results_rough["weak_relative_efficiency"]
 
-fig = plt.figure(figsize = (7,5))
-fig.patch.set_facecolor('white')
-ax  = sns.boxplot(data = df)
-ax.set_ylim(0, 1.15)
-ax.set_title("Relative efficiencies in strong risk")
+data = [supersmooth_strong_relative_efficiency,
+        smooth_strong_relative_efficiency,
+        rough_strong_relative_efficiency,
+        supersmooth_weak_relative_efficiency,
+        smooth_weak_relative_efficiency,
+        rough_weak_relative_efficiency
+        ]
 
-(df["supersmooth"] > 1)
-# TODO-BS-2024-11-02: We don't get values > 1 which contradicts the simulation from the paper.
-# Relative efficiency differently defined / loss at stopping time.
+def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name):
+    # Create a boxplot for the given data
+    plt.figure(figsize=(10, 6))
+    bp = plt.boxplot(data, patch_artist=True, labels=labels)
+
+    # Define custom colors
+    colors = ['blue', 'purple', '#CCCC00', 'blue', 'purple', '#CCCC00']
+
+    # Set colors for each box
+    for patch, color in zip(bp['boxes'], colors):
+        patch.set_facecolor(color)
+        patch.set_linewidth(1.5)  # Set the border thickness
+
+    # Making whiskers, caps, and medians thicker and grey
+    for whisker in bp['whiskers']:
+        whisker.set_linewidth(1.5)
+    for cap in bp['caps']:
+        cap.set_linewidth(1.5)
+    for median in bp['medians']:
+        median.set_linewidth(1.5)
+
+    # Add a horizontal line at y=1
+    plt.axhline(y=1, color='black', linestyle='--', linewidth=1.5)
+
+    # Enable gridlines
+    plt.grid(True)
+
+    # Set y-axis limits (can adjust based on your data)
+    plt.ylim(y_lim_lower, y_lim_upper)
+
+    # Customize tick labels and layout
+    plt.tick_params(axis='both', which='major', labelsize=14)
+
+    # Add sub-label "weak" beneath the first three x-axis labels
+    plt.xticks(ticks=range(1, len(labels) + 1), labels=labels)
+
+    # Add a single "weak" label beneath the first three x-tick labels
+    plt.text(2, plt.ylim()[0] - 0.1, 'weak norm', ha='center', va='top', fontsize=14)
+    plt.text(5, plt.ylim()[0] - 0.1, 'strong norm', ha='center', va='top', fontsize=14)
+
+
+    plt.savefig(os.path.join(fig_dir, f'boxplot_{name}.png'), bbox_inches='tight', dpi=300)
+
+    plt.tight_layout()  # Adjust layout
+
+    # Show the plot
+    plt.show()
+
+# Labels for the boxplot
+labels = [
+    "supersmooth", "smooth", "rough",
+    "supersmooth", "smooth", "rough"
+]
+
+fig_dir = ""
+
+create_custom_boxplot(data, labels, y_lim_lower = 0.3, y_lim_upper=1.3, fig_dir=fig_dir, name='efficiency_SVD')
 
 
 
+# Signal plot:
+
+plt.figure(figsize=(10, 6))
+plt.plot(indices, true_signal_supersmooth, color='blue')
+plt.plot(indices, true_signal_smooth, color='purple')
+plt.plot(indices, true_signal_rough, color='#CCCC00')
+plt.grid(True)
+plt.tick_params(axis='both', which='major', labelsize=14)
+plt.ylim([0, 1.6])
+# Add sub-label "weak" beneath the first three x-axis labels
+#plt.xticks(ticks=range(1, len(labels) + 1), labels=labels)
+
+# **Add the main x-axis label**
+plt.xlabel(" ", fontsize = 22)
 
 
+# Add a single "weak" label beneath the first three x-tick labels
+# plt.text(2, plt.ylim()[0] - 0.1, '', ha='center', va='top', fontsize=14)
+# plt.text(5, plt.ylim()[0] - 0.1, '', ha='center', va='top', fontsize=14)
 
+# plt.show()
 
-
-
-
+plt.savefig(os.path.join(fig_dir, f'signals.png'), bbox_inches='tight', dpi=300)
 
 
 
