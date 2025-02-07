@@ -101,7 +101,8 @@ Recently, it has been shown for several regularisation methods that sequential e
            :caption: Contents
 
 
-
-
+This research has been partially funded by the Deutsche Forschungsgemeinschaft
+(DFG) – Project-ID 318763901 - SFB1294, Project-ID 460867398 - Research Unit
+5381 and the German Academic Scholarship Foundation.
 
 
