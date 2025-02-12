@@ -801,8 +801,10 @@ class SimulationWrapper:
         )
         strong_empirical_oracle_risk = model_conjugate_gradients.get_strong_empirical_risk(strong_empirical_oracle)
         weak_empirical_oracle_risk = model_conjugate_gradients.get_weak_empirical_risk(weak_empirical_oracle)
+
         strong_empirical_stopping_index_risk = model_conjugate_gradients.get_strong_empirical_risk(stopping_index)
         weak_empirical_stopping_index_risk = model_conjugate_gradients.get_weak_empirical_risk(stopping_index)
+
         squared_residual_at_stopping_index = model_conjugate_gradients.get_residual(stopping_index)
 
         strong_relative_efficiency = np.sqrt(strong_empirical_oracle_risk / strong_empirical_stopping_index_risk)
