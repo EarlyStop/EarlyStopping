@@ -17,7 +17,7 @@ parameters_smooth = es.SimulationParameters(
     design=design_smooth,
     true_signal=true_signal_smooth,
     true_noise_level=0.01,
-    max_iteration=5000,
+    max_iteration=2000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -26,7 +26,7 @@ parameters_supersmooth = es.SimulationParameters(
     design=design_supersmooth,
     true_signal=true_signal_supersmooth,
     true_noise_level=0.01,
-    max_iteration=5000,
+    max_iteration=2000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -35,7 +35,7 @@ parameters_rough = es.SimulationParameters(
     design=design_rough,
     true_signal=true_signal_rough,
     true_noise_level=0.01,
-    max_iteration=5000,
+    max_iteration=2000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -59,6 +59,41 @@ strong_relative_efficiency_rough = np.array([res[8] for res in results_rough])
 weak_relative_efficiency_smooth = np.array([res[9] for res in results_smooth])
 weak_relative_efficiency_supersmooth = np.array([res[9] for res in results_supersmooth])
 weak_relative_efficiency_rough = np.array([res[9] for res in results_rough])
+
+# Extract the early stopping time and the oracle stopping time, smooth
+strong_oracle_smooth = np.array( [res[0] for res in results_smooth] )
+weak_oracle_smooth  = np.array( [res[1] for res in results_smooth] )
+stopping_index_smooth  = np.array( [res[2] for res in results_smooth] )
+
+# Extract the early stopping time and the oracle stopping time, supersmooth
+strong_oracle_supersmooth = np.array( [res[0] for res in results_supersmooth] )
+weak_oracle_supersmooth  = np.array( [res[1] for res in results_supersmooth] )
+stopping_index_supersmooth  = np.array( [res[2] for res in results_supersmooth] )
+
+# Extract the early stopping time and the oracle stopping time, rough
+strong_oracle_rough = np.array( [res[0] for res in results_rough] )
+weak_oracle_rough  = np.array( [res[1] for res in results_rough] )
+stopping_index_rough  = np.array( [res[2] for res in results_rough] )
+
+# relative iterations, weak
+weak_relative_iteration_smooth = stopping_index_smooth/weak_oracle_smooth
+weak_relative_iteration_supersmooth = stopping_index_supersmooth/weak_oracle_supersmooth
+weak_relative_iteration_rough = stopping_index_rough/weak_oracle_rough
+
+# relative iterations, strong
+strong_relative_iteration_smooth = stopping_index_smooth/strong_oracle_smooth
+strong_relative_iteration_supersmooth = stopping_index_supersmooth/strong_oracle_supersmooth
+strong_relative_iteration_rough = stopping_index_rough/strong_oracle_rough
+
+
+efficiency_iteration_plot = [
+    weak_relative_iteration_supersmooth,
+    weak_relative_iteration_smooth,
+    weak_relative_iteration_rough,
+    strong_relative_iteration_supersmooth,
+    strong_relative_iteration_smooth,
+    strong_relative_iteration_rough
+]
 
 # Plot results
 def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name):
@@ -102,4 +137,5 @@ efficiency_to_plot = [
 labels = ["supersmooth", "smooth", "rough", "supersmooth", "smooth", "rough"]
 fig_dir = ""
 
-create_custom_boxplot(efficiency_to_plot, labels, y_lim_lower=0, y_lim_upper=1, fig_dir=fig_dir, name='cg_efficiency')
+create_custom_boxplot(efficiency_to_plot, labels, y_lim_lower = 0.3, y_lim_upper=1.3, fig_dir=fig_dir, name='cg_efficiency')
+create_custom_boxplot(efficiency_iteration_plot, labels, y_lim_lower = 0.3, y_lim_upper=1.3, fig_dir=fig_dir, name='cg_efficiency_iteration')
