@@ -173,3 +173,6 @@ docs/source/sg_execution_times.rst
 # data
 *.png
 *.csv
+
+#  files
+simulations/experimental.py

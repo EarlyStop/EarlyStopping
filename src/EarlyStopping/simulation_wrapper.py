@@ -4,6 +4,7 @@ from scipy.linalg import toeplitz
 from scipy.sparse import dia_matrix
 from scipy.sparse.linalg import svds
 import pandas as pd
+import warnings
 
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
@@ -16,6 +17,17 @@ from .truncated_svd import TruncatedSVD
 # TODO: Update bias2 vs. bias/ mse vs risk, landweber empirical vs. non-empirical quantities for replication study
 # bias2
 # risk
+
+
+def custom_warning(message, category, filename, lineno, file=None, line=None):
+    message_str = str(message)  # Convert to string for checking
+    if "PARAMETER WARNING" in message_str:  # Only color specific warnings
+        return f"\033[91m{category.__name__}: {message}\033[0m\n"  # Red
+    else:
+        return f"{category.__name__}: {message}\n"  # Default color
+
+
+warnings.formatwarning = custom_warning
 
 
 class SimulationData:
@@ -338,6 +350,7 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
+
 class SimulationParameters:
     """
     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/simulation_wrapper.py>`_
@@ -401,17 +414,29 @@ class SimulationParameters:
         self.interpolation = interpolation
         self.computation_threshold = computation_threshold
         self.cores = cores
+
         self.__validate()
 
     def __validate(self):
+
+        XXt = np.transpose(self.design) @ self.design
+
         if not isinstance(self.true_signal, np.ndarray):
             raise ValueError("true_signal must be a numpy array.")
         if not (0 <= self.true_noise_level):
             raise ValueError("true_noise_level must be greater than or equal to 0.")
         if not isinstance(self.max_iteration, int) or self.max_iteration < 0:
             raise ValueError("max_iteration must be a nonnegative integer.")
-        # add more cases to validate (e.g. for noise)
-        # TODO: Catch the case for truncated SVD that you have more iterations as max iterations in your simmulation than dimensions
+        if not (np.linalg.matrix_rank(XXt) == XXt.shape[0]):
+            warnings.warn(
+                "PARAMETER WARNING: The inverse problem is ill-posed, which is currently not fully supported by landweber.",
+                category=UserWarning,
+            )
+        if self.max_iteration >= len(self.true_signal):
+            warnings.warn(
+                "PARAMETER WARNING: The maximal number of iterations exceeds the dimension. Truncated SVD does not currently support this case."
+            )
+
 
 class SimulationWrapper:
     """
@@ -572,7 +597,6 @@ class SimulationWrapper:
             delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
         )
 
-
         # TODO-BS-2024-11-02: Add AIC stop, classical oracles, etc. as column
         column_names = [
             "strong_bias2",
@@ -627,13 +651,16 @@ class SimulationWrapper:
         weak_classical_oracle = np.argmin(weak_mse)
         strong_classical_oracle = np.argmin(strong_mse)
 
+        weak_error_vector_at_stopping_time = model_truncated_svd.design @ (
+            model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal
+        )
+        weak_error_at_stopping_time = np.sum(weak_error_vector_at_stopping_time**2)
+        weak_relative_efficiency = np.sqrt(np.min(weak_mse) / weak_error_at_stopping_time)
 
-        weak_error_vector_at_stopping_time = model_truncated_svd.design @ (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal)
-        weak_error_at_stopping_time        = np.sum(weak_error_vector_at_stopping_time**2)
-        weak_relative_efficiency           = np.sqrt(np.min(weak_mse) / weak_error_at_stopping_time)
-
-        strong_error_at_stopping_time = np.sum((model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal)**2)
-        strong_relative_efficiency    = np.sqrt(np.min(strong_mse) / strong_error_at_stopping_time)
+        strong_error_at_stopping_time = np.sum(
+            (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal) ** 2
+        )
+        strong_relative_efficiency = np.sqrt(np.min(strong_mse) / strong_error_at_stopping_time)
 
         return (
             strong_bias2,
