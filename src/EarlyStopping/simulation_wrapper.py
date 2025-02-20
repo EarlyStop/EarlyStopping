@@ -1,6 +1,8 @@
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.linalg import toeplitz
+import scipy
+from scipy import sparse
 from scipy.sparse import dia_matrix
 from scipy.sparse.linalg import svds
 import pandas as pd
@@ -421,21 +423,33 @@ class SimulationParameters:
 
         XXt = np.transpose(self.design) @ self.design
 
+
         if not isinstance(self.true_signal, np.ndarray):
             raise ValueError("true_signal must be a numpy array.")
         if not (0 <= self.true_noise_level):
             raise ValueError("true_noise_level must be greater than or equal to 0.")
         if not isinstance(self.max_iteration, int) or self.max_iteration < 0:
             raise ValueError("max_iteration must be a nonnegative integer.")
-        if not (np.linalg.matrix_rank(XXt) == XXt.shape[0]):
-            warnings.warn(
-                "PARAMETER WARNING: The inverse problem is ill-posed, which is currently not fully supported by landweber.",
-                category=UserWarning,
-            )
         if self.max_iteration >= len(self.true_signal):
             warnings.warn(
                 "PARAMETER WARNING: The maximal number of iterations exceeds the dimension. Truncated SVD does not currently support this case."
             )
+
+        if scipy.sparse.issparse(XXt):
+            warnings.warn(
+                "PARAMETER WARNING: The design matrix is sparse. Escaping from __validate().",
+                category=UserWarning,
+            )
+            return None
+        else: 
+            rank = np.linalg.matrix_rank(XXt)
+
+        if not (rank == XXt.shape[0]):
+            warnings.warn(
+                "PARAMETER WARNING: The inverse problem is ill-posed, which is currently not fully supported by landweber.",
+                category=UserWarning,
+            )
+        
 
 
 class SimulationWrapper:
@@ -679,7 +693,7 @@ class SimulationWrapper:
             strong_relative_efficiency,
         )
 
-    def run_simulation_conjugate_gradients(self):
+    def run_simulation_conjugate_gradients(self, data_set_name=None):
         """
         Runs a simulation for an inverse problem using the Conjugate Gradients method.
         This function generates a noisy response based on the specified noise level and performs a
@@ -699,11 +713,32 @@ class SimulationWrapper:
         self.response = self.noise + (self.response_noiseless)[:, None]
 
         info("Running Monte-Carlo simulation.")
-        self.results = Parallel(n_jobs=self.cores)(
+        results = Parallel(n_jobs=self.cores)(
             delayed(self.monte_carlo_wrapper_conjugate_gradients)(m) for m in range(self.monte_carlo_runs)
         )
 
-        return self.results
+        column_names = [
+            "conjugate_gradients_strong_empirical_oracle",
+            "conjugate_gradients_weak_empirical_oracle",
+            "conjugate_gradients_stopping_index",
+            "conjugate_gradients_strong_empirical_oracle_risk",
+            "conjugate_gradients_strong_empirical_stopping_index_risk",
+            "conjugate_gradients_weak_empirical_oracle_risk",
+            "conjugate_gradients_weak_empirical_stopping_index_risk",
+            "conjugate_gradients_squared_residual_at_stopping_index",
+            "conjugate_gradients_strong_relative_efficiency",
+            "conjugate_gradients_weak_relative_efficiency",
+            "conjugate_gradients_terminal_iteration"
+        ]
+
+        results_df = pd.DataFrame(results, columns=column_names)
+
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
+
+        return results_df
+
+
 
     def search_learning_rate(self, search_depth):
         u, s, vh = svds(self.design, k=1)

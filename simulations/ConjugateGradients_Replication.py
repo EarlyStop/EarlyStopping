@@ -51,29 +51,32 @@ results_supersmooth = simulation_supersmooth.run_simulation_conjugate_gradients(
 results_rough = simulation_rough.run_simulation_conjugate_gradients()
 
 # Extract strong relative efficiencies
-strong_relative_efficiency_smooth = np.array([res[8] for res in results_smooth])
-strong_relative_efficiency_supersmooth = np.array([res[8] for res in results_supersmooth])
-strong_relative_efficiency_rough = np.array([res[8] for res in results_rough])
+
+
+strong_relative_efficiency_smooth = np.array(results_smooth["conjugate_gradients_strong_relative_efficiency"])
+strong_relative_efficiency_supersmooth = np.array(results_supersmooth["conjugate_gradients_strong_relative_efficiency"])
+strong_relative_efficiency_rough = np.array(results_rough["conjugate_gradients_strong_relative_efficiency"])
 
 # Extract weak relative efficiencies
-weak_relative_efficiency_smooth = np.array([res[9] for res in results_smooth])
-weak_relative_efficiency_supersmooth = np.array([res[9] for res in results_supersmooth])
-weak_relative_efficiency_rough = np.array([res[9] for res in results_rough])
+weak_relative_efficiency_smooth = np.array(results_smooth["conjugate_gradients_weak_relative_efficiency"])
+weak_relative_efficiency_supersmooth = np.array(results_supersmooth["conjugate_gradients_weak_relative_efficiency"])
+weak_relative_efficiency_rough = np.array(results_rough["conjugate_gradients_weak_relative_efficiency"])
 
 # Extract the early stopping time and the oracle stopping time, smooth
-strong_oracle_smooth = np.array( [res[0] for res in results_smooth] )
-weak_oracle_smooth  = np.array( [res[1] for res in results_smooth] )
-stopping_index_smooth  = np.array( [res[2] for res in results_smooth] )
+strong_oracle_smooth = np.array( results_smooth["conjugate_gradients_strong_empirical_oracle"])
+strong_oracle_supersmooth = np.array( results_supersmooth["conjugate_gradients_strong_empirical_oracle"])
+strong_oracle_rough = np.array(results_rough["conjugate_gradients_strong_empirical_oracle"])
 
-# Extract the early stopping time and the oracle stopping time, supersmooth
-strong_oracle_supersmooth = np.array( [res[0] for res in results_supersmooth] )
-weak_oracle_supersmooth  = np.array( [res[1] for res in results_supersmooth] )
-stopping_index_supersmooth  = np.array( [res[2] for res in results_supersmooth] )
+weak_oracle_smooth  = np.array( results_smooth["conjugate_gradients_weak_empirical_oracle"])
+weak_oracle_supersmooth  = np.array( results_supersmooth["conjugate_gradients_weak_empirical_oracle"])
+weak_oracle_rough  = np.array( results_rough["conjugate_gradients_weak_empirical_oracle"])
 
-# Extract the early stopping time and the oracle stopping time, rough
-strong_oracle_rough = np.array( [res[0] for res in results_rough] )
-weak_oracle_rough  = np.array( [res[1] for res in results_rough] )
-stopping_index_rough  = np.array( [res[2] for res in results_rough] )
+
+stopping_index_smooth  = np.array( results_smooth["conjugate_gradients_stopping_index"])
+stopping_index_supersmooth  = np.array( results_supersmooth["conjugate_gradients_stopping_index"])
+stopping_index_rough  = np.array( results_rough["conjugate_gradients_stopping_index"])
+
+
 
 # relative iterations, weak
 weak_relative_iteration_smooth = stopping_index_smooth/weak_oracle_smooth
