@@ -100,6 +100,7 @@ class Landweber:
     ):
 
         self.design = design
+        self.design_T = np.transpose(design)
         self.response = response
         self.learning_rate = learning_rate
         self.initial_value = initial_value
@@ -137,16 +138,30 @@ class Landweber:
             # initialize matrices required for computing the strong/weak bias and variance
             self.identity = sparse.dia_matrix(np.eye(self.parameter_size))
 
+            self.illposed = False
             if scipy.sparse.issparse(self.gram_matrix):
                 self.inverse_congruency_matrix = scipy.sparse.linalg.inv(self.gram_matrix)
             else:
                 self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
+
+                rank = np.linalg.matrix_rank(self.gram_matrix)
+
+                if not (rank == self.gram_matrix.shape[0]):
+                    warnings.warn(
+                        "PARAMETER WARNING: The inverse problem is ill-posed, settings illposed flag. EXPERIMENTAL FEATURE",
+                        category=UserWarning,
+                    )
+
+                    self.illposed = True
 
             self.perturbation_congruency_matrix = (
                 sparse.dia_matrix(np.eye(self.parameter_size)) - self.learning_rate * self.gram_matrix
             )
             self.weak_perturbation_congruency_matrix = self.design @ self.perturbation_congruency_matrix
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
+            
+            if self.illposed:
+                self.accomulated_perturbation_congruency_matrix_power = self.perturbation_congruency_matrix_power 
 
             # initialize strong/weak bias and variance
             self.expectation_estimator = self.initial_value
@@ -266,7 +281,7 @@ class Landweber:
         """
         if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
             # argmax takes the first instance of True in the true-false array
-            strong_balanced_oracle = np.argmax(self.strong_bias2 <= self.strong_variance)
+            strong_balanced_oracle = np.argmax(self.strong_bias2 <= self.strong_variance) 
             return strong_balanced_oracle
 
         if self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]:
@@ -281,7 +296,7 @@ class Landweber:
             return strong_balanced_oracle
         else:
             warnings.warn(
-                "Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
+                "Strongly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
             )
             return None
 
@@ -297,10 +312,14 @@ class Landweber:
             self.true_signal - self.expectation_estimator
         )
 
+
         self.perturbation_congruency_matrix_power = (
             self.perturbation_congruency_matrix_power @ self.perturbation_congruency_matrix
         )
 
+        if self.illposed:
+            self.accomulated_perturbation_congruency_matrix_power = self.accomulated_perturbation_congruency_matrix_power + self.perturbation_congruency_matrix_power
+            
     def __update_strong_bias2(self):
         """Update strong bias
 
@@ -327,18 +346,29 @@ class Landweber:
         The strong variance in the m-th iteration is given by
         :math: `\\sigma**2 \\mathrm{tr}(h^{-1}(A^{\\top}A)^{-1}(I-(I-hA^{\\top}A)^{m})^{2})`
         """
+        if self.illposed:
+            warnings.warn(
+                        "PARAMETER WARNING: The inverse problem is ill-posed. Switching to longfrom variane computation.",
+                        category=UserWarning,
+                    )
+            square_matrix = self.accomulated_perturbation_congruency_matrix_power @ self.accomulated_perturbation_congruency_matrix_power
+            pretrace_temporary_matrix = square_matrix @ self.gram_matrix
+            new_strong_variance = (self.true_noise_level ** 2) * (self.learning_rate**2) * pretrace_temporary_matrix.trace()
+            
+            self.strong_variance = np.append(self.strong_variance, new_strong_variance)
+            print(new_strong_variance)
+        else: 
+            # presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
+            pretrace_temporary_matrix = (
+                self.learning_rate ** (-1)
+                * self.inverse_congruency_matrix
+                @ (self.identity - self.perturbation_congruency_matrix_power)
+                @ (self.identity - self.perturbation_congruency_matrix_power)
+            )
 
-        # presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
-        pretrace_temporary_matrix = (
-            self.learning_rate ** (-1)
-            * self.inverse_congruency_matrix
-            @ (self.identity - self.perturbation_congruency_matrix_power)
-            @ (self.identity - self.perturbation_congruency_matrix_power)
-        )
-
-        new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
-
-        self.strong_variance = np.append(self.strong_variance, new_strong_variance)
+            new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
+            print(new_strong_variance)
+            self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
     def __update_weak_variance(self):
         """Update weak variance
@@ -346,13 +376,25 @@ class Landweber:
         The weak variance in the m-th iteration is given by
         :math: `\\sigma**2 \\mathrm{tr}((I-(I-hA^{\\top}A)^{m})^{2})`
         """
-        pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (
-            self.identity - self.perturbation_congruency_matrix_power
-        )
+        if self.illposed:
+            warnings.warn(
+                        "PARAMETER WARNING: The inverse problem is ill-posed. Switching to longfrom variane computation.",
+                        category=UserWarning,
+                    )
 
-        new_weak_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
+            pretrace_temporary_matrix_presquare = self.design @ self.accomulated_perturbation_congruency_matrix_power @ self.design_T
+            square_matrix = pretrace_temporary_matrix_presquare @ pretrace_temporary_matrix_presquare
+            new_weak_variance = (self.true_noise_level ** 2) * (self.learning_rate**2) * square_matrix.trace()
+            
+            self.weak_variance = np.append(self.weak_variance, new_weak_variance)
+        else:
+            pretrace_temporary_matrix = (self.identity - self.perturbation_congruency_matrix_power) @ (
+                self.identity - self.perturbation_congruency_matrix_power
+            )
 
-        self.weak_variance = np.append(self.weak_variance, new_weak_variance)
+            new_weak_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
+
+            self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
     def __update_strong_empirical_risk(self):
         """Update the strong empirical error"""

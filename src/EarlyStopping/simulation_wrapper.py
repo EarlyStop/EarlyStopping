@@ -441,8 +441,12 @@ class SimulationParameters:
                 category=UserWarning,
             )
             return None
-        else: 
-            rank = np.linalg.matrix_rank(XXt)
+        else:
+            warnings.warn(
+                "PARAMETER WARNING: The design matrix is NOT sparse.",
+                category=UserWarning,
+            )
+            rank = np.linalg.matrix_rank(XXt)          
 
         if not (rank == XXt.shape[0]):
             warnings.warn(
