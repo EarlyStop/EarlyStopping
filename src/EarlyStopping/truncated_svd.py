@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 from scipy import sparse
 from scipy.sparse.linalg import svds
+from scipy.sparse import dia_matrix
 import warnings
 
 class TruncatedSVD:
@@ -105,6 +106,12 @@ class TruncatedSVD:
 
         self.residuals = np.array([np.sum(self.response**2)])
         self.truncated_svd_estimate_list = [np.zeros(self.parameter_size)]
+
+        # Check for sparsity
+        if (self.diagonal == True) and (not isinstance(self.design, dia_matrix)):
+            raise TypeError("The diagonal design matrix is not of dia_sparse type. Please refine!")
+        elif (self.diagonal == True):
+            self.diagonal_design = self.design.diagonal()
 
         # Initialize theoretical quantities
         if self.true_signal is not None:
@@ -317,8 +324,7 @@ class TruncatedSVD:
         self.iteration += 1
 
     def __truncated_SVD_one_iteration_diagonal(self):
-        s = self.design[self.iteration, self.iteration]
-        self.diagonal_design = np.append(self.diagonal_design, s)
+        s = self.diagonal_design[self.iteration]
 
         # Estimator update
         standard_basis_vector                 = np.zeros(self.parameter_size)
