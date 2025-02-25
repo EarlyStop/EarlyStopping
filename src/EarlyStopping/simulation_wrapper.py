@@ -370,8 +370,6 @@ class SimulationParameters:
 
     *true_noise_level*: ``float``. The standard deviation of the normally distributed noise applied to the response.
 
-    *max_iteration*: ``int``. Specifies the maximum number of iterations allowed for each simulation.
-
     *monte_carlo_runs*: ``int``. Defines the number of Monte-Carlo runs to perform in the simulation.
 
     *noise*: ``ndarray, optional``. Specifies an initial noise matrix; defaults to `None`, in which case noise will
@@ -395,7 +393,6 @@ class SimulationParameters:
         design,
         true_signal,
         true_noise_level,
-        max_iteration,
         monte_carlo_runs,
         noise=None,
         response_noiseless=None,
@@ -408,7 +405,6 @@ class SimulationParameters:
         self.design = design
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
-        self.max_iteration = max_iteration
         self.monte_carlo_runs = monte_carlo_runs
         self.noise = noise
         self.response_noiseless = response_noiseless
@@ -428,12 +424,6 @@ class SimulationParameters:
             raise ValueError("true_signal must be a numpy array.")
         if not (0 <= self.true_noise_level):
             raise ValueError("true_noise_level must be greater than or equal to 0.")
-        if not isinstance(self.max_iteration, int) or self.max_iteration < 0:
-            raise ValueError("max_iteration must be a nonnegative integer.")
-        if self.max_iteration >= len(self.true_signal):
-            warnings.warn(
-                "PARAMETER WARNING: The maximal number of iterations exceeds the dimension. Truncated SVD does not currently support this case."
-            )
 
         if scipy.sparse.issparse(XXt):
             warnings.warn(
@@ -468,8 +458,6 @@ class SimulationWrapper:
 
     *true_noise_level*: ``float``. The standard deviation of the normally distributed noise applied to the response.
 
-    *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
-
     *monte_carlo_runs*: ``int``. Defines the number of Monte-Carlo runs to perform in the simulation.
 
     *noise*: ``ndarray, optional``. Specifies an initial noise matrix; defaults to `None`, in which case noise will
@@ -486,13 +474,13 @@ class SimulationWrapper:
 
     **Methods**
 
-    +-----------------------------------------------------------------+---------------------------------------------------------+
-    |  run_simulation_truncated_svd(``diagonal``, ``data_set_name``)  | Run montecarlo simulation for truncated SVD.            |
-    +-----------------------------------------------------------------+---------------------------------------------------------+
-    |  run_simulation_landweber(``learning_rate``,``data_set_name``)  | Run montecarlo simulation for the Landweber iteration.  |
-    +-----------------------------------------------------------------+---------------------------------------------------------+
-    |  run_simulation_conjugate_gradients()                           | Run montecarlo simulation for conjugate gradients.      |
-    +-----------------------------------------------------------------+---------------------------------------------------------+
+    +-----------------------------------------------------------------------------------+---------------------------------------------------------+
+    |  run_simulation_truncated_svd(``max_iteration``, ``diagonal``, ``data_set_name``) | Run montecarlo simulation for truncated SVD.            |
+    +-----------------------------------------------------------------------------------+---------------------------------------------------------+
+    |  run_simulation_landweber(``max_iteration``, ``learning_rate``,``data_set_name``) | Run montecarlo simulation for the Landweber iteration.  |
+    +-----------------------------------------------------------------------------------+---------------------------------------------------------+
+    |  run_simulation_conjugate_gradients(``max_iteration``, ``data_set_name``)         | Run montecarlo simulation for conjugate gradients.      |
+    +-----------------------------------------------------------------------------------+---------------------------------------------------------+
     """
 
     def __init__(
@@ -500,7 +488,6 @@ class SimulationWrapper:
         design,
         true_signal=None,
         true_noise_level=None,
-        max_iteration=1000,
         monte_carlo_runs=5,
         noise=None,
         response_noiseless=None,
@@ -513,7 +500,6 @@ class SimulationWrapper:
         self.design = design
         self.true_signal = true_signal
         self.true_noise_level = true_noise_level
-        self.max_iteration = max_iteration
         self.monte_carlo_runs = monte_carlo_runs
         self.noise = noise
         self.critical_value = critical_value
@@ -528,13 +514,15 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
-    def run_simulation_landweber(self, learning_rate=None, data_set_name=None):
+    def run_simulation_landweber(self, max_iteration, learning_rate=None, data_set_name=None):
         """
         Runs a simulation for an inverse problem using the Landweber iteration method.
         The function generates a noisy response based on the specified noise level and and performs a Monte-Carlo
         simulation to collect various metrics related to the estimator's performance.
 
         **Parameters**
+
+        *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
 
         *learning_rate*: ``float`` or ``str``, optional. Specifies the learning rate for the Landweber iteration.
         If set to `"auto"`, the method will search for an optimal learning rate. Default is 1.
@@ -552,13 +540,13 @@ class SimulationWrapper:
 
         if learning_rate == "auto":
             info("Searching for viable learning rates.")
-            self.learning_rate = self.search_learning_rate(search_depth=10)
+            self.learning_rate = self.search_learning_rate(max_iteration, search_depth=10)
         else:
             self.learning_rate = 1
 
         info("Running Monte Carlo simulation.")
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_landweber)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_landweber)(m, max_iteration) for m in range(self.monte_carlo_runs)
         )
 
         column_names = [
@@ -585,13 +573,15 @@ class SimulationWrapper:
 
         return results_df
 
-    def run_simulation_truncated_svd(self, diagonal=False, data_set_name=None):
+    def run_simulation_truncated_svd(self, max_iteration, diagonal=False, data_set_name=None):
         """
         Runs a simulation for an inverse problem using truncated Singular Value Decomposition (SVD).
         The function generates a noisy response based on the specified noise level and performs a Monte-Carlo
         simulation to collect various metrics related to the estimator's performance.
 
         **Parameters**
+
+        *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
 
         *diagonal*: ``bool``, optional. Specifies whether to treat the matrix as diagonal. Default is False.
 
@@ -612,7 +602,7 @@ class SimulationWrapper:
         info("Running Monte-Carlo simulation.")
 
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_truncated_svd)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_truncated_svd)(m, max_iteration) for m in range(self.monte_carlo_runs)
         )
 
         # TODO-BS-2024-11-02: Add AIC stop, classical oracles, etc. as column
@@ -640,7 +630,7 @@ class SimulationWrapper:
 
         return results_df
 
-    def monte_carlo_wrapper_truncated_svd(self, m):
+    def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_truncated_svd = TruncatedSVD(
             design=self.design,
@@ -649,8 +639,9 @@ class SimulationWrapper:
             true_noise_level=self.true_noise_level,
             diagonal=self.diagonal,
         )
+        print(max_iteration)
 
-        model_truncated_svd.iterate(self.max_iteration)
+        model_truncated_svd.iterate(max_iteration)
 
         strong_bias2 = model_truncated_svd.strong_bias2
         strong_variance = model_truncated_svd.strong_variance
@@ -661,10 +652,10 @@ class SimulationWrapper:
         residuals = model_truncated_svd.residuals
 
         discrepancy_stop = model_truncated_svd.get_discrepancy_stop(
-            self.sample_size * (self.true_noise_level**2), self.max_iteration
+            self.sample_size * (self.true_noise_level**2), max_iteration
         )
-        weak_balanced_oracle = model_truncated_svd.get_weak_balanced_oracle(self.max_iteration)
-        strong_balanced_oracle = model_truncated_svd.get_strong_balanced_oracle(self.max_iteration)
+        weak_balanced_oracle = model_truncated_svd.get_weak_balanced_oracle(max_iteration)
+        strong_balanced_oracle = model_truncated_svd.get_strong_balanced_oracle(max_iteration)
 
         weak_classical_oracle = np.argmin(weak_mse)
         strong_classical_oracle = np.argmin(strong_mse)
@@ -697,7 +688,7 @@ class SimulationWrapper:
             strong_relative_efficiency,
         )
 
-    def run_simulation_conjugate_gradients(self, data_set_name=None):
+    def run_simulation_conjugate_gradients(self, max_iteration, data_set_name=None):
         """
         Runs a simulation for an inverse problem using the Conjugate Gradients method.
         This function generates a noisy response based on the specified noise level and performs a
@@ -705,7 +696,9 @@ class SimulationWrapper:
 
         **Parameters**
 
-        None
+        *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
+
+        *data_set_name*: ``str``, optional. If specified, the results are saved to a CSV file with this name.
 
         **Returns**
 
@@ -718,7 +711,7 @@ class SimulationWrapper:
 
         info("Running Monte-Carlo simulation.")
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m, max_iteration) for m in range(self.monte_carlo_runs)
         )
 
         column_names = [
@@ -744,7 +737,7 @@ class SimulationWrapper:
 
 
 
-    def search_learning_rate(self, search_depth):
+    def search_learning_rate(self, max_iteration, search_depth):
         u, s, vh = svds(self.design, k=1)
         largest_singular_value = s[0]
         initial_guess_learning_rate = 2 / largest_singular_value**2
@@ -752,7 +745,7 @@ class SimulationWrapper:
         info("Determine learning rate candidates based on search depth.")
 
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.search_learning_rate_wrapper)(m) for m in range(search_depth)
+            delayed(self.search_learning_rate_wrapper)(m, max_iteration) for m in range(search_depth)
         )
 
         learning_rate_candidates_evaluation, strong_errors = zip(*results)
@@ -762,7 +755,7 @@ class SimulationWrapper:
         accepted_errors = np.array(strong_errors)[true_false_vector]
         return accepted_candidates[np.argmin(accepted_errors)]
 
-    def search_learning_rate_wrapper(self, m):
+    def search_learning_rate_wrapper(self, m, max_iteration):
         model_landweber = Landweber(
             design=self.design,
             response=self.response[:, 0],
@@ -771,13 +764,13 @@ class SimulationWrapper:
             learning_rate=self.learning_rate_candidates[m],
         )
 
-        model_landweber.iterate(self.max_iteration)
+        model_landweber.iterate(max_iteration)
         stopping_index_landweber = model_landweber.get_discrepancy_stop(
-            self.sample_size * (self.true_noise_level**2), self.max_iteration
+            self.sample_size * (self.true_noise_level**2), max_iteration
         )
 
         converges = True
-        for k in range((self.max_iteration - 1)):
+        for k in range((max_iteration - 1)):
             if model_landweber.residuals[k] < model_landweber.residuals[(k + 1)]:
                 converges = False
 
@@ -785,11 +778,11 @@ class SimulationWrapper:
             info(f"The estimator does not converge for learning rate: {self.learning_rate_candidates[m]}", color="red")
 
         if stopping_index_landweber == None:
-            stopping_index_landweber = self.max_iteration
+            stopping_index_landweber = max_iteration
 
         return converges, model_landweber.strong_empirical_risk[stopping_index_landweber]
 
-    def monte_carlo_wrapper_landweber(self, m):
+    def monte_carlo_wrapper_landweber(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_landweber = Landweber(
             design=self.design,
@@ -799,7 +792,7 @@ class SimulationWrapper:
             learning_rate=self.learning_rate,
         )
 
-        model_landweber.iterate(self.max_iteration)
+        model_landweber.iterate(max_iteration)
 
         landweber_strong_bias2 = model_landweber.strong_bias2
         landweber_strong_variance = model_landweber.strong_variance
@@ -810,10 +803,10 @@ class SimulationWrapper:
         landweber_residuals = model_landweber.residuals
 
         stopping_index_landweber = model_landweber.get_discrepancy_stop(
-            self.sample_size * (self.true_noise_level**2), self.max_iteration
+            self.sample_size * (self.true_noise_level**2), max_iteration
         )
-        balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(self.max_iteration)
-        balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(self.max_iteration)
+        balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(max_iteration)
+        balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(max_iteration)
 
         landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
         landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
@@ -841,7 +834,7 @@ class SimulationWrapper:
             balanced_oracle_strong,
         )
 
-    def monte_carlo_wrapper_conjugate_gradients(self, m):
+    def monte_carlo_wrapper_conjugate_gradients(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
 
         model_conjugate_gradients = ConjugateGradients(
@@ -857,13 +850,13 @@ class SimulationWrapper:
             self.critical_value = self.sample_size * (self.true_noise_level**2)
 
         strong_empirical_oracle = model_conjugate_gradients.get_strong_empirical_oracle(
-            max_iteration=self.max_iteration, interpolation=self.interpolation
+            max_iteration=max_iteration, interpolation=self.interpolation
         )
         weak_empirical_oracle = model_conjugate_gradients.get_weak_empirical_oracle(
-            max_iteration=self.max_iteration, interpolation=self.interpolation
+            max_iteration=max_iteration, interpolation=self.interpolation
         )
         stopping_index = model_conjugate_gradients.get_discrepancy_stop(
-            critical_value=self.critical_value, max_iteration=self.max_iteration, interpolation=self.interpolation
+            critical_value=self.critical_value, max_iteration=max_iteration, interpolation=self.interpolation
         )
         strong_empirical_oracle_risk = model_conjugate_gradients.get_strong_empirical_risk(strong_empirical_oracle)
         weak_empirical_oracle_risk = model_conjugate_gradients.get_weak_empirical_risk(weak_empirical_oracle)

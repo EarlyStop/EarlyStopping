@@ -17,7 +17,6 @@ parameters_smooth = es.SimulationParameters(
     design=design_smooth,
     true_signal=true_signal_smooth,
     true_noise_level=0.01,
-    max_iteration=2000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -26,7 +25,6 @@ parameters_supersmooth = es.SimulationParameters(
     design=design_supersmooth,
     true_signal=true_signal_supersmooth,
     true_noise_level=0.01,
-    max_iteration=2000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -35,7 +33,6 @@ parameters_rough = es.SimulationParameters(
     design=design_rough,
     true_signal=true_signal_rough,
     true_noise_level=0.01,
-    max_iteration=2000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -46,9 +43,9 @@ simulation_supersmooth = es.SimulationWrapper(**parameters_supersmooth.__dict__)
 simulation_rough = es.SimulationWrapper(**parameters_rough.__dict__)
 
 # Run Conjugate Gradients simulations
-results_smooth = simulation_smooth.run_simulation_conjugate_gradients()
-results_supersmooth = simulation_supersmooth.run_simulation_conjugate_gradients()
-results_rough = simulation_rough.run_simulation_conjugate_gradients()
+results_smooth = simulation_smooth.run_simulation_conjugate_gradients(max_iteration = 2000)
+results_supersmooth = simulation_supersmooth.run_simulation_conjugate_gradients(max_iteration = 2000)
+results_rough = simulation_rough.run_simulation_conjugate_gradients(max_iteration = 2000)
 
 # Extract strong relative efficiencies
 

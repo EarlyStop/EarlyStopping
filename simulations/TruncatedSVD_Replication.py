@@ -30,17 +30,10 @@ design, response_noiseless_rough, true_signal_rough = es.SimulationData.diagonal
 
 # Setting the simulation parameters
 # ------------------------------------------------------------------------------
-# TODO-BS-2024-11-02: Rework the truncated svd class to take sparse diagonal matrices as inputs and
-# rework this to be used with the SimulationData class from the wrapper, e.g. like
-# response_noiseless_supersmooth = eigenvalues * true_signal_supersmooth
-# design_supersmooth, \
-# response_noiseless_supersmooth, \
-# true_signal_supersmooth         = es.SimulationData.diagonal_data(sample_size = 10000, type = 'supersmooth')
 parameters_supersmooth = es.SimulationParameters(
     design=design,
     true_signal=true_signal_supersmooth,
     true_noise_level=0.01,
-    max_iteration=1000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -48,7 +41,6 @@ parameters_smooth = es.SimulationParameters(
     design=design,
     true_signal=true_signal_smooth,
     true_noise_level=0.01,
-    max_iteration=1000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -56,7 +48,6 @@ parameters_rough = es.SimulationParameters(
     design=design,
     true_signal=true_signal_rough,
     true_noise_level=0.01,
-    max_iteration=3000,
     monte_carlo_runs=1000,
     cores=12
 )
@@ -69,13 +60,13 @@ simulation_smooth      = es.SimulationWrapper(**parameters_smooth.__dict__)
 simulation_rough       = es.SimulationWrapper(**parameters_rough.__dict__)
 
 results_supersmooth = simulation_supersmooth.run_simulation_truncated_svd(
-                        diagonal=True, data_set_name="truncated_svd_simulation_supersmooth"
+                        max_iteration = 500, diagonal=True, data_set_name="truncated_svd_simulation_supersmooth"
                       )
 results_smooth      = simulation_smooth.run_simulation_truncated_svd(
-                        diagonal=True, data_set_name="truncated_svd_simulation_smooth"
+                        max_iteration = 1000, diagonal=True, data_set_name="truncated_svd_simulation_smooth"
                       )
 results_rough       = simulation_rough.run_simulation_truncated_svd(
-                       diagonal=True, data_set_name="truncated_svd_simulation_rough"
+                       max_iteration = 3000, diagonal=True, data_set_name="truncated_svd_simulation_rough"
                       )
 
 

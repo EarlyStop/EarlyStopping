@@ -154,6 +154,8 @@ class ConjugateGradients:
 
         *conjugate_gradient_estimate*: ``ndarray``. The conjugate gradient estimate at iteration.
         """
+        if iteration is None:
+            raise ValueError("iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration.")
 
         iteration_ceil = np.ceil(iteration).astype("int")
 

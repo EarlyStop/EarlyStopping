@@ -148,6 +148,9 @@ class TruncatedSVD:
 
         *truncated_svd_estimate*: ``ndarray``. The truncated svd estimate at iteration.
         """
+        if iteration is None:
+            raise ValueError("iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration.")
+
         if iteration > self.iteration:
             self.iterate(iteration - self.iteration)
 

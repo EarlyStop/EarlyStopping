@@ -198,6 +198,9 @@ class Landweber:
 
         *landweber_estimate*: ``ndarray``. The Landweber estimate at iteration.
         """
+        if iteration is None:
+            raise ValueError("iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration.")
+
         if iteration > self.iteration:
             self.iterate(iteration - self.iteration)
 
@@ -356,7 +359,7 @@ class Landweber:
             new_strong_variance = (self.true_noise_level ** 2) * (self.learning_rate**2) * pretrace_temporary_matrix.trace()
             
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
-            print(new_strong_variance)
+            # print(new_strong_variance)
         else: 
             # presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
             pretrace_temporary_matrix = (
@@ -367,7 +370,7 @@ class Landweber:
             )
 
             new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
-            print(new_strong_variance)
+            # print(new_strong_variance)
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
     def __update_weak_variance(self):
