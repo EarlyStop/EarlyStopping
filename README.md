@@ -31,7 +31,7 @@ Early stopping is a python library implementing computationally efficient model 
   </a>.
   arXiv:2406.15001 [math.ST] (2024).
 
-  - R. Miftachov, M. Reiß.
+- R. Miftachov, M. Reiß.
   <a href="https://arxiv.org/abs/2502.04709">
     "Early Stopping for Regression Trees"
   </a>.
