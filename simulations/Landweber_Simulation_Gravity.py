@@ -6,28 +6,21 @@ import os
 
 importlib.reload(es)
 
-sample_size = 100
-max_iteration = 4000
+sample_size = 4
+max_iteration = 100
 
 design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=sample_size)
+# design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=sample_size, type="smooth")
 
-parameters = es.SimulationParameters(
-    design=design,
-    true_signal=true_signal,
-    true_noise_level=0.01,
-    max_iteration=max_iteration,
-    monte_carlo_runs=100,
-    cores=12
-)
 
 # simulation = es.SimulationWrapper(**parameters.__dict__)
 # results = simulation.run_simulation_landweber(data_set_name = "gravity_simulation")
 
-true_noise_level = 0.01
+true_noise_level = 1
 noise = true_noise_level * np.random.normal(0, 1, sample_size)
 response = response_noiseless + noise
 
-model_gravity = es.Landweber(design, response, learning_rate=1 / 30, true_signal=true_signal, true_noise_level=true_noise_level)
+model_gravity = es.Landweber(design, response, learning_rate=1/100, true_signal=true_signal, true_noise_level=true_noise_level)
 
 model_gravity.iterate(max_iteration)
 
@@ -59,7 +52,7 @@ axs[1].plot(range(0, max_iteration + 1), model_gravity.strong_variance, label="V
 axs[1].axvline(x=m_gravity, color="red", linestyle="--")
 axs[1].axvline(x=strong_oracle_gravity, color="green", linestyle="--")
 #axs[1].set_xlim([0, 50])
-axs[1].set_ylim([0, 0.2])
+axs[1].set_ylim([0, 0.2]) # 0.2
 axs[1].set_xlabel("Iteration")
 axs[1].set_ylabel("Strong Quantities")
 
@@ -69,7 +62,7 @@ axs[2].plot(range(0, max_iteration + 1), model_gravity.weak_variance, label="Var
 axs[2].axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")
 axs[2].axvline(x=weak_oracle_gravity, color="green", linestyle="--", label="$t$ (oracle)")
 #axs[2].set_xlim([0, 400])
-axs[2].set_ylim([0, 0.002])
+axs[2].set_ylim([0, 0.2]) # 0.002
 axs[2].set_xlabel("Iteration")
 axs[2].set_ylabel("Weak Quantities")
 axs[2].legend(loc = "upper right")

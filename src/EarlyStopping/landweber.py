@@ -143,6 +143,7 @@ class Landweber:
                 self.inverse_congruency_matrix = scipy.sparse.linalg.inv(self.gram_matrix)
             else:
                 self.inverse_congruency_matrix = np.linalg.inv(self.gram_matrix)
+                print(self.inverse_congruency_matrix)
 
                 rank = np.linalg.matrix_rank(self.gram_matrix)
 
@@ -152,7 +153,7 @@ class Landweber:
                         category=UserWarning,
                     )
 
-                    self.illposed = True
+                    self.illposed = False # eventually True just bugged atm
 
             self.perturbation_congruency_matrix = (
                 sparse.dia_matrix(np.eye(self.parameter_size)) - self.learning_rate * self.gram_matrix
@@ -363,12 +364,11 @@ class Landweber:
         else: 
             # presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
             pretrace_temporary_matrix = (
-                self.learning_rate ** (-1)
-                * self.inverse_congruency_matrix
+                # self.learning_rate ** (-1)
+                self.inverse_congruency_matrix
                 @ (self.identity - self.perturbation_congruency_matrix_power)
                 @ (self.identity - self.perturbation_congruency_matrix_power)
             )
-
             new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
             # print(new_strong_variance)
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
@@ -411,6 +411,7 @@ class Landweber:
 
     def __landweber_one_iteration(self):
         """Performs one iteration of the Landweber algorithm"""
+        # Add residual_vector to the update step
 
         self.landweber_estimate = self.landweber_estimate + self.learning_rate * np.transpose(self.design) @ (
             self.response - self.design @ self.landweber_estimate
@@ -419,6 +420,7 @@ class Landweber:
         self.landweber_estimate_list.append(self.landweber_estimate)
 
         # Update estimation quantities
+        # Add residual_vector to the update step
         self.__residual_vector = self.response - self.design @ self.landweber_estimate
         new_residuals = np.sum(self.__residual_vector**2)
         self.residuals = np.append(self.residuals, new_residuals)
