@@ -6,10 +6,11 @@ import os
 
 importlib.reload(es)
 
-sample_size = 4
-max_iteration = 100
+sample_size = 100
+max_iteration = 10000
 
-design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=sample_size)
+# design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=sample_size)
+design, response_noiseless, true_signal = es.SimulationData.phillips(sample_size=sample_size)
 # design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=sample_size, type="smooth")
 
 
@@ -20,7 +21,9 @@ true_noise_level = 1
 noise = true_noise_level * np.random.normal(0, 1, sample_size)
 response = response_noiseless + noise
 
-model_gravity = es.Landweber(design, response, learning_rate=1/100, true_signal=true_signal, true_noise_level=true_noise_level)
+model_gravity = es.Landweber(
+    design, response, learning_rate=1 / 100, true_signal=true_signal, true_noise_level=true_noise_level
+)
 
 model_gravity.iterate(max_iteration)
 
@@ -39,7 +42,7 @@ fig, axs = plt.subplots(3, 1, figsize=(14, 12))
 print(len(model_gravity.residuals))
 
 axs[0].plot(range(0, max_iteration + 1), model_gravity.residuals)
-#axs[0].axvline(x=m, color="red", linestyle="--")
+# axs[0].axvline(x=m, color="red", linestyle="--")
 axs[0].set_xlim([0, 50])
 axs[0].set_ylim([0, 20])
 axs[0].set_xlabel("Iteration")
@@ -51,8 +54,8 @@ axs[1].plot(range(0, max_iteration + 1), model_gravity.strong_bias2, label="$Bia
 axs[1].plot(range(0, max_iteration + 1), model_gravity.strong_variance, label="Variance", color="blue")
 axs[1].axvline(x=m_gravity, color="red", linestyle="--")
 axs[1].axvline(x=strong_oracle_gravity, color="green", linestyle="--")
-#axs[1].set_xlim([0, 50])
-axs[1].set_ylim([0, 0.2]) # 0.2
+# axs[1].set_xlim([0, 50])
+axs[1].set_ylim([0, 0.2])  # 0.2
 axs[1].set_xlabel("Iteration")
 axs[1].set_ylabel("Strong Quantities")
 
@@ -61,11 +64,11 @@ axs[2].plot(range(0, max_iteration + 1), model_gravity.weak_bias2, label="$Bias^
 axs[2].plot(range(0, max_iteration + 1), model_gravity.weak_variance, label="Variance", color="blue")
 axs[2].axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")
 axs[2].axvline(x=weak_oracle_gravity, color="green", linestyle="--", label="$t$ (oracle)")
-#axs[2].set_xlim([0, 400])
-axs[2].set_ylim([0, 0.2]) # 0.002
+# axs[2].set_xlim([0, 400])
+axs[2].set_ylim([0, 0.2])  # 0.002
 axs[2].set_xlabel("Iteration")
 axs[2].set_ylabel("Weak Quantities")
-axs[2].legend(loc = "upper right")
+axs[2].legend(loc="upper right")
 
 plt.tight_layout()
 
