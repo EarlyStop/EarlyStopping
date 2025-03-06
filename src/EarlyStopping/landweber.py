@@ -401,7 +401,10 @@ class Landweber:
                 self.identity - self.perturbation_congruency_matrix_power
             )
 
+            #print(self.true_noise_level)          
+
             new_weak_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
+            #print(new_weak_variance)
 
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 

@@ -22,7 +22,7 @@ elif name == "gravity":
 
 # Define simulation parameters
 parameters = es.SimulationParameters(
-    design=design, true_signal=true_signal, true_noise_level=1, monte_carlo_runs=100, cores=12  # 0.01,
+    design=design, true_signal=true_signal, true_noise_level=0.1, monte_carlo_runs=100, cores=12  # 0.01,
 )
 
 # Create SimulationWrapper instance
@@ -30,18 +30,19 @@ simulation = es.SimulationWrapper(**parameters.__dict__)
 
 # Run simulations for each method
 results_landweber = simulation.run_simulation_landweber(
-    learning_rate=1 / 100, max_iteration=10000, data_set_name="landweber_simulation_gravity"
+    learning_rate=1 / 100, max_iteration=10000, 
+    data_set_name="landweber_simulation_gravity"
 )
 
 results_cg = simulation.run_simulation_conjugate_gradients(
     max_iteration=500,
-    # data_set_name="conjugate_gradients_simulation_gravity"
+    data_set_name="conjugate_gradients_simulation_gravity"
 )
 
 results_svd = simulation.run_simulation_truncated_svd(
     max_iteration=sample_size,
     diagonal=False,
-    # data_set_name="truncated_svd_simulation_gravity"
+    data_set_name="truncated_svd_simulation_gravity"
 )
 
 # Extract relative efficiencies for each method
@@ -120,5 +121,5 @@ fig_dir = ""
 
 # Create comparison boxplot
 create_custom_boxplot(
-    efficiency_to_plot, labels, y_lim_lower=0.3, y_lim_upper=1.3, fig_dir=fig_dir, name=f"method_comparison_{name}"
+    efficiency_to_plot, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name=f"method_comparison_{name}"
 )
