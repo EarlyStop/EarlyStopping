@@ -177,3 +177,5 @@ docs/source/sg_execution_times.rst
 #  files
 simulations/experimental.py
 /.vs
+$PROFILE
+run_with_earlystopping2.bat

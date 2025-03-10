@@ -419,7 +419,6 @@ class SimulationParameters:
 
         XXt = np.transpose(self.design) @ self.design
 
-
         if not isinstance(self.true_signal, np.ndarray):
             raise ValueError("true_signal must be a numpy array.")
         if not (0 <= self.true_noise_level):
@@ -436,14 +435,13 @@ class SimulationParameters:
                 "PARAMETER WARNING: The design matrix is NOT sparse.",
                 category=UserWarning,
             )
-            rank = np.linalg.matrix_rank(XXt)          
+            rank = np.linalg.matrix_rank(XXt)
 
         if not (rank == XXt.shape[0]):
             warnings.warn(
                 "PARAMETER WARNING: The inverse problem is ill-posed, which is currently not fully supported by landweber.",
                 category=UserWarning,
             )
-        
 
 
 class SimulationWrapper:
@@ -514,7 +512,7 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
-    def run_simulation_landweber(self, max_iteration, learning_rate=None, data_set_name=None):
+    def run_simulation_landweber(self, max_iteration, learning_rate=1, data_set_name=None):
         """
         Runs a simulation for an inverse problem using the Landweber iteration method.
         The function generates a noisy response based on the specified noise level and and performs a Monte-Carlo
@@ -533,7 +531,7 @@ class SimulationWrapper:
 
         *results_df*: ``pd.DataFrame``. DataFrame containing the results of the Monte-Carlo simulation.
         """
-        info("Running simulation.")
+        info("Running Monte-Carlo simulation for Landweber.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
         self.response = self.noise + (self.response_noiseless)[:, None]
@@ -542,9 +540,8 @@ class SimulationWrapper:
             info("Searching for viable learning rates.")
             self.learning_rate = self.search_learning_rate(max_iteration, search_depth=10)
         else:
-            self.learning_rate = 1
+            self.learning_rate = learning_rate
 
-        info("Running Monte Carlo simulation.")
         results = Parallel(n_jobs=self.cores)(
             delayed(self.monte_carlo_wrapper_landweber)(m, max_iteration) for m in range(self.monte_carlo_runs)
         )
@@ -593,13 +590,12 @@ class SimulationWrapper:
 
         The resulting DataFrame can be saved to a CSV file if `data_set_name` is provided.
         """
+        info("Running Monte-Carlo simulation for TruncatedSVD.")
         self.diagonal = diagonal
-        info("Running simulation.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
 
         self.response = self.noise + (self.response_noiseless)[:, None]
-        info("Running Monte-Carlo simulation.")
 
         results = Parallel(n_jobs=self.cores)(
             delayed(self.monte_carlo_wrapper_truncated_svd)(m, max_iteration) for m in range(self.monte_carlo_runs)
@@ -650,7 +646,6 @@ class SimulationWrapper:
             true_noise_level=self.true_noise_level,
             diagonal=self.diagonal,
         )
-        print(max_iteration)
 
         model_truncated_svd.iterate(max_iteration)
 
@@ -715,14 +710,14 @@ class SimulationWrapper:
 
         *results*: ``list``. A list of results from the Monte-Carlo simulation.
         """
-        info("Running simulation.")
+        info("Running Monte-Carlo simulation for Conjugate Gradients.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
         self.response = self.noise + (self.response_noiseless)[:, None]
 
-        info("Running Monte-Carlo simulation.")
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m, max_iteration) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m, max_iteration)
+            for m in range(self.monte_carlo_runs)
         )
 
         column_names = [
@@ -736,7 +731,7 @@ class SimulationWrapper:
             "conjugate_gradients_squared_residual_at_stopping_index",
             "conjugate_gradients_strong_relative_efficiency",
             "conjugate_gradients_weak_relative_efficiency",
-            "conjugate_gradients_terminal_iteration"
+            "conjugate_gradients_terminal_iteration",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -745,8 +740,6 @@ class SimulationWrapper:
             results_df.to_csv(f"{data_set_name}.csv", index=False)
 
         return results_df
-
-
 
     def search_learning_rate(self, max_iteration, search_depth):
         u, s, vh = svds(self.design, k=1)
@@ -816,8 +809,16 @@ class SimulationWrapper:
         stopping_index_landweber = model_landweber.get_discrepancy_stop(
             self.sample_size * (self.true_noise_level**2), max_iteration
         )
+
         balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(max_iteration)
         balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(max_iteration)
+
+        if (balanced_oracle_weak is None) or (balanced_oracle_strong is None):
+            raise ValueError("Weak or strong balanced oracle is None. Relative efficiency cannot be computed.")
+
+        if stopping_index_landweber is None:
+            stopping_index_landweber = max_iteration
+            print("Stopping index is None. Setting to max iteration.")
 
         landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
         landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
