@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn import linear_model
+import warnings
 
 class L2_boost():
     """
@@ -20,7 +21,7 @@ class L2_boost():
     
     *parameter_size*: ``int``. Parameter size of the linear model.
 
-    *iter*: ``int``. Current boosting iteration of the algorithm.
+    *iteration*: ``int``. Current boosting iteration of the algorithm.
 
     *boost_estimate*: ``array``. Boosting estimate at the current iteration for the data given in design.
 
@@ -31,46 +32,47 @@ class L2_boost():
     *stoch_error*: ``array``. Only exists if true_signal was given. Lists the values of a stochastic error term up to current boosting iteration.
 
     # TODO-BS-2024-11-02: Change to "risk" name convention.
-    *mse*: ``array``. Only exists if true_signal was given. Lists the values of the mean squared error betwean the boosting estimator and the true signal up to current boosting iteration.
+    *mse*: ``array``. Only exists if true_signal was given. Lists the values of the mean squared error between the boosting estimator and the true signal up to current boosting iteration.
 
     **Methods**
 
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | iterate( ``number_of_iterations=1`` )                  | Performs number of iterations of the boosting algorithm.         |
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | predict( ``design_observation`` )                      | Predicts the response based on the current boosting estimate.    |
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | discrepancy_stop( ``crit, max_iter`` )                 | Stops the boosting algorithm based on the discrepancy principle. | 
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | residual_ratio_stop( ``max_iter, alpha=0.05, K=1.2`` ) | Stops the boosting algorithm based on the residual ratios.       | 
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | get_noise_estimate(``K=1``)                            | Computes a noise estimate for the model via the scaled lasso.    |
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | get_aic_iteration(``K=2``)                             | Computes the minimizer of a high dimensional Akaike criterion.   |
-    +--------------------------------------------------------+------------------------------------------------------------------+
-    | boost_to_balanced_oracle()                             | Iterates the boosting algorithm up to the balanced oracle.       |
-    +--------------------------------------------------------+------------------------------------------------------------------+
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | iterate( ``number_of_iterations=1`` )                           | Performs number of iterations of the boosting algorithm.         |
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | predict( ``design_observation`` )                               | Predicts the response based on the current boosting estimate.    |
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | get_discrepancy_stop( ``critical_value, max_iteration`` )       | Stops the boosting algorithm based on the discrepancy principle. | 
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | get_residual_ratio_stop( ``max_iteration, alpha=0.05, K=1.2`` ) | Stops the boosting algorithm based on the residual ratios.       | 
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | get_noise_estimate(``K=1``)                                     | Computes a noise estimate for the model via the scaled lasso.    |
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | get_aic_iteration(``K=2``)                                      | Computes the minimizer of a high dimensional Akaike criterion.   |
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
+    | get_balanced_oracle( ``max_iteration`` )                        | Iterates the boosting algorithm up to the balanced oracle.       |
+    +-----------------------------------------------------------------+------------------------------------------------------------------+
     """
 
     def __init__(self, design, response, true_signal = None):
-        self.design = design 
-        self.response = response
-        self.true_signal     = true_signal
+        self.design      = design 
+        self.response    = response
+        self.true_signal = true_signal
 
         # Parameters of the model
         self.sample_size = np.shape(design)[0]
         self.parameter_size   = np.shape(design)[1]
 
         # Estimation quantities
-        self.iter               = 0
+        self.iteration           = 0
         self.selected_components = np.array([])
         self.orth_directions     = []
-        self.coefficients       = np.zeros(self.parameter_size)
-        self.boost_estimate      = np.zeros(self.sample_size)
+        self.coefficients_list   = [np.zeros(self.parameter_size)]
+        self.boost_estimate_list = [np.zeros(self.sample_size)]
 
         # Residual quantities
         self.__residual_vector = response
-        self.residuals        = np.array([np.mean(self.__residual_vector**2)])
+        self.residuals         = np.array([np.mean(self.__residual_vector**2)])
+        self.residual_ratios   = np.array([0])
 
         if self.true_signal is not None:
             self.__error_vector      = self.response - self.true_signal
@@ -99,23 +101,40 @@ class L2_boost():
             *input_variable*: ``array``. The size of input_variable has to match parameter_size.
         """
         return np.dot(design_observation, self.coefficients)
+        # 2025-03-10-TODO-BS: adjust coefficients.
 
 
-    def discrepancy_stop(self, crit, max_iter):
+    def get_discrepancy_stop(self, critical_value, max_iteration):
         """ Early stopping for the boosting procedure based on the discrepancy principle.
-            Procedure is stopped when the residuals go below crit or iteration
-            max_iter is reached.
+            Procedure is stopped when the residuals go below critical_value or iteration
+            max_iteration is reached.
 
             **Parameters**
 
-            *crit*: ``float``. Critical value for the early stopping procedure.
+            *critical_value*: ``float``. Critical value for the early stopping procedure.
 
-            *max_iter*: ``int``. Maximal number of iterations to be performed.
+            *max_iteration*: ``int``. Maximal number of iterations to be performed.
         """
-        while self.residuals[self.iter] > crit and self.iter < max_iter:
-            self.__boost_one_iteration()
+        if self.residuals[self.iteration] <= critical_value:
+            # argmax takes the first instance of True in the true-false array
+            early_stopping_index = np.argmax(self.residuals <= critical_value)
+            return int(early_stopping_index)
 
-    def residual_ratio_stop(self, max_iter, alpha = 0.05, K = 1.2):
+        if self.residuals[self.iteration] > critical_value:
+            while (self.residuals[self.iteration] > critical_value and
+                   self.iteration <= max_iteration
+                  ):
+                self.iterate(1)
+
+        if self.residuals[self.iteration] <= critical_value:
+            early_stopping_index = self.iteration
+            return int(early_stopping_index)
+        else:
+            warnings.warn("Stopping index not found up to max_iteration. Returning None.",
+                          category=UserWarning)
+            return None
+
+    def get_residual_ratio_stop(self, max_iteration, alpha = 0.05, K = 1.2):
         """ Stops the algorithm based on a residual ration criterion.
 
             **Parameters**
@@ -124,24 +143,58 @@ class L2_boost():
 
             *K*: ``float``. Constant for the definition.
 
-            *max_iter*: ``int``. Maximal number of iterations to be performed.
+            *max_iteration*: ``int``. Maximal number of iterations to be performed.
         """ 
-        residual_ratio = 0
-        crit = 1 - 4 * K * np.log(self.parameter_size / alpha) / self.sample_size
-        while residual_ratio < crit and self.iter < max_iter:
-            self.__boost_one_iteration()
-            residual_ratio = self.residuals[self.iter] / self.residuals[self.iter - 1]
+        critical_value = 1 - 4 * K * np.log(self.parameter_size / alpha) / self.sample_size
+        if self.residual_ratios[self.iteration] >= critical_value:
+            # argmax takes the first instance of True in the true-false array
+            early_stopping_index = np.argmax(self.residual_ratios >= critical_value)
+            return int(early_stopping_index)
 
-    def boost_to_balanced_oracle(self):
+        if self.residual_ratios[self.iteration] < critical_value:
+            while (self.residual_ratios[self.iteration] < critical_value and
+                   self.iteration <= max_iteration
+                  ):
+                self.iterate(1)
+
+        if self.residual_ratios[self.iteration] >= critical_value:
+            early_stopping_index = self.iteration
+            return int(early_stopping_index)
+        else:
+            warnings.warn("Stopping index not found up to max_iteration. Returning None.",
+                          category=UserWarning)
+            return None
+
+    def get_balanced_oracle(self, max_iteration):
         """ Performs iterations of the orthogonal boosting algorithm until the
             balanced oracle index at which the squared bias is smaller than the
             stochastic error is reached.
+
+            **Parameters**
+
+            *max_iteration*: ``int``. Maximal number of iterations to be performed.
         """
         if self.true_signal is None:
             return "This method is only available when the true signal is known"
         else:
-            while self.bias2[self.iter] > self.stoch_error[self.iter]:
-                self.__boost_one_iteration()
+            if self.bias2[self.iteration] <= self.stoch_error[self.iteration]:
+                # argmax takes the first instance of True in the true-false array
+                balanced_oracle = np.argmax(self.bias2 <= self.stoch_error)
+                return int(balanced_oracle)
+
+            if self.bias2[self.iteration] > self.stoch_error[self.iteration]:
+                while (self.bias2[self.iteration] > self.stoch_error[self.iteration] and
+                       self.iteration <= max_iteration
+                      ):
+                    self.iterate(1)
+
+            if self.bias2[self.iteration] <= self.stoch_error[self.iteration]:
+                balanced_oracle = self.iteration
+                return int(balanced_oracle)
+            else:
+                warnings.warn("Balanced oracle not found up to max_iteration. Returning None.",
+                              category=UserWarning)
+                return None
 
     def get_noise_estimate(self, K = 1):
         """ Computes an estimator for the noise level sigma^2 of the model via the scaled Lasso.
@@ -181,7 +234,7 @@ class L2_boost():
             *K*: ``float``. Constant in the definition. Defaults to 2, which is common in the literature.
         """
         noise_estimate = self.get_noise_estimate()
-        dim_penalty = np.arange(0, self.iter + 1) * K * noise_estimate * np.log(self.parameter_size) / self.sample_size
+        dim_penalty = np.arange(0, self.iteration + 1) * K * noise_estimate * np.log(self.parameter_size) / self.sample_size
         aic = self.residuals + dim_penalty
         return np.argmin(aic)
 
@@ -191,7 +244,7 @@ class L2_boost():
         # Compute weak learner index and check for repetition
         weak_learner_index            = self.__compute_weak_learner_index()
         component_selected_repeatedly = False
-        for iter_num in range(self.iter):
+        for iter_num in range(self.iteration):
             if weak_learner_index == self.selected_components[iter_num]:
                 component_selected_repeatedly = True
 
@@ -199,20 +252,26 @@ class L2_boost():
             print("Algorithm terminated")
         else:
             # Update selected variables
-            self.selected_components = np.append(self.selected_components,
-                                                weak_learner_index)
+            self.selected_components = np.append(self.selected_components, weak_learner_index)
             self.__update_orth_directions(self.design[:, weak_learner_index])
             weak_learner = self.orth_directions[-1]
 
             # Update estimation quantities
-            coefficient           = np.dot(self.response, weak_learner) / \
-                                    self.sample_size
-            self.coefficients[weak_learner_index] = coefficient
-            self.boost_estimate    = self.boost_estimate + coefficient * weak_learner
-            self.__residual_vector = self.response - self.boost_estimate
+            coefficient_entry                    = np.dot(self.response, weak_learner) / self.sample_size
+            new_coefficients                     = self.coefficients_list[self.iteration]
+            new_coefficients[weak_learner_index] = coefficient_entry
+            self.coefficients_list.append(new_coefficients)
+
+            new_boost_estimate = self.boost_estimate_list[self.iteration] + coefficient_entry * weak_learner
+            self.boost_estimate_list.append(new_boost_estimate)
+
+            self.__residual_vector = self.response - new_boost_estimate
             new_residuals          = np.mean(self.__residual_vector**2)
-            self.residuals        = np.append(self.residuals, new_residuals)
-            self.iter             = self.iter + 1
+            new_residual_ratio     = new_residuals / self.residuals[self.iteration]
+            self.residuals         = np.append(self.residuals, new_residuals)
+            self.residual_ratios   = np.append(self.residual_ratios, new_residual_ratio)
+
+            self.iteration              = self.iteration + 1
 
             # Update theoretical quantities
             if self.true_signal is not None:
@@ -238,7 +297,7 @@ class L2_boost():
 
     def __update_orth_directions(self, direction):
         """Updates the list of orthogonal directions"""
-        if self.iter == 0:
+        if self.iteration == 0:
             direction_norm = np.sqrt(np.mean(direction**2))
             direction     = direction / direction_norm
         else:
@@ -250,7 +309,7 @@ class L2_boost():
         self.orth_directions.append(direction)
 
     def __update_mse(self):
-        new_mse   = np.mean((self.true_signal - self.boost_estimate)**2)
+        new_mse   = np.mean((self.true_signal - self.boost_estimate_list[self.iteration])**2)
         self.mse = np.append(self.mse, new_mse)
 
     def __update_bias2(self, weak_learner):

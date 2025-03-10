@@ -75,9 +75,9 @@ Y = f + eps
 # ---------------------------------------
 # By giving the true function f to the class, we can track the theoretical bias-variance decomposition and the balanced oracle.
 alg = es.L2_boost(X, Y, f)
-alg.boost_to_balanced_oracle()
-print("The balanced oracle is given by", alg.iter, "with mse =", alg.mse[alg.iter])
-alg.iterate(300 - alg.iter)
+alg.get_balanced_oracle(300)
+print("The balanced oracle is given by", alg.iteration, "with mse =", alg.mse[alg.iteration])
+alg.iterate(300 - alg.iteration)
 classical_oracle = np.argmin(alg.mse)
 print("The classical oracle is given by", classical_oracle, "with mse =", alg.mse[classical_oracle])
 
@@ -95,45 +95,28 @@ plt.show()
 # The L2-boost class provides several data driven methods to choose a boosting iteration making the right tradeoff between bias and stochastic error.
 # The first one is a stopping condition based on the discrepancy principle, which stops when the residuals become smaller than a critical value.
 # Theoretically this critical value should be chosen as the noise level of the model, for which the class also provides a methods based on the scaled Lasso.
-alg = es.L2_boost(X, Y, f)
 noise_estimate = alg.get_noise_estimate()
-alg.discrepancy_stop(crit=noise_estimate, max_iter=200)
-stopping_time = alg.iter
+stopping_time = alg.get_discrepancy_stop(critical_value = noise_estimate, max_iteration=200)
+stopping_time
 print("The discrepancy based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
 
 # %%
 # Early stopping via residual ratios
 # ----------------------------------
 # Another method is based on stopping when the ratio of consecutive residuals goes above a certain threshhold.
-alg = es.L2_boost(X, Y, f)
-alg.residual_ratio_stop(max_iter=200, K=1.2)
-stopping_time = alg.iter
+stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=1.2)
 print("The residual ratio based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
 
-alg = es.L2_boost(X, Y, f)
-alg.residual_ratio_stop(max_iter=200, K=0.2)
-stopping_time = alg.iter
+stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.2)
 print("The residual ratio based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
 
-alg = es.L2_boost(X, Y, f)
-alg.residual_ratio_stop(max_iter=200, K=0.1)
-stopping_time = alg.iter
+stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.1)
 print("The residual ratio based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
+
 
 # %%
 # Classical model selection via AIC
 # ---------------------------------
 # The class also has a method to compute a high dimensional Akaike criterion over the boosting path up to the current iteration.
-alg = es.L2_boost(X, Y, f)
-alg.iterate(200)
 aic_minimizer = alg.get_aic_iteration(K=2)
 print("The aic-minimizer over the whole path is given by", aic_minimizer, "with mse =", alg.mse[aic_minimizer])
-
-# %%
-# This can also be combined to a two-step procedure.
-alg = es.L2_boost(X, Y, f)
-noise_estimate = alg.get_noise_estimate(K=0.5)
-alg.discrepancy_stop(crit=noise_estimate, max_iter=200)
-print("The discrepancy based early stopping time is given by", alg.iter)
-aic_minimizer = alg.get_aic_iteration(K=2)
-print("The two-step stopping time is given by", aic_minimizer)
