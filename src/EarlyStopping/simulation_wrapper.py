@@ -630,6 +630,17 @@ class SimulationWrapper:
 
         return results_df
 
+    def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+        model_L2_boost = L2_boost(
+            design      = self.design,
+            response    = self.response[:, m],
+            true_signal = self.true_signal,
+        )
+        print(max_iteration)
+
+        model_L2_boost.iterate(max_iteration)
+
     def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_truncated_svd = TruncatedSVD(
