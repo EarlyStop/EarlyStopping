@@ -82,6 +82,8 @@ axs[0].set_ylim([0, 0.5])  # 0.2
 axs[0].set_xlabel("Iteration", fontsize=font_size)
 axs[0].set_ylabel("Strong Quantities", fontsize=font_size)
 axs[0].tick_params(axis="both", which="major", labelsize=font_size)
+axs[0].grid(True)
+
 
 print(model_gravity.weak_variance)
 
@@ -95,8 +97,9 @@ axs[1].set_xlim([0, 50])
 axs[1].set_ylim([0, 0.5])  # 0.002
 axs[1].set_xlabel("Iteration", fontsize=font_size)
 axs[1].set_ylabel("Weak Quantities", fontsize=font_size)
-axs[1].legend(loc="upper right", fontsize=font_size)
+# axs[1].legend(loc="upper right", fontsize=font_size)
 axs[1].tick_params(axis="both", which="major", labelsize=font_size)
+axs[1].grid(True)
 
 plt.tight_layout()
 plt.savefig("counterexample_plot.png", dpi=300, bbox_inches="tight")
