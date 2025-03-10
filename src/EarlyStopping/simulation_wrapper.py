@@ -626,6 +626,60 @@ class SimulationWrapper:
 
         return results_df
 
+    def run_simulation_L2_boost(self, max_iteration, data_set_name=None):
+        """
+        Runs a simulation for a high dimensional linear model using truncated Singular Value Decomposition (SVD).
+        The function generates a noisy response based on the specified noise level and performs a Monte-Carlo
+        simulation to collect various metrics related to the estimator's performance.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
+
+        *data_set_name*: ``str``, optional. If specified, the results are saved to a CSV file with this name.
+
+        **Returns**
+
+        *results_df*: ``pd.DataFrame``. DataFrame containing the results of the Monte-Carlo simulation.
+
+        The resulting DataFrame can be saved to a CSV file if `data_set_name` is provided.
+        """
+        info("Running Monte-Carlo simulation for L2-boost.")
+        if self.noise is None:
+            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
+
+        self.response = self.noise + (self.response_noiseless)[:, None]
+
+        results = Parallel(n_jobs=self.cores)(
+            delayed(self.monte_carlo_wrapper_truncated_svd)(m, max_iteration) for m in range(self.monte_carlo_runs)
+        )
+
+        column_names = [
+            "bias2",
+            "stoch_error",
+            "mse",
+            "residuals",
+            "noise_estimate",
+            "discrepancy_time",
+            "residual_ratio_time",
+            "balanced_oracle",
+            "aic_time",
+            "mse_at_discrepancy_time",
+            "mse_at_balanced_oracle",
+            "mse_at_residual_ratio_time",
+            "mse_at_aic_time",
+            "relative_efficiency_discrepancy",
+            "relative_efficiency_residual_ratio",
+            "relative_efficiency_aic"
+        ]
+
+        results_df = pd.DataFrame(results, columns=column_names)
+
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
+
+        return results_df
+
     def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_L2_boost = L2_boost(
@@ -633,9 +687,48 @@ class SimulationWrapper:
             response    = self.response[:, m],
             true_signal = self.true_signal,
         )
-        print(max_iteration)
 
         model_L2_boost.iterate(max_iteration)
+
+        bias2       = model_L2_boost.bias2
+        stoch_error = model_L2_boost.stoch_error
+        mse         = model_L2_boost.mse
+        residuals   = model_L2_boost.residuals
+
+        noise_estimate      = model_L2_boost.get_noise_estimate
+        discrepancy_time    = model_L2_boost.get_discrepancy_stop(noise_estimate, max_iteration)
+        residual_ratio_time = model_L2_boost.get_residual_ratio_stop(max_iteration)
+        balanced_oracle     = model_L2_boost.get_balanced_oracle(max_iteration)
+        aic_time            = model_L2_boost.get_aic_iteration()
+
+        mse_at_discrepancy_time    = mse[discrepancy_time]
+        mse_at_balanced_oracle     = mse[balanced_oracle]
+        mse_at_residual_ratio_time = mse[residual_ratio_time]
+        mse_at_aic_time            = mse[aic_time]
+
+        relative_efficiency_discrepancy    = np.sqrt(np.min(mse) / mse_at_discrepancy_time)
+        relative_efficiency_residual_ratio = np.sqrt(np.min(mse) / mse_at_residual_ratio_time)
+        relative_efficiency_aic            = np.sqrt(np.min(mse) / mse_at_aic_time)
+
+        return (
+            bias2,
+            stoch_error,
+            mse,
+            residuals,
+            noise_estimate,
+            discrepancy_time,
+            residual_ratio_time,
+            balanced_oracle,
+            aic_time,
+            mse_at_discrepancy_time,
+            mse_at_balanced_oracle,
+            mse_at_residual_ratio_time,
+            mse_at_aic_time,
+            relative_efficiency_discrepancy,
+            relative_efficiency_residual_ratio,
+            relative_efficiency_aic
+        )
+        
 
     def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
