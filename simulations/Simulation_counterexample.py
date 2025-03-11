@@ -70,8 +70,7 @@ print(len(model_gravity.residuals))
 # axs[0].tick_params(axis="both", which="major", labelsize=14)
 
 
-# axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_risk, color="orange", label="Error")
-axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_mse, color="orange", label="Error")
+axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_risk, color="orange", label="Error")
 axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_bias2, label="$Bias^2$", color="grey")
 axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_variance, label="Variance", color="blue")
 axs[0].axvline(x=m_gravity, color="red", linestyle="--")
@@ -87,8 +86,7 @@ axs[0].grid(True)
 
 print(model_gravity.weak_variance)
 
-# axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_risk, color="orange", label="Error")
-axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_mse, color="orange", label="Error")
+axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_risk, color="orange", label="Error")
 axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_bias2, label="$Bias^2$", color="grey")
 axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_variance, label="Variance", color="blue")
 axs[1].axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")

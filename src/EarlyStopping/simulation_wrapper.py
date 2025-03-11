@@ -605,10 +605,10 @@ class SimulationWrapper:
         column_names = [
             "strong_bias2",
             "strong_variance",
-            "strong_mse",
+            "strong_risk",
             "weak_bias2",
             "weak_variance",
-            "weak_mse",
+            "weak_risk",
             "residuals",
             "discrepancy_stop",
             "weak_balanced_oracle",
@@ -744,10 +744,10 @@ class SimulationWrapper:
 
         strong_bias2 = model_truncated_svd.strong_bias2
         strong_variance = model_truncated_svd.strong_variance
-        strong_mse = model_truncated_svd.strong_mse
+        strong_risk = model_truncated_svd.strong_risk
         weak_bias2 = model_truncated_svd.weak_bias2
         weak_variance = model_truncated_svd.weak_variance
-        weak_mse = model_truncated_svd.weak_mse
+        weak_risk = model_truncated_svd.weak_risk
         residuals = model_truncated_svd.residuals
 
         discrepancy_stop = model_truncated_svd.get_discrepancy_stop(
@@ -756,27 +756,27 @@ class SimulationWrapper:
         weak_balanced_oracle = model_truncated_svd.get_weak_balanced_oracle(max_iteration)
         strong_balanced_oracle = model_truncated_svd.get_strong_balanced_oracle(max_iteration)
 
-        weak_classical_oracle = np.argmin(weak_mse)
-        strong_classical_oracle = np.argmin(strong_mse)
+        weak_classical_oracle = np.argmin(weak_risk)
+        strong_classical_oracle = np.argmin(strong_risk)
 
         weak_error_vector_at_stopping_time = model_truncated_svd.design @ (
             model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal
         )
         weak_error_at_stopping_time = np.sum(weak_error_vector_at_stopping_time**2)
-        weak_relative_efficiency = np.sqrt(np.min(weak_mse) / weak_error_at_stopping_time)
+        weak_relative_efficiency = np.sqrt(np.min(weak_risk) / weak_error_at_stopping_time)
 
         strong_error_at_stopping_time = np.sum(
             (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal) ** 2
         )
-        strong_relative_efficiency = np.sqrt(np.min(strong_mse) / strong_error_at_stopping_time)
+        strong_relative_efficiency = np.sqrt(np.min(strong_risk) / strong_error_at_stopping_time)
 
         return (
             strong_bias2,
             strong_variance,
-            strong_mse,
+            strong_risk,
             weak_bias2,
             weak_variance,
-            weak_mse,
+            weak_risk,
             residuals,
             discrepancy_stop,
             weak_balanced_oracle,

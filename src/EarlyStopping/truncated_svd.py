@@ -18,7 +18,7 @@ class TruncatedSVD:
 
     *true_signal*: ``array, default = None``. p-dim vector of the true signal. For simulation purposes only.
     For simulated data, the true signal can be included to compute theoretical quantities such as
-    the bias and the MSE alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` ).
+    the bias and the risk alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` ).
 
     *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the
     standard deviation of normally distributed noise contributing to the response variable. Allows
@@ -46,7 +46,7 @@ class TruncatedSVD:
     *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak
     variance up to the current iteration.
 
-    *weak_mse*: ``array``. Only exists if true_signal was given. Lists the values of the weak
+    *weak_risk*: ``array``. Only exists if true_signal was given. Lists the values of the weak
     mean squared error up to the current iteration.
 
     *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong
@@ -55,7 +55,7 @@ class TruncatedSVD:
     *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the
     strong variance up to the current iteration.
 
-    *strong_mse*: ``array``. Only exists if true_signal was given. Lists the values of the strong
+    *strong_risk*: ``array``. Only exists if true_signal was given. Lists the values of the strong
     mean squared error up to the current iteration.
 
     **Methods**
@@ -117,11 +117,11 @@ class TruncatedSVD:
         if self.true_signal is not None:
             self.weak_bias2    = np.array([np.sum((self.design @ self.true_signal)**2)])
             self.weak_variance = np.array([0])
-            self.weak_mse      = np.array([np.sum((self.design @ self.true_signal)**2)])
+            self.weak_risk      = np.array([np.sum((self.design @ self.true_signal)**2)])
 
             self.strong_bias2    = np.array([np.sum(self.true_signal**2)])
             self.strong_variance = np.array([0])
-            self.strong_mse      = np.array([np.sum(self.true_signal**2)])
+            self.strong_risk      = np.array([np.sum(self.true_signal**2)])
 
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the algorithm.
@@ -312,8 +312,8 @@ class TruncatedSVD:
             new_weak_variance  = self.weak_variance[self.iteration] + self.true_noise_level**2
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
-            new_weak_mse = new_weak_bias2 + new_weak_variance
-            self.weak_mse = np.append(self.weak_mse, new_weak_mse)
+            new_weak_risk = new_weak_bias2 + new_weak_variance
+            self.weak_risk = np.append(self.weak_risk, new_weak_risk)
 
             new_strong_bias2  = self.strong_bias2[self.iteration] - self.diagonal_true_signal[self.iteration]**2
             self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
@@ -321,8 +321,8 @@ class TruncatedSVD:
             new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
-            new_strong_mse = new_strong_bias2 + new_strong_variance
-            self.strong_mse = np.append(self.strong_mse, new_strong_mse)
+            new_strong_risk = new_strong_bias2 + new_strong_variance
+            self.strong_risk = np.append(self.strong_risk, new_strong_risk)
         
         self.iteration += 1
 
@@ -348,8 +348,8 @@ class TruncatedSVD:
             new_weak_variance  = self.weak_variance[self.iteration] + self.true_noise_level**2
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
-            new_weak_mse = new_weak_bias2 + new_weak_variance
-            self.weak_mse = np.append(self.weak_mse, new_weak_mse)
+            new_weak_risk = new_weak_bias2 + new_weak_variance
+            self.weak_risk = np.append(self.weak_risk, new_weak_risk)
 
             new_strong_bias2  = self.strong_bias2[self.iteration] - self.true_signal[self.iteration]**2
             self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
@@ -357,7 +357,7 @@ class TruncatedSVD:
             new_strong_variance  = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
-            new_strong_mse = new_strong_bias2 + new_strong_variance
-            self.strong_mse = np.append(self.strong_mse, new_strong_mse)
+            new_strong_risk = new_strong_bias2 + new_strong_variance
+            self.strong_risk = np.append(self.strong_risk, new_strong_risk)
 
         self.iteration += 1
