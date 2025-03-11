@@ -74,6 +74,37 @@ class SimulationData:
 
         response_noiseless = design @ true_signal
         return design, response_noiseless, true_signal
+    
+    @staticmethod
+    def beta_sparse(sample_size, power=3, factor=10):
+        true_signal = 1 / (1 + np.arange(sample_size)) ** power
+        true_signal = factor * true_signal / np.sum(np.abs(true_signal))
+
+        cov = np.identity(sample_size)
+
+        design = np.random.multivariate_normal(np.zeros(sample_size), cov, sample_size)
+        response_noiseless = design @ true_signal
+
+        return design, response_noiseless, true_signal
+    
+    @staticmethod
+    def s_sparse(sample_size=1000, s=[20, 40, 60], alpha=[1, 0.5, 0.25], factor=10):
+        true_signal = np.zeros(sample_size)
+
+        start = 0
+        for i in range(len(s)):
+            end = s[i]
+            true_signal[start:end] = alpha[i]
+            start = end  # Update start for the next segment
+            
+        true_signal = factor * true_signal / np.sum(np.abs(true_signal))
+
+        cov = np.identity(sample_size)
+
+        design = np.random.multivariate_normal(np.zeros(sample_size), cov, sample_size)
+        response_noiseless = design @ true_signal
+
+        return design, response_noiseless, true_signal
 
     @staticmethod
     def gravity(sample_size, a=0, b=1, d=0.25):
