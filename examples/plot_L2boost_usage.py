@@ -76,15 +76,15 @@ Y = f + eps
 # By giving the true function f to the class, we can track the theoretical bias-variance decomposition and the balanced oracle.
 alg = es.L2_boost(X, Y, f)
 alg.get_balanced_oracle(300)
-print("The balanced oracle is given by", alg.iteration, "with mse =", alg.mse[alg.iteration])
+print("The balanced oracle is given by", alg.iteration, "with risk =", alg.risk[alg.iteration])
 alg.iterate(300 - alg.iteration)
-classical_oracle = np.argmin(alg.mse)
-print("The classical oracle is given by", classical_oracle, "with mse =", alg.mse[classical_oracle])
+classical_oracle = np.argmin(alg.risk)
+print("The classical oracle is given by", classical_oracle, "with risk =", alg.risk[classical_oracle])
 
 fig = plt.figure(figsize=(10, 7))
 plt.plot(alg.bias2)
 plt.plot(alg.stoch_error)
-plt.plot(alg.mse)
+plt.plot(alg.risk)
 plt.ylim((0, 1.5))
 plt.xlim((0, 300))
 plt.show()
@@ -98,20 +98,24 @@ plt.show()
 noise_estimate = alg.get_noise_estimate()
 stopping_time = alg.get_discrepancy_stop(critical_value = noise_estimate, max_iteration=200)
 stopping_time
-print("The discrepancy based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
+print("The discrepancy based early stopping time is given by", stopping_time, "with risk =",
+      alg.risk[stopping_time])
 
 # %%
 # Early stopping via residual ratios
 # ----------------------------------
 # Another method is based on stopping when the ratio of consecutive residuals goes above a certain threshhold.
 stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=1.2)
-print("The residual ratio based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
+print("The residual ratio based early stopping time is given by", stopping_time, "with risk =",
+      alg.risk[stopping_time])
 
 stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.2)
-print("The residual ratio based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
+print("The residual ratio based early stopping time is given by", stopping_time, "with risk =",
+      alg.risk[stopping_time])
 
 stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.1)
-print("The residual ratio based early stopping time is given by", stopping_time, "with mse =", alg.mse[stopping_time])
+print("The residual ratio based early stopping time is given by", stopping_time, "with risk =",
+      alg.risk[stopping_time])
 
 
 # %%
@@ -119,4 +123,4 @@ print("The residual ratio based early stopping time is given by", stopping_time,
 # ---------------------------------
 # The class also has a method to compute a high dimensional Akaike criterion over the boosting path up to the current iteration.
 aic_minimizer = alg.get_aic_iteration(K=2)
-print("The aic-minimizer over the whole path is given by", aic_minimizer, "with mse =", alg.mse[aic_minimizer])
+print("The aic-minimizer over the whole path is given by", aic_minimizer, "with risk =", alg.risk[aic_minimizer])

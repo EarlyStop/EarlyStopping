@@ -13,7 +13,7 @@ class L2_boost():
 
     *response*: ``array``. n-dim vector of the observed data in the linear model.
 
-    *true_signal*: ``array or None, default = None``. For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the boosting procedure.
+    *true_signal*: ``array or None, default = None``. For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the risk alongside the boosting procedure.
 
     **Attributes**
 
@@ -31,8 +31,7 @@ class L2_boost():
 
     *stoch_error*: ``array``. Only exists if true_signal was given. Lists the values of a stochastic error term up to current boosting iteration.
 
-    # TODO-BS-2024-11-02: Change to "risk" name convention.
-    *mse*: ``array``. Only exists if true_signal was given. Lists the values of the mean squared error between the boosting estimator and the true signal up to current boosting iteration.
+    *risk*: ``array``. Only exists if true_signal was given. Lists the values of the mean squared error between the boosting estimator and the true signal up to current boosting iteration.
 
     **Methods**
 
@@ -81,7 +80,8 @@ class L2_boost():
 
             self.bias2      = np.array([np.mean(self.__bias2_vector**2)])
             self.stoch_error = np.array([0])
-            self.mse        = np.array([np.mean(self.true_signal**2)])
+            self.risk        = np.array([np.mean(self.true_signal**2)])
+            # 2025-03-11-TODO-BS: Umbenennen zu risk
 
     def iterate(self, number_of_iterations = 1):
         """ Performs number_of_iterations iterations of the orthogonal boosting algorithm.
@@ -275,7 +275,7 @@ class L2_boost():
 
             # Update theoretical quantities
             if self.true_signal is not None:
-                self.__update_mse()
+                self.__update_risk()
                 self.__update_bias2(weak_learner)
                 self.__update_stochastic_error(weak_learner)
 
@@ -308,9 +308,9 @@ class L2_boost():
             direction     = direction / direction_norm
         self.orth_directions.append(direction)
 
-    def __update_mse(self):
-        new_mse   = np.mean((self.true_signal - self.boost_estimate_list[self.iteration])**2)
-        self.mse = np.append(self.mse, new_mse)
+    def __update_risk(self):
+        new_risk   = np.mean((self.true_signal - self.boost_estimate_list[self.iteration])**2)
+        self.risk = np.append(self.risk, new_risk)
 
     def __update_bias2(self, weak_learner):
         coefficient        = np.dot(self.true_signal, weak_learner) / \

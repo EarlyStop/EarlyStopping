@@ -688,17 +688,17 @@ class SimulationWrapper:
         column_names = [
             "bias2",
             "stoch_error",
-            "mse",
+            "risk",
             "residuals",
             "noise_estimate",
             "discrepancy_time",
             "residual_ratio_time",
             "balanced_oracle",
             "aic_time",
-            "mse_at_discrepancy_time",
-            "mse_at_balanced_oracle",
-            "mse_at_residual_ratio_time",
-            "mse_at_aic_time",
+            "risk_at_discrepancy_time",
+            "risk_at_balanced_oracle",
+            "risk_at_residual_ratio_time",
+            "risk_at_aic_time",
             "relative_efficiency_discrepancy",
             "relative_efficiency_residual_ratio",
             "relative_efficiency_aic"
@@ -723,7 +723,7 @@ class SimulationWrapper:
 
         bias2       = model_L2_boost.bias2
         stoch_error = model_L2_boost.stoch_error
-        mse         = model_L2_boost.mse
+        risk         = model_L2_boost.risk
         residuals   = model_L2_boost.residuals
 
         noise_estimate      = model_L2_boost.get_noise_estimate
@@ -732,29 +732,29 @@ class SimulationWrapper:
         balanced_oracle     = model_L2_boost.get_balanced_oracle(max_iteration)
         aic_time            = model_L2_boost.get_aic_iteration()
 
-        mse_at_discrepancy_time    = mse[discrepancy_time]
-        mse_at_balanced_oracle     = mse[balanced_oracle]
-        mse_at_residual_ratio_time = mse[residual_ratio_time]
-        mse_at_aic_time            = mse[aic_time]
+        risk_at_discrepancy_time    = risk[discrepancy_time]
+        risk_at_balanced_oracle     = risk[balanced_oracle]
+        risk_at_residual_ratio_time = risk[residual_ratio_time]
+        risk_at_aic_time            = risk[aic_time]
 
-        relative_efficiency_discrepancy    = np.sqrt(np.min(mse) / mse_at_discrepancy_time)
-        relative_efficiency_residual_ratio = np.sqrt(np.min(mse) / mse_at_residual_ratio_time)
-        relative_efficiency_aic            = np.sqrt(np.min(mse) / mse_at_aic_time)
+        relative_efficiency_discrepancy    = np.sqrt(np.min(risk) / risk_at_discrepancy_time)
+        relative_efficiency_residual_ratio = np.sqrt(np.min(risk) / risk_at_residual_ratio_time)
+        relative_efficiency_aic            = np.sqrt(np.min(risk) / risk_at_aic_time)
 
         return (
             bias2,
             stoch_error,
-            mse,
+            risk,
             residuals,
             noise_estimate,
             discrepancy_time,
             residual_ratio_time,
             balanced_oracle,
             aic_time,
-            mse_at_discrepancy_time,
-            mse_at_balanced_oracle,
-            mse_at_residual_ratio_time,
-            mse_at_aic_time,
+            risk_at_discrepancy_time,
+            risk_at_balanced_oracle,
+            risk_at_residual_ratio_time,
+            risk_at_aic_time,
             relative_efficiency_discrepancy,
             relative_efficiency_residual_ratio,
             relative_efficiency_aic
