@@ -90,6 +90,13 @@ class SimulationData:
     
     @staticmethod
     def s_sparse(sample_size=1000, s=[20, 40, 60], alpha=[1, 0.5, 0.25], factor=10):
+        if (s == None) or (alpha == None):
+            raise ValueError("s and alpha must be specified.")
+        if len(s) != len(alpha):
+            raise ValueError("The length of s and alpha must be equal.")
+        if (len(s) == 0) or (len(alpha) == 0):
+            raise ValueError("s and alpha must not be empty.")
+
         true_signal = np.zeros(sample_size)
 
         start = 0
