@@ -11,6 +11,7 @@ import warnings
 from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
 from .truncated_svd import TruncatedSVD
+from .L2_boost import L2_boost
 
 # import matplotlib.pyplot as plt
 # from matplotlib.ticker import FixedLocator
@@ -682,7 +683,7 @@ class SimulationWrapper:
         self.response = self.noise + (self.response_noiseless)[:, None]
 
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_truncated_svd)(m, max_iteration) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_L2_boost)(m, max_iteration) for m in range(self.monte_carlo_runs)
         )
 
         column_names = [
@@ -716,17 +717,19 @@ class SimulationWrapper:
         model_L2_boost = L2_boost(
             design      = self.design,
             response    = self.response[:, m],
-            true_signal = self.true_signal,
+            true_signal = self.true_signal
         )
 
         model_L2_boost.iterate(max_iteration)
 
         bias2       = model_L2_boost.bias2
         stoch_error = model_L2_boost.stoch_error
-        risk         = model_L2_boost.risk
+        risk        = model_L2_boost.risk
         residuals   = model_L2_boost.residuals
 
-        noise_estimate      = model_L2_boost.get_noise_estimate
+        noise_estimate      = model_L2_boost.get_noise_estimate()
+        print(noise_estimate - np.mean((model_L2_boost.response - model_L2_boost.design @
+                                        model_L2_boost.true_signal)**2))
         discrepancy_time    = model_L2_boost.get_discrepancy_stop(noise_estimate, max_iteration)
         residual_ratio_time = model_L2_boost.get_residual_ratio_stop(max_iteration)
         balanced_oracle     = model_L2_boost.get_balanced_oracle(max_iteration)
