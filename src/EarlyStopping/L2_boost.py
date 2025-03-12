@@ -74,14 +74,14 @@ class L2_boost():
         self.residual_ratios   = np.array([0])
 
         if self.true_signal is not None:
-            self.__error_vector      = self.response - self.true_signal
-            self.__bias2_vector      = self.true_signal
+            self.noiseless_response   = self.design @ self.true_signal
+            self.__error_vector       = self.response - self.noiseless_response
+            self.__bias2_vector       = self.noiseless_response
             self.__stoch_error_vector = np.zeros(self.sample_size)
 
             self.bias2      = np.array([np.mean(self.__bias2_vector**2)])
             self.stoch_error = np.array([0])
-            self.risk        = np.array([np.mean(self.true_signal**2)])
-            # 2025-03-11-TODO-BS: Umbenennen zu risk
+            self.risk        = np.array([np.mean(self.noiseless_response**2)])
 
     def iterate(self, number_of_iterations = 1):
         """ Performs number_of_iterations iterations of the orthogonal boosting algorithm.
@@ -309,11 +309,11 @@ class L2_boost():
         self.orth_directions.append(direction)
 
     def __update_risk(self):
-        new_risk   = np.mean((self.true_signal - self.boost_estimate_list[self.iteration])**2)
+        new_risk   = np.mean((self.noiseless_response - self.boost_estimate_list[self.iteration])**2)
         self.risk = np.append(self.risk, new_risk)
 
     def __update_bias2(self, weak_learner):
-        coefficient        = np.dot(self.true_signal, weak_learner) / \
+        coefficient        = np.dot(self.noiseless_response, weak_learner) / \
                              self.sample_size
         self.__bias2_vector = self.__bias2_vector - coefficient * weak_learner
         new_bias2           = np.mean(self.__bias2_vector**2)

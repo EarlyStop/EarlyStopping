@@ -33,6 +33,7 @@ beta_1 = 10 * beta_1 / np.sum(np.abs(beta_1))
 # S-sparse signals
 beta_15 = np.zeros(para_size)
 beta_15[0:15] = 1
+# beta_15[10:15] = 0.1
 beta_15 = 10 * beta_15 / np.sum(np.abs(beta_15))
 
 beta_60 = np.zeros(para_size)
@@ -66,7 +67,7 @@ plt.show()
 cov = np.identity(para_size)
 sigma = np.sqrt(1)
 X = np.random.multivariate_normal(np.zeros(para_size), cov, sample_size)
-f = X @ beta_90
+f = X @ beta_15
 eps = np.random.normal(0, sigma, sample_size)
 Y = f + eps
 
@@ -74,19 +75,20 @@ Y = f + eps
 # Theoretical bias-variance decomposition
 # ---------------------------------------
 # By giving the true function f to the class, we can track the theoretical bias-variance decomposition and the balanced oracle.
-alg = es.L2_boost(X, Y, f)
-alg.get_balanced_oracle(300)
+alg = es.L2_boost(X, Y, beta_15)
+alg.get_balanced_oracle(20)
 print("The balanced oracle is given by", alg.iteration, "with risk =", alg.risk[alg.iteration])
-alg.iterate(300 - alg.iteration)
+alg.iterate(50 - alg.iteration)
 classical_oracle = np.argmin(alg.risk)
 print("The classical oracle is given by", classical_oracle, "with risk =", alg.risk[classical_oracle])
 
 fig = plt.figure(figsize=(10, 7))
 plt.plot(alg.bias2)
 plt.plot(alg.stoch_error)
+plt.plot(alg.residuals)
 plt.plot(alg.risk)
 plt.ylim((0, 1.5))
-plt.xlim((0, 300))
+plt.xlim((0, 50))
 plt.show()
 
 # %%
@@ -95,11 +97,14 @@ plt.show()
 # The L2-boost class provides several data driven methods to choose a boosting iteration making the right tradeoff between bias and stochastic error.
 # The first one is a stopping condition based on the discrepancy principle, which stops when the residuals become smaller than a critical value.
 # Theoretically this critical value should be chosen as the noise level of the model, for which the class also provides a methods based on the scaled Lasso.
-noise_estimate = alg.get_noise_estimate()
+noise_estimate = alg.get_noise_estimate(K = 0.5)
 stopping_time = alg.get_discrepancy_stop(critical_value = noise_estimate, max_iteration=200)
 stopping_time
 print("The discrepancy based early stopping time is given by", stopping_time, "with risk =",
       alg.risk[stopping_time])
+
+np.sqrt(np.min(alg.risk) / alg.risk[stopping_time])
+alg.risk
 
 # %%
 # Early stopping via residual ratios
