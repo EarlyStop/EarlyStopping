@@ -56,52 +56,43 @@ weak_oracle_gravity = model_gravity.get_weak_balanced_oracle(max_iteration)
 # Strong balanced oracle
 strong_oracle_gravity = model_gravity.get_strong_balanced_oracle(max_iteration)
 
-# Original figure with 3 subplots
-fig, axs = plt.subplots(2, 1, figsize=(14, 12))
-
 print(len(model_gravity.residuals))
 
-# axs[0].plot(range(0, max_iteration + 1), model_gravity.residuals)
-# # axs[0].axvline(x=m, color="red", linestyle="--")
-# axs[0].set_xlim([0, 50])
-# axs[0].set_ylim([0, 10000])
-# axs[0].set_xlabel("Iteration", fontsize=14)
-# axs[0].set_ylabel("Residuals", fontsize=14)
-# axs[0].tick_params(axis="both", which="major", labelsize=14)
-
-
-axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_risk, color="orange", label="Error")
-axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_bias2, label="$Bias^2$", color="grey")
-axs[0].plot(range(0, max_iteration + 1), model_gravity.strong_variance, label="Variance", color="blue")
-axs[0].axvline(x=m_gravity, color="red", linestyle="--")
-axs[0].axvline(x=strong_oracle_gravity, color="green", linestyle="--")
-# axs[1].set_xlim([0, 50])
-axs[0].set_xlim([0, 50])
-axs[0].set_ylim([0, 0.5])  # 0.2
-axs[0].set_xlabel("Iteration", fontsize=font_size)
-axs[0].set_ylabel("Strong Quantities", fontsize=font_size)
-axs[0].tick_params(axis="both", which="major", labelsize=font_size)
-axs[0].grid(True)
-
+# Create separate figure for Strong Quantities
+plt.figure(figsize=(10, 6))
+plt.plot(range(0, max_iteration + 1), model_gravity.strong_risk, color="orange", label="Error")
+plt.plot(range(0, max_iteration + 1), model_gravity.strong_bias2, label="$Bias^2$", color="grey")
+plt.plot(range(0, max_iteration + 1), model_gravity.strong_variance, label="Variance", color="blue")
+plt.axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")
+plt.axvline(x=strong_oracle_gravity, color="green", linestyle="--", label="$t$ (oracle)")
+plt.xlim([0, 50])
+plt.ylim([0, 0.5])  # 0.2
+plt.xlabel('', fontsize=22)
+plt.ylabel('', fontsize=22)
+plt.tick_params(axis='both', which='major', labelsize=14)
+plt.grid(True)
+plt.legend(loc="upper right", fontsize=font_size)
+plt.tight_layout()
+plt.savefig("strong_quantities_plot.png", dpi=300, bbox_inches="tight")
 
 print(model_gravity.weak_variance)
 
-axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_risk, color="orange", label="Error")
-axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_bias2, label="$Bias^2$", color="grey")
-axs[1].plot(range(0, max_iteration + 1), model_gravity.weak_variance, label="Variance", color="blue")
-axs[1].axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")
-axs[1].axvline(x=weak_oracle_gravity, color="green", linestyle="--", label="$t$ (oracle)")
-axs[1].set_xlim([0, 50])
-axs[1].set_ylim([0, 0.5])  # 0.002
-axs[1].set_xlabel("Iteration", fontsize=font_size)
-axs[1].set_ylabel("Weak Quantities", fontsize=font_size)
-# axs[1].legend(loc="upper right", fontsize=font_size)
-axs[1].tick_params(axis="both", which="major", labelsize=font_size)
-axs[1].grid(True)
-
+# Create separate figure for Weak Quantities
+plt.figure(figsize=(10, 6))
+plt.plot(range(0, max_iteration + 1), model_gravity.weak_risk, color="orange", label="Error")
+plt.plot(range(0, max_iteration + 1), model_gravity.weak_bias2, label="$Bias^2$", color="grey")
+plt.plot(range(0, max_iteration + 1), model_gravity.weak_variance, label="Variance", color="blue")
+plt.axvline(x=m_gravity, color="red", linestyle="--", label=r"$\tau$")
+plt.axvline(x=weak_oracle_gravity, color="green", linestyle="--", label="$t$ (oracle)")
+plt.xlim([0, 50])
+plt.ylim([0, 0.5])  # 0.002
+plt.xlabel('', fontsize=22)
+plt.ylabel('', fontsize=22)
+plt.tick_params(axis='both', which='major', labelsize=14)
+plt.grid(True)
+plt.legend(loc="upper right", fontsize=font_size)
 plt.tight_layout()
-plt.savefig("counterexample_plot.png", dpi=300, bbox_inches="tight")
-
+plt.savefig("weak_quantities_plot.png", dpi=300, bbox_inches="tight")
 
 # Define a consistent colormap for both heatmaps
 colormap = "viridis"
@@ -121,7 +112,7 @@ plt.ylabel("", fontsize=14)
 # plt.yticks([])
 plt.tight_layout()
 plt.savefig("design_matrix_heatmap.png", dpi=300, bbox_inches="tight")
-plt.close()
+
 
 # Create and save true signal as a line plot
 plt.figure(figsize=(10, 6))
@@ -130,7 +121,6 @@ plt.grid(True)
 plt.tick_params(axis="both", which="major", labelsize=14)
 plt.tight_layout()
 plt.savefig("true_signal_lineplot.png", dpi=300, bbox_inches="tight")
-plt.close()
 
 # Show the original plots
 plt.show()
