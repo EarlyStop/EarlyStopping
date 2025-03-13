@@ -18,7 +18,7 @@ design, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagon
 design, response_noiseless_rough, true_signal_rough = es.SimulationData.diagonal_data(sample_size=10000, type='rough')
 
 # We'll focus on the smooth signal for our demonstration
-signal_type = 'supersmooth'  # Options: 'supersmooth', 'smooth', 'rough'
+signal_type = 'smooth'  # Options: 'supersmooth', 'smooth', 'rough'
 
 # Select the appropriate signal based on the chosen type
 if signal_type == 'supersmooth':
@@ -113,7 +113,7 @@ cg_risk = conjugate_gradient.strong_empirical_risk
 cg_min_risk_index = np.argmin(cg_risk)
 cg_min_risk_estimate = conjugate_gradient.get_estimate(cg_min_risk_index)
 
-tsvd_risk = tsvd.strong_mse
+tsvd_risk = tsvd.strong_risk
 tsvd_min_risk_index = np.argmin(tsvd_risk)
 tsvd_min_risk_estimate = tsvd.get_estimate(tsvd_min_risk_index)
 
