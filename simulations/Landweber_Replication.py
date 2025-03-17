@@ -35,7 +35,7 @@ parameters_supersmooth = es.SimulationParameters(
     design=design_supersmooth,
     true_signal=true_signal_supersmooth,
     true_noise_level=0.01,
-    monte_carlo_runs=10,  # 500
+    monte_carlo_runs=500,  # 500
     cores=12,
 )
 
@@ -152,7 +152,7 @@ labels = ["supersmooth", "smooth", "rough", "supersmooth", "smooth", "rough"]
 
 fig_dir = ""
 
-create_custom_boxplot(efficiency_to_plot, labels, y_lim_lower=0.3, y_lim_upper=1.3, fig_dir=fig_dir, name="efficiency")
+create_custom_boxplot(efficiency_to_plot, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="efficiency")
 
 
 relative_iteration_to_plot = [
@@ -165,5 +165,5 @@ relative_iteration_to_plot = [
 ]
 
 create_custom_boxplot(
-    relative_iteration_to_plot, labels, y_lim_lower=0.3, y_lim_upper=1.3, fig_dir=fig_dir, name="iteration"
+    relative_iteration_to_plot, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="iteration"
 )
