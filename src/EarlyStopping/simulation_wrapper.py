@@ -695,7 +695,7 @@ class SimulationWrapper:
 
         column_names = [
             "bias2",
-            "stoch_error",
+            "stochastic_error",
             "risk",
             "residuals",
             "noise_estimate",
@@ -726,7 +726,7 @@ class SimulationWrapper:
         model_L2_boost.iterate(max_iteration)
 
         bias2 = model_L2_boost.bias2
-        stoch_error = model_L2_boost.stoch_error
+        stochastic_error = model_L2_boost.stochastic_error
         risk = model_L2_boost.risk
         residuals = model_L2_boost.residuals
 
@@ -751,7 +751,7 @@ class SimulationWrapper:
 
         return (
             bias2,
-            stoch_error,
+            stochastic_error,
             risk,
             residuals,
             noise_estimate,

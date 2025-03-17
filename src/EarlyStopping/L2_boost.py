@@ -29,7 +29,7 @@ class L2_boost():
 
     *bias2*: ``array``. Only exists if true_signal was given. Lists the values of the squared bias up to current boosting iteration.
 
-    *stoch_error*: ``array``. Only exists if true_signal was given. Lists the values of a stochastic error term up to current boosting iteration.
+    *stochastic_error*: ``array``. Only exists if true_signal was given. Lists the values of a stochastic error term up to current boosting iteration.
 
     *risk*: ``array``. Only exists if true_signal was given. Lists the values of the mean squared error between the boosting estimator and the true signal up to current boosting iteration.
 
@@ -77,10 +77,10 @@ class L2_boost():
             self.noiseless_response   = self.design @ self.true_signal
             self.__error_vector       = self.response - self.noiseless_response
             self.__bias2_vector       = self.noiseless_response
-            self.__stoch_error_vector = np.zeros(self.sample_size)
+            self.__stochastic_error_vector = np.zeros(self.sample_size)
 
             self.bias2      = np.array([np.mean(self.__bias2_vector**2)])
-            self.stoch_error = np.array([0])
+            self.stochastic_error = np.array([0])
             self.risk        = np.array([np.mean(self.noiseless_response**2)])
 
     def iterate(self, number_of_iterations = 1):
@@ -177,18 +177,18 @@ class L2_boost():
         if self.true_signal is None:
             return "This method is only available when the true signal is known"
         else:
-            if self.bias2[self.iteration] <= self.stoch_error[self.iteration]:
+            if self.bias2[self.iteration] <= self.stochastic_error[self.iteration]:
                 # argmax takes the first instance of True in the true-false array
-                balanced_oracle = np.argmax(self.bias2 <= self.stoch_error)
+                balanced_oracle = np.argmax(self.bias2 <= self.stochastic_error)
                 return int(balanced_oracle)
 
-            if self.bias2[self.iteration] > self.stoch_error[self.iteration]:
-                while (self.bias2[self.iteration] > self.stoch_error[self.iteration] and
+            if self.bias2[self.iteration] > self.stochastic_error[self.iteration]:
+                while (self.bias2[self.iteration] > self.stochastic_error[self.iteration] and
                        self.iteration <= max_iteration
                       ):
                     self.iterate(1)
 
-            if self.bias2[self.iteration] <= self.stoch_error[self.iteration]:
+            if self.bias2[self.iteration] <= self.stochastic_error[self.iteration]:
                 balanced_oracle = self.iteration
                 return int(balanced_oracle)
             else:
@@ -322,7 +322,7 @@ class L2_boost():
     def __update_stochastic_error(self, weak_learner):
         coefficient             = np.dot(self.__error_vector, weak_learner) / \
                                  self.sample_size
-        self.__stoch_error_vector = self.__stoch_error_vector + \
+        self.__stochastic_error_vector = self.__stochastic_error_vector + \
                                   coefficient * weak_learner
-        new_stoch_error           = np.mean(self.__stoch_error_vector**2)
-        self.stoch_error         = np.append(self.stoch_error, new_stoch_error)
+        new_stochastic_error           = np.mean(self.__stochastic_error_vector**2)
+        self.stochastic_error         = np.append(self.stochastic_error, new_stochastic_error)
