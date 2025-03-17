@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import RegressionTree_additive_generation as data_gen
+
 
 # Ensure consistent style
 plt.rc('axes', titlesize=20)
@@ -49,15 +51,18 @@ def f4(x):
     return func_step(x, knots, vals)
 
 
-# Generate uniformly distributed data
+# Generate uniformly distributed data in the interval [-2.5, 2.5]
 x = np.linspace(-2.5, 2.5, 400)
 
-# Apply functions
-y1 = f1(x)
-y2 = f2(x)
-y3 = f3(x)
-y4 = f4(x)
+# Create a 2D array where each column is the same x values
+# This is needed because the functions in data_gen expect a 2D array
+X = np.column_stack([x, x, x, x])
 
+# Plot 1: Piecewise constant functions
+y1 = data_gen.f1(x)
+y2 = data_gen.f2(x)
+y3 = data_gen.f3(x)
+y4 = data_gen.f4(x)
 
 # Plotting
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -68,7 +73,6 @@ ax.plot(x, y2, color="purple", linewidth=1.5, label='Function 2')
 ax.plot(x, y3, color="#CCCC00", linewidth=1.5, label='Function 3')
 ax.plot(x, y4, color="black", linewidth=1.5, label='Function 4')
 
-
 ax.grid(True)
 
 # Save figure
@@ -76,39 +80,11 @@ fig_dir = "."
 fig.savefig(os.path.join(fig_dir, 'piecewise_constant_functions_esfiep.png'), bbox_inches="tight", dpi=300)
 plt.show()
 
-
-def linear_interp(x, knots, values):
-    return np.interp(x, knots, values)
-
-# Define the functions with updated linear interpolation
-def f1_lin(x):
-    knots = [-2.5, -2.3, 1, 2.5]  # Extended to ensure range covers the plot
-    values = [0.5, -2.5, 1.8, 2.3]
-    return linear_interp(x, knots, values)
-
-def f2_lin(x):
-    knots = [-2.5, -2, -1, 1, 2, 2.5]  # Extended to ensure range covers the plot
-    values = [-0.5, 2.5, 1, -0.5, -2.2, -2.3]
-    return linear_interp(x, knots, values)
-
-def f3_lin(x):
-    knots = [-2.5, -1.5, 0.5, 2.5]  # Extended to ensure range covers the plot
-    values = [0, -3, 2.5, -1]  # Adjusted to have the same number of values as knots
-    return linear_interp(x, knots, values)
-
-def f4_lin(x):
-    knots = [-2.5, -1.8, -0.5, 1.5, 1.8, 2.5]  # Extended to ensure range covers the plot
-    values = [-1, -3.8, -1, -2.3, -0.5, 0.8]
-    return linear_interp(x, knots, values)
-
-# Generate uniformly distributed data
-x = np.linspace(-2.5, 2.5, 400)
-
-# Apply functions
-y1_lin = f1_lin(x)
-y2_lin = f2_lin(x)
-y3_lin = f3_lin(x)
-y4_lin = f4_lin(x)
+# Plot 2: Piecewise linear functions
+y1_lin = data_gen.f1_lin(x)
+y2_lin = data_gen.f2_lin(x)
+y3_lin = data_gen.f3_lin(x)
+y4_lin = data_gen.f4_lin(x)
 
 # Plotting
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -126,40 +102,21 @@ fig_dir = "."
 fig.savefig(os.path.join(fig_dir, 'piecewise_linear_functions_esfiep.png'), bbox_inches="tight", dpi=300)
 plt.show()
 
-
-def func_hills(x, split=0, vals=(1, 1, 10), rev=False):
-    ans = np.full(len(x), np.nan)  # Initialize with NaNs
-    if not rev:
-        ans[x < split] = vals[0] + np.sin(vals[1] * x[x < split])
-        eps = (vals[1] / vals[2]) * np.cos(vals[1] * split) / np.cos(vals[2] * split)  # Corrected indices
-        delta = vals[0] + np.sin(vals[1] * split) - eps * np.sin(vals[2] * split)  # Corrected indices
-        ans[x >= split] = delta + eps * np.sin(vals[2] * x[x >= split])  # Corrected indices
-    else:
-        ans[x > split] = vals[0] + np.sin(vals[1] * x[x > split])
-        eps = (vals[1] / vals[2]) * np.cos(vals[1] * split) / np.cos(vals[2] * split)  # Corrected indices
-        delta = vals[0] + np.sin(vals[1] * split) - eps * np.sin(vals[2] * split)  # Corrected indices
-        ans[x <= split] = delta + eps * np.sin(vals[2] * x[x <= split])  # Corrected indices
-    return ans
-
-def scen5(x):
-    x1 = func_hills(x, 0, (1, 1, 12))
-    x2 = func_hills(x, 1, (1, 2, 8))
-    x3 = func_hills(x, -1, (0, 3, 15), rev=True)
-    x4 = func_hills(x, 1, (0, 2.5, 10), rev=True)
-    return np.column_stack((x1, x2, x3, x4))
-
-# Generate uniformly distributed data in the interval [-2.5, 2.5]
-x = np.linspace(-2.5, 2.5, 400)
-results = scen5(x)
+# Plot 3: Hills functions
+# For hills functions, we need to apply each function to the corresponding column
+f1 = data_gen.func_hills(x, 0, (1, 1, 12))
+f2 = data_gen.func_hills(x, 1, (1, 2, 8))
+f3 = data_gen.func_hills(x, -1, (0, 3, 15), rev=True)
+f4 = data_gen.func_hills(x, 1, (0, 2.5, 10), rev=True)
 
 # Plotting
 fig, ax = plt.subplots(figsize=(10, 6))
 fig.patch.set_facecolor('white')
 
-ax.plot(x, results[:, 0], color="blue", linewidth=1.5, label='Function 1')
-ax.plot(x, results[:, 1], color="purple", linewidth=1.5, label='Function 2')
-ax.plot(x, results[:, 2], color="#CCCC00", linewidth=1.5, label='Function 3')
-ax.plot(x, results[:, 3], color="black", linewidth=1.5, label='Function 4')
+ax.plot(x, f1, color="blue", linewidth=1.5, label='Function 1')
+ax.plot(x, f2, color="purple", linewidth=1.5, label='Function 2')
+ax.plot(x, f3, color="#CCCC00", linewidth=1.5, label='Function 3')
+ax.plot(x, f4, color="black", linewidth=1.5, label='Function 4')
 
 ax.grid(True)
 
@@ -168,25 +125,37 @@ fig_dir = "."
 fig.savefig(os.path.join(fig_dir, 'hills_functions_esfiep.png'), bbox_inches="tight", dpi=300)
 plt.show()
 
-def smooth(X):
-    x1 = -2 * np.sin(2 * X)
-    x2 = (0.8 * X ** 2 - 2.5)
-    x3 = (X - 1 / 2)
-    x4 = (np.exp(-0.65 * X) - 2.5)
-    return np.column_stack((x1, x2, x3, x4))
+# Plot 4: Smooth functions
+# Extract the individual components from additive_smooth
+x_single = np.zeros((400, 4))
+x_single[:, 0] = x  # Set first column to x values
 
+# Function 1: -2 * np.sin(2 * X[:,0])
+f1_smooth = -2 * np.sin(2 * x)
 
-x = np.linspace(-2.5, 2.5, 400)
-results_smooth = smooth(x)
+# Set second column to x values for function 2
+x_single[:, 1] = x
+# Function 2: (0.8 * X[:,1]**2 - 2.5)
+f2_smooth = 0.8 * x**2 - 2.5
+
+# Set third column to x values for function 3
+x_single[:, 2] = x
+# Function 3: (X[:,2] - 1/2)
+f3_smooth = x - 1/2
+
+# Set fourth column to x values for function 4
+x_single[:, 3] = x
+# Function 4: (np.exp(-0.65 * X[:,3]) - 2.5)
+f4_smooth = np.exp(-0.65 * x) - 2.5
 
 # Plotting
 fig, ax = plt.subplots(figsize=(10, 6))
 fig.patch.set_facecolor('white')
 
-ax.plot(x, results_smooth[:, 0], color="blue", linewidth=1.5, label='Function 1')
-ax.plot(x, results_smooth[:, 1], color="purple", linewidth=1.5, label='Function 2')
-ax.plot(x, results_smooth[:, 2], color="#CCCC00", linewidth=1.5, label='Function 3')
-ax.plot(x, results_smooth[:, 3], color="black", linewidth=1.5, label='Function 4')
+ax.plot(x, f1_smooth, color="blue", linewidth=1.5, label='Function 1')
+ax.plot(x, f2_smooth, color="purple", linewidth=1.5, label='Function 2')
+ax.plot(x, f3_smooth, color="#CCCC00", linewidth=1.5, label='Function 3')
+ax.plot(x, f4_smooth, color="black", linewidth=1.5, label='Function 4')
 
 ax.grid(True)
 
