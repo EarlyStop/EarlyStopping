@@ -703,6 +703,8 @@ class SimulationWrapper:
             "residual_ratio_time",
             "balanced_oracle",
             "aic_time",
+            "two_step_discrepancy_stop",
+            "two_step_residual_ratio_stop",
             "risk_at_discrepancy_time",
             "risk_at_balanced_oracle",
             "risk_at_residual_ratio_time",
@@ -710,6 +712,8 @@ class SimulationWrapper:
             "relative_efficiency_discrepancy",
             "relative_efficiency_residual_ratio",
             "relative_efficiency_aic",
+            "relative_efficiency_two_step_discrepancy_stop",
+            "relative_efficiency_two_step_residual_ratio_stop"
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -739,15 +743,21 @@ class SimulationWrapper:
         residual_ratio_time = model_L2_boost.get_residual_ratio_stop(max_iteration)
         balanced_oracle = model_L2_boost.get_balanced_oracle(max_iteration)
         aic_time = model_L2_boost.get_aic_iteration()
+        two_step_discrepancy_stop = model_L2_boost.get_aic_iteration(max_iteration=discrepancy_time)
+        two_step_residual_ratio_stop = model_L2_boost.get_aic_iteration(max_iteration=residual_ratio_time)
 
         risk_at_discrepancy_time = risk[discrepancy_time]
         risk_at_balanced_oracle = risk[balanced_oracle]
         risk_at_residual_ratio_time = risk[residual_ratio_time]
         risk_at_aic_time = risk[aic_time]
+        risk_at_two_step_discrepancy_stop = risk[two_step_discrepancy_stop]
+        risk_at_two_step_residual_ratio_stop = risk[two_step_residual_ratio_stop]
 
         relative_efficiency_discrepancy = np.sqrt(np.min(risk) / risk_at_discrepancy_time)
         relative_efficiency_residual_ratio = np.sqrt(np.min(risk) / risk_at_residual_ratio_time)
         relative_efficiency_aic = np.sqrt(np.min(risk) / risk_at_aic_time)
+        relative_efficiency_two_step_discrepancy_stop = np.sqrt(np.min(risk) / risk_at_two_step_discrepancy_stop)
+        relative_efficiency_two_step_residual_ratio_stop = np.sqrt(np.min(risk) / risk_at_two_step_residual_ratio_stop)
 
         return (
             bias2,
@@ -759,6 +769,8 @@ class SimulationWrapper:
             residual_ratio_time,
             balanced_oracle,
             aic_time,
+            two_step_discrepancy_stop,
+            two_step_residual_ratio_stop,
             risk_at_discrepancy_time,
             risk_at_balanced_oracle,
             risk_at_residual_ratio_time,
@@ -766,6 +778,8 @@ class SimulationWrapper:
             relative_efficiency_discrepancy,
             relative_efficiency_residual_ratio,
             relative_efficiency_aic,
+            relative_efficiency_two_step_discrepancy_stop,
+            relative_efficiency_two_step_residual_ratio_stop
         )
 
     def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):

@@ -215,10 +215,22 @@ labels = [ "beta_3", "beta_2", "beta_1", "beta_15", "beta_60", "beta_90"]
 fig_dir = ""
 create_custom_boxplot(data, labels, y_lim_lower = 0.1, y_lim_upper=1.1, fig_dir=fig_dir, name='L2_boost_relative_efficiencies_residual_ratio')
 
+# Quantities for AIC
 # Relative efficiency for residual ratio stop
 relative_efficiency_aic_beta_3 = results_beta_3["relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_3 = results_beta_3["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_two_step_residual_ratio_stop_beta_3 = results_beta_3["relative_efficiency_two_step_residual_ratio_stop"]
+
+
 relative_efficiency_aic_beta_2 = results_beta_2["relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_2 = results_beta_2["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_two_step_residual_ratio_stop_beta_2 = results_beta_2["relative_efficiency_two_step_residual_ratio_stop"]
+
+
 relative_efficiency_aic_beta_1 = results_beta_1["relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_1 = results_beta_1["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_two_step_residual_ratio_stop_beta_1 = results_beta_1["relative_efficiency_two_step_residual_ratio_stop"]
+
 
 aic_beta_60 = results_beta_60["aic_time"]
 print(aic_beta_60)
@@ -227,10 +239,22 @@ dp_time_beta_60 = results_beta_60["discrepancy_time"]
 print(dp_time_beta_60)
 
 relative_efficiency_aic_beta_15 = results_beta_15["relative_efficiency_aic"]
-relative_efficiency_aic_beta_60 = results_beta_60["relative_efficiency_aic"]
-relative_efficiency_aic_beta_90 = results_beta_90["relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_15 = results_beta_15["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_two_step_residual_ratio_stop_beta_15 = results_beta_15["relative_efficiency_two_step_residual_ratio_stop"]
 
-data = [relative_efficiency_aic_beta_3,
+
+relative_efficiency_aic_beta_60 = results_beta_60["relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_60 = results_beta_60["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_two_step_residual_ratio_stop_beta_60 = results_beta_60["relative_efficiency_two_step_residual_ratio_stop"]
+
+
+
+relative_efficiency_aic_beta_90 = results_beta_90["relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_90 = results_beta_90["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_two_step_residual_ratio_stop_beta_90 = results_beta_90["relative_efficiency_two_step_residual_ratio_stop"]
+
+
+data_aic = [relative_efficiency_aic_beta_3,
         relative_efficiency_aic_beta_2,
         relative_efficiency_aic_beta_1,
         relative_efficiency_aic_beta_15,
@@ -238,10 +262,28 @@ data = [relative_efficiency_aic_beta_3,
         relative_efficiency_aic_beta_90
        ]
 
+data_two_step_discrepancy_stop = [relative_efficiency_two_step_discrepancy_stop_beta_3,
+        relative_efficiency_two_step_discrepancy_stop_beta_2,
+        relative_efficiency_two_step_discrepancy_stop_beta_1,
+        relative_efficiency_two_step_discrepancy_stop_beta_15,
+        relative_efficiency_two_step_discrepancy_stop_beta_60,
+        relative_efficiency_two_step_discrepancy_stop_beta_90
+]
+
+data_two_step_residual_ratio_stop = [relative_efficiency_two_step_residual_ratio_stop_beta_3,
+        relative_efficiency_two_step_residual_ratio_stop_beta_2,
+        relative_efficiency_two_step_residual_ratio_stop_beta_1,
+        relative_efficiency_two_step_residual_ratio_stop_beta_15,
+        relative_efficiency_two_step_residual_ratio_stop_beta_60,
+        relative_efficiency_two_step_residual_ratio_stop_beta_90
+]
+
+
 labels = [ "beta_3", "beta_2", "beta_1", "beta_15", "beta_60", "beta_90"]
 fig_dir = ""
-create_custom_boxplot(data, labels, y_lim_lower = 0.1, y_lim_upper=1.1, fig_dir=fig_dir, name='L2_boost_relative_efficiencies_aic')
-
+# create_custom_boxplot(data_aic, labels, y_lim_lower = 0, y_lim_upper=1.1, fig_dir=fig_dir, name='L2_boost_relative_efficiencies_aic')
+create_custom_boxplot(data_two_step_discrepancy_stop, labels, y_lim_lower = 0, y_lim_upper=1.1, fig_dir=fig_dir, name='L2_boost_relative_efficiency_two_step_discrepancy_stop')
+create_custom_boxplot(data_two_step_residual_ratio_stop, labels, y_lim_lower = 0, y_lim_upper=1.1, fig_dir=fig_dir, name='L2_boost_relative_efficiency_two_step_residual_ratio_stop')
 
 
 

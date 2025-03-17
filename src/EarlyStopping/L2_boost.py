@@ -226,13 +226,16 @@ class L2_boost():
 
         return noise_estimate
 
-    def get_aic_iteration(self, K = 2, max_iteration=self.iteration):
+    def get_aic_iteration(self, K = 2, max_iteration=None):
         """ Computes the iteration index minimizing a high dimensional Akaike criterion.
 
             **Parameters**
 
             *K*: ``float``. Constant in the definition. Defaults to 2, which is common in the literature.
         """
+        if (max_iteration == None):
+            max_iteration = self.iteration
+            
         noise_estimate = self.get_noise_estimate()
         dim_penalty = np.arange(0, max_iteration + 1) * K * noise_estimate * np.log(self.parameter_size) / self.sample_size
         aic = self.residuals[0:max_iteration + 1] + dim_penalty
