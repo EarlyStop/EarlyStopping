@@ -30,37 +30,33 @@ simulation = es.SimulationWrapper(**parameters.__dict__)
 
 # Run simulations for each method
 results_landweber = simulation.run_simulation_landweber(
-    learning_rate=1 / 100, max_iteration=10000, 
-    data_set_name="landweber_simulation_gravity"
+    learning_rate=1 / 100, max_iteration=10000, data_set_name="landweber_simulation_gravity"
 )
 
 results_cg = simulation.run_simulation_conjugate_gradients(
-    max_iteration=500,
-    data_set_name="conjugate_gradients_simulation_gravity"
+    max_iteration=500, data_set_name="conjugate_gradients_simulation_gravity"
 )
 
 results_svd = simulation.run_simulation_truncated_svd(
-    max_iteration=sample_size,
-    diagonal=False,
-    data_set_name="truncated_svd_simulation_gravity"
+    max_iteration=sample_size, diagonal=False, data_set_name="truncated_svd_simulation_gravity"
 )
 
 # Extract relative efficiencies for each method
 # Landweber
-landweber_weak_efficiency = np.array(results_landweber["landweber_weak_relative_efficiency"])
-landweber_strong_efficiency = np.array(results_landweber["landweber_strong_relative_efficiency"])
+landweber_weak_efficiency = np.array(results_landweber["weak_relative_efficiency"])
+landweber_strong_efficiency = np.array(results_landweber["strong_relative_efficiency"])
 
 # Conjugate Gradients
-cg_weak_efficiency = np.array(results_cg["conjugate_gradients_weak_relative_efficiency"])
-cg_strong_efficiency = np.array(results_cg["conjugate_gradients_strong_relative_efficiency"])
+cg_weak_efficiency = np.array(results_cg["weak_relative_efficiency"])
+cg_strong_efficiency = np.array(results_cg["strong_relative_efficiency"])
 
 # Truncated SVD
 svd_weak_efficiency = np.array(results_svd["weak_relative_efficiency"])
 svd_strong_efficiency = np.array(results_svd["strong_relative_efficiency"])
 
 # Extract stopping times for each method
-landweber_stopping_times = np.array(results_landweber["stopping_index_landweber"])
-cg_stopping_times = np.array(results_cg["conjugate_gradients_stopping_index"])
+landweber_stopping_times = np.array(results_landweber["discrepancy_stop"])
+cg_stopping_times = np.array(results_cg["discrepancy_stop"])
 svd_stopping_times = np.array(results_svd["discrepancy_stop"])
 
 # Prepare data for plotting
@@ -74,11 +70,7 @@ efficiency_to_plot = [
 ]
 
 # Prepare stopping times for plotting
-stopping_times_to_plot = [
-    landweber_stopping_times,
-    cg_stopping_times,
-    svd_stopping_times
-]
+stopping_times_to_plot = [landweber_stopping_times, cg_stopping_times, svd_stopping_times]
 
 
 def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name):
@@ -162,7 +154,7 @@ def create_stopping_times_boxplot(data, labels, fig_dir, name):
 
     # Use log scale for y-axis if the stopping times vary widely
     if np.max(data[0]) > 10 * np.min(data[-1]):
-        plt.yscale('log')
+        plt.yscale("log")
         plt.grid(True, which="both")
 
     plt.savefig(os.path.join(fig_dir, f"stopping_times_{name}.png"), bbox_inches="tight", dpi=300)
@@ -180,10 +172,13 @@ fig_dir = ""
 
 # Create comparison boxplot for efficiency
 create_custom_boxplot(
-    efficiency_to_plot, labels_efficiency, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name=f"method_comparison_{name}"
+    efficiency_to_plot,
+    labels_efficiency,
+    y_lim_lower=0,
+    y_lim_upper=1.3,
+    fig_dir=fig_dir,
+    name=f"method_comparison_{name}",
 )
 
 # Create boxplot for stopping times
-create_stopping_times_boxplot(
-    stopping_times_to_plot, labels_stopping, fig_dir=fig_dir, name=f"stopping_times_{name}"
-)
+create_stopping_times_boxplot(stopping_times_to_plot, labels_stopping, fig_dir=fig_dir, name=f"stopping_times_{name}")

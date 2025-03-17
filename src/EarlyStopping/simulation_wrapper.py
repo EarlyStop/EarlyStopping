@@ -75,7 +75,7 @@ class SimulationData:
 
         response_noiseless = design @ true_signal
         return design, response_noiseless, true_signal
-    
+
     @staticmethod
     def beta_sparse(sample_size, power=3, factor=10):
         true_signal = 1 / (1 + np.arange(sample_size)) ** power
@@ -87,7 +87,7 @@ class SimulationData:
         response_noiseless = design @ true_signal
 
         return design, response_noiseless, true_signal
-    
+
     @staticmethod
     def s_sparse(sample_size=1000, s=[20, 40, 60], alpha=[1, 0.5, 0.25], factor=10):
         if (s == None) or (alpha == None):
@@ -104,7 +104,7 @@ class SimulationData:
             end = s[i]
             true_signal[start:end] = alpha[i]
             start = end  # Update start for the next segment
-            
+
         true_signal = factor * true_signal / np.sum(np.abs(true_signal))
 
         cov = np.identity(sample_size)
@@ -586,18 +586,18 @@ class SimulationWrapper:
         )
 
         column_names = [
-            "landweber_strong_empirical_risk_es",
-            "landweber_weak_empirical_risk_es",
-            "landweber_weak_relative_efficiency",
-            "landweber_strong_relative_efficiency",
-            "landweber_strong_bias2",
-            "landweber_strong_variance",
-            "landweber_strong_risk",
-            "landweber_weak_bias2",
-            "landweber_weak_variance",
-            "landweber_weak_risk",
-            "landweber_residuals",
-            "stopping_index_landweber",
+            "strong_empirical_risk_es",
+            "weak_empirical_risk_es",
+            "weak_relative_efficiency",
+            "strong_relative_efficiency",
+            "strong_bias2",
+            "strong_variance",
+            "strong_risk",
+            "weak_bias2",
+            "weak_variance",
+            "weak_risk",
+            "residuals",
+            "discrepancy_stop",
             "balanced_oracle_weak",
             "balanced_oracle_strong",
         ]
@@ -709,7 +709,7 @@ class SimulationWrapper:
             "risk_at_aic_time",
             "relative_efficiency_discrepancy",
             "relative_efficiency_residual_ratio",
-            "relative_efficiency_aic"
+            "relative_efficiency_aic",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -721,35 +721,33 @@ class SimulationWrapper:
 
     def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
-        model_L2_boost = L2_boost(
-            design      = self.design,
-            response    = self.response[:, m],
-            true_signal = self.true_signal
-        )
+        model_L2_boost = L2_boost(design=self.design, response=self.response[:, m], true_signal=self.true_signal)
 
         model_L2_boost.iterate(max_iteration)
 
-        bias2       = model_L2_boost.bias2
+        bias2 = model_L2_boost.bias2
         stoch_error = model_L2_boost.stoch_error
-        risk        = model_L2_boost.risk
-        residuals   = model_L2_boost.residuals
+        risk = model_L2_boost.risk
+        residuals = model_L2_boost.residuals
 
-        noise_estimate      = model_L2_boost.get_noise_estimate()
-        print(noise_estimate - np.mean((model_L2_boost.response - model_L2_boost.design @
-                                        model_L2_boost.true_signal)**2))
-        discrepancy_time    = model_L2_boost.get_discrepancy_stop(noise_estimate, max_iteration)
+        noise_estimate = model_L2_boost.get_noise_estimate()
+        print(
+            noise_estimate
+            - np.mean((model_L2_boost.response - model_L2_boost.design @ model_L2_boost.true_signal) ** 2)
+        )
+        discrepancy_time = model_L2_boost.get_discrepancy_stop(noise_estimate, max_iteration)
         residual_ratio_time = model_L2_boost.get_residual_ratio_stop(max_iteration)
-        balanced_oracle     = model_L2_boost.get_balanced_oracle(max_iteration)
-        aic_time            = model_L2_boost.get_aic_iteration()
+        balanced_oracle = model_L2_boost.get_balanced_oracle(max_iteration)
+        aic_time = model_L2_boost.get_aic_iteration()
 
-        risk_at_discrepancy_time    = risk[discrepancy_time]
-        risk_at_balanced_oracle     = risk[balanced_oracle]
+        risk_at_discrepancy_time = risk[discrepancy_time]
+        risk_at_balanced_oracle = risk[balanced_oracle]
         risk_at_residual_ratio_time = risk[residual_ratio_time]
-        risk_at_aic_time            = risk[aic_time]
+        risk_at_aic_time = risk[aic_time]
 
-        relative_efficiency_discrepancy    = np.sqrt(np.min(risk) / risk_at_discrepancy_time)
+        relative_efficiency_discrepancy = np.sqrt(np.min(risk) / risk_at_discrepancy_time)
         relative_efficiency_residual_ratio = np.sqrt(np.min(risk) / risk_at_residual_ratio_time)
-        relative_efficiency_aic            = np.sqrt(np.min(risk) / risk_at_aic_time)
+        relative_efficiency_aic = np.sqrt(np.min(risk) / risk_at_aic_time)
 
         return (
             bias2,
@@ -767,9 +765,8 @@ class SimulationWrapper:
             risk_at_aic_time,
             relative_efficiency_discrepancy,
             relative_efficiency_residual_ratio,
-            relative_efficiency_aic
+            relative_efficiency_aic,
         )
-        
 
     def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
@@ -855,17 +852,17 @@ class SimulationWrapper:
         )
 
         column_names = [
-            "conjugate_gradients_strong_empirical_oracle",
-            "conjugate_gradients_weak_empirical_oracle",
-            "conjugate_gradients_stopping_index",
-            "conjugate_gradients_strong_empirical_oracle_risk",
-            "conjugate_gradients_strong_empirical_stopping_index_risk",
-            "conjugate_gradients_weak_empirical_oracle_risk",
-            "conjugate_gradients_weak_empirical_stopping_index_risk",
-            "conjugate_gradients_squared_residual_at_stopping_index",
-            "conjugate_gradients_strong_relative_efficiency",
-            "conjugate_gradients_weak_relative_efficiency",
-            "conjugate_gradients_terminal_iteration",
+            "strong_empirical_oracle",
+            "weak_empirical_oracle",
+            "discrepancy_stop",
+            "strong_empirical_oracle_risk",
+            "strong_empirical_stopping_index_risk",
+            "weak_empirical_oracle_risk",
+            "weak_empirical_stopping_index_risk",
+            "squared_residual_at_stopping_index",
+            "strong_relative_efficiency",
+            "weak_relative_efficiency",
+            "terminal_iteration",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
