@@ -14,7 +14,7 @@ plt.rc('ytick', labelsize=15)
 importlib.reload(es)
 
 sample_size = 100
-max_iteration = 1000
+max_iteration = 100
 
 # design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=sample_size)
 design, response_noiseless, true_signal = es.SimulationData.phillips(sample_size=sample_size)
@@ -29,11 +29,11 @@ true_noise_level = 1 / 10
 noise = true_noise_level * np.random.normal(0, 1, sample_size)
 response = response_noiseless + noise
 
-model_gravity = es.Landweber(
-    design, response, learning_rate=1 / 100, true_signal=true_signal, true_noise_level=true_noise_level
-)
+# model_gravity = es.Landweber(
+#     design, response, learning_rate=1 / 100, true_signal=true_signal, true_noise_level=true_noise_level
+# )
 
-#model_gravity = es.TruncatedSVD(design, response, true_signal=true_signal, true_noise_level=true_noise_level)
+model_gravity = es.TruncatedSVD(design, response, true_signal=true_signal, true_noise_level=true_noise_level)
 
 
 model_gravity.iterate(max_iteration)
@@ -60,7 +60,7 @@ ax.plot(range(0, max_iteration + 1), model_gravity.strong_variance, color="red",
 ax.plot(range(0, max_iteration + 1), model_gravity.strong_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
 ax.axvline(x=m_gravity, ymin=0, ymax=0.6, color="green", linestyle="--", linewidth=1.5, label=r"$\tau$")
 ax.axvline(x=strong_oracle_gravity, ymin=0, ymax=0.6, color="orange", linestyle="--", linewidth=1.5, label=r"$t$ (oracle)")
-ax.set_xlim([0, 1000])
+ax.set_xlim([0, 20])
 ax.set_ylim([0, 0.5])
 ax.set_xlabel("Iteration $m$")
 ax.set_ylabel("Strong Quantities")
@@ -81,7 +81,7 @@ ax.plot(range(0, max_iteration + 1), model_gravity.weak_variance, color="red", l
 ax.plot(range(0, max_iteration + 1), model_gravity.weak_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
 ax.axvline(x=m_gravity, ymin=0, ymax=0.6, color="green", linestyle="--", linewidth=1.5, label=r"$\tau$")
 ax.axvline(x=weak_oracle_gravity, ymin=0, ymax=0.6, color="orange", linestyle="--", linewidth=1.5, label=r"$t$ (oracle)")
-ax.set_xlim([0, 1000])
+ax.set_xlim([0, 20])
 ax.set_ylim([0, 0.5])
 ax.set_xlabel("Iteration $m$")
 ax.set_ylabel("Weak Quantities")

@@ -7,6 +7,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
+from scipy.fft import fft, ifft
+
 import pandas as pd
 import os
 
@@ -126,9 +128,40 @@ plot_range = 10000
 x_indices = np.arange(1, plot_range + 1)
 
 # Plot Landweber estimate
-plt.plot(x_indices, landweber_estimate[:plot_range], color="purple", label='Landweber')
+plt.plot(x_indices, fft(landweber_estimate[:plot_range]), color="#CCCC00", label='Landweber')
 # Plot tSVD estimate
-plt.plot(x_indices, tsvd_estimate[:plot_range], color="#CCCC00", label='tSVD')
+plt.plot(x_indices, fft(tsvd_estimate[:plot_range]), color="purple", label='tSVD')
+# Plot Conjugate Gradient estimate
+plt.plot(x_indices, fft(cg_estimate[:plot_range]), color="blue", label='Conjugate Gradient')
+# Plot true signal
+plt.plot(x_indices, fft(true_signal[:plot_range]), color="black", label='True Signal')
+plt.tick_params(axis='both', which='major', labelsize=14)
+plt.yscale("log")
+
+# Add labels and title
+plt.xlabel('', fontsize=22)
+plt.ylabel('', fontsize=22)
+plt.ylim([0, 1000])
+plt.xlim([0, 1000])
+plt.grid(True)
+
+# Save the figure
+plt.tight_layout()
+plt.savefig(f'signal_estimation_comparison_fft_{signal_type}.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+# Visualization of Minimum Risk Estimates
+# ------------------------------------------------------------------------------
+plt.figure(figsize=(10, 6))
+
+# Plot only the first 1000 components for better visibility
+plot_range = 10000
+x_indices = np.arange(1, plot_range + 1)
+
+# Plot Landweber minimum risk estimate
+plt.plot(x_indices, landweber_estimate[:plot_range], color="#CCCC00", label='Landweber')
+# Plot tSVD estimate
+plt.plot(x_indices, tsvd_estimate[:plot_range], color="purple", label='tSVD')
 # Plot Conjugate Gradient estimate
 plt.plot(x_indices, cg_estimate[:plot_range], color="blue", label='Conjugate Gradient')
 # Plot true signal
@@ -145,34 +178,4 @@ plt.grid(True)
 # Save the figure
 plt.tight_layout()
 plt.savefig(f'signal_estimation_comparison_{signal_type}.png', dpi=300, bbox_inches='tight')
-plt.show()
-
-# Visualization of Minimum Risk Estimates
-# ------------------------------------------------------------------------------
-plt.figure(figsize=(10, 6))
-
-# Plot only the first 1000 components for better visibility
-plot_range = 10000
-x_indices = np.arange(1, plot_range + 1)
-
-# Plot Landweber minimum risk estimate
-plt.plot(x_indices, landweber_min_risk_estimate[:plot_range], color="purple", label='Landweber Min Risk')
-# Plot tSVD minimum risk estimate
-plt.plot(x_indices, tsvd_min_risk_estimate[:plot_range], color="#CCCC00", label='tSVD Min Risk')
-# Plot Conjugate Gradient minimum risk estimate
-plt.plot(x_indices, cg_min_risk_estimate[:plot_range], color="blue", label='Conjugate Gradient Min Risk')
-# Plot true signal
-plt.plot(x_indices, true_signal[:plot_range], color="black", label='True Signal')
-plt.tick_params(axis='both', which='major', labelsize=14)
-
-# Add labels and title
-plt.xlabel('', fontsize=22)
-plt.ylabel('', fontsize=22)
-plt.ylim([0, 1.6])
-plt.xlim([0, 1000])
-plt.grid(True)
-
-# Save the figure
-plt.tight_layout()
-plt.savefig(f'signal_estimation_min_risk_comparison_{signal_type}.png', dpi=300, bbox_inches='tight')
 plt.show()
