@@ -12,7 +12,7 @@ plt.rc('ytick', labelsize=15)
 index = np.arange(1, 125)
 alpha = 0.001
 variance = index * (2.0) * alpha
-# bias_1 = (1000 / (index) ** 0.5) * alpha
+#bias_1 = (1000 / (index) ** 0.5) * alpha
 bias_1 = 1000 * np.exp(-0.09 * index) * alpha
 risk_1 = bias_1 + variance
 # risk_2 = bias_2 + variance
@@ -33,7 +33,7 @@ ax.plot(index, variance, linewidth=2, color="red", label=r"$s_m$")
 ax.plot(index, risk_1, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
 ax.axvline(x=oracle, ymin=0, ymax=0.6, color="black", linestyle="--", linewidth=1.5)
 ax.text(oracle-2, 630 * alpha, r"$m^\mathfrak{o}(g^*)$", fontsize=14)
-ax.axvline(x=balanced_oracle, ymin=0, ymax=0.6, color="black", linestyle="--", linewidth=1.5)
+ax.axvline(x=balanced_oracle+1, ymin=0, ymax=0.6, color="black", linestyle="--", linewidth=1.5)
 ax.text(balanced_oracle - 4, 630 * alpha, r"$m^\mathfrak{b}(g^*)$", fontsize=14)
 
 # ax.plot(index, bias_2, color="blue", linestyle="--", linewidth=1.5, label=r"$a_m(f^*)$")
@@ -59,7 +59,7 @@ ax.set_xlabel("Iteration $m$")  # Remove x-axis label
 ax.set_ylabel("")  # Remove y-axis label
 
 # ax.set_xticks([])
-ax.tick_params(axis='y', length=0)
+# ax.tick_params(axis='y', length=0)
 # ax.set_yticklabels([])
 
 # Save figure

@@ -10,6 +10,7 @@ plt.rc('axes', titlesize=20)
 plt.rc('axes', labelsize=15)
 plt.rc('xtick', labelsize=15)
 plt.rc('ytick', labelsize=15)
+plt.tick_params(axis="both", which="major", labelsize=14)
 
 importlib.reload(es)
 
@@ -71,8 +72,10 @@ ax.set_ylim([0, 20])
 # ax.set_xlabel("Iteration $m$")
 # ax.set_ylabel("Strong Quantities")
 ax.grid(True)
-ax.tick_params(axis='y', length=0)
+
+# ax.tick_params(axis='y', length=0)
 plt.tight_layout()
+plt.tick_params(axis="both", which="major", labelsize=14)
 plt.savefig("demonstration_strong_quantities_plot.png", dpi=300, bbox_inches="tight")
 
 
@@ -99,6 +102,7 @@ ax.set_ylim([0, 1])
 # ax.set_xlabel("Iteration $m$")
 # ax.set_ylabel("Strong Quantities")
 ax.grid(True)
-ax.tick_params(axis='y', length=0)
+# ax.tick_params(axis='y', length=0)
 plt.tight_layout()
+plt.tick_params(axis="both", which="major", labelsize=14)
 plt.savefig("demonstration_weak_quantities_plot.png", dpi=300, bbox_inches="tight")

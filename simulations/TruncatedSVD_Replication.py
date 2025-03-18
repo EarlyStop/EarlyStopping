@@ -14,8 +14,8 @@ import os
 # ------------------------------------------------------------------------------
 # From G. Blanchard, M. Hoffmann, M. Reiß. "Early stopping for statistical inverse problems via
 # truncated SVD estimation". In: Electronic Journal of Statistics 12(2): 3204-3231 (2018).
-# sample_size  = 10000
-# indices      = np.arange(sample_size) + 1
+sample_size  = 10000
+indices      = np.arange(sample_size) + 1
 # eigenvalues  = indices**(-0.5)
 # design       = np.diag(eigenvalues)
 
@@ -153,7 +153,7 @@ plt.ylim([0, 1.6])
 # plt.xticks(ticks=range(1, len(labels) + 1), labels=labels)
 
 # **Add the main x-axis label**
-plt.xlabel(" ", fontsize=22)
+# plt.xlabel(" ", fontsize=22)
 
 
 # Add a single "weak" label beneath the first three x-tick labels
@@ -163,3 +163,4 @@ plt.xlabel(" ", fontsize=22)
 # plt.show()
 
 plt.savefig(os.path.join(fig_dir, f"signals.png"), bbox_inches="tight", dpi=300)
+print("saved the figure")
