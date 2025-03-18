@@ -600,6 +600,10 @@ class SimulationWrapper:
             "discrepancy_stop",
             "balanced_oracle_weak",
             "balanced_oracle_strong",
+            # "weak_classical_oracle",
+            # "strong_classical_oracle",
+            # "weak_empirical_oracle",
+            # "strong_empirical_oracle"
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -656,6 +660,8 @@ class SimulationWrapper:
             "strong_classical_oracle",
             "weak_relative_efficiency",
             "strong_relative_efficiency",
+            "weak_error_at_stopping_time",
+            "strong_error_at_stopping_time",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -726,6 +732,7 @@ class SimulationWrapper:
     def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_L2_boost = L2_boost(design=self.design, response=self.response[:, m], true_signal=self.true_signal)
+
 
         model_L2_boost.iterate(max_iteration)
 
@@ -837,6 +844,8 @@ class SimulationWrapper:
             strong_classical_oracle,
             weak_relative_efficiency,
             strong_relative_efficiency,
+            weak_error_at_stopping_time,
+            strong_error_at_stopping_time,
         )
 
     def run_simulation_conjugate_gradients(self, max_iteration, data_set_name=None):
@@ -967,6 +976,12 @@ class SimulationWrapper:
 
         landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
         landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
+
+        weak_classical_oracle = np.argmin(landweber_weak_risk)
+        strong_classical_oracle = np.argmin(landweber_strong_risk)
+        weak_empirical_oracle = np.argmin(model_landweber.weak_empirical_risk)
+        strong_empirical_oracle = np.argmin(model_landweber.strong_empirical_risk)
+
         landweber_weak_relative_efficiency = np.sqrt(
             np.min(model_landweber.weak_empirical_risk) / landweber_weak_empirical_risk_es
         )
@@ -989,6 +1004,10 @@ class SimulationWrapper:
             stopping_index_landweber,
             balanced_oracle_weak,
             balanced_oracle_strong,
+            # weak_classical_oracle,
+            # strong_classical_oracle,
+            # weak_empirical_oracle,
+            # strong_empirical_oracle
         )
 
     def monte_carlo_wrapper_conjugate_gradients(self, m, max_iteration):

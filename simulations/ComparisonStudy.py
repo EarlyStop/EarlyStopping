@@ -59,6 +59,15 @@ landweber_stopping_times = np.array(results_landweber["discrepancy_stop"])
 cg_stopping_times = np.array(results_cg["discrepancy_stop"])
 svd_stopping_times = np.array(results_svd["discrepancy_stop"])
 
+# Error at stopping time
+landweber_errors = np.array(results_landweber["strong_empirical_risk_es"])
+cg_errors = np.array(results_cg["strong_empirical_stopping_index_risk"])
+svd_errors = np.array(results_svd["strong_error_at_stopping_time"])
+
+# landweber_oracle = np.array(results_landweber["strong_empirical_oracle"])
+# cg_oracle = np.array(results_cg["strong_empirical_oracle"])
+# svd_oracle = np.array(results_svd["strong_classical_oracle"])
+
 # Prepare data for plotting
 efficiency_to_plot = [
     landweber_weak_efficiency,
@@ -72,6 +81,11 @@ efficiency_to_plot = [
 # Prepare stopping times for plotting
 stopping_times_to_plot = [landweber_stopping_times, cg_stopping_times, svd_stopping_times]
 
+# Prepare errors for plotting
+errors_to_plot = [landweber_errors, cg_errors, svd_errors]
+
+# Prepare oracles for plotting
+# oracles_to_plot = [landweber_oracle, cg_oracle, svd_oracle]
 
 def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name):
     plt.figure(figsize=(10, 6))
@@ -118,7 +132,7 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
     plt.show()
 
 
-def create_stopping_times_boxplot(data, labels, fig_dir, name):
+def create_log_boxplot(data, labels, fig_dir, name):
     plt.figure(figsize=(10, 6))
     bp = plt.boxplot(data, patch_artist=True, labels=labels)
 
@@ -142,7 +156,7 @@ def create_stopping_times_boxplot(data, labels, fig_dir, name):
     plt.grid(True)
 
     # Add y-axis label
-    plt.ylabel(r"$\tau$", fontsize=14)
+    # plt.ylabel(r"$\tau^{DP}$", fontsize=14)
 
     # Add norm type labels
     # plt.text(2, plt.ylim()[0] - 0.1, " ", ha="center", va="top", fontsize=14)
@@ -160,6 +174,7 @@ def create_stopping_times_boxplot(data, labels, fig_dir, name):
     plt.savefig(os.path.join(fig_dir, f"stopping_times_{name}.png"), bbox_inches="tight", dpi=300)
     plt.tight_layout()
     plt.show()
+
 
 
 # Labels for the efficiency boxplot
@@ -181,4 +196,6 @@ create_custom_boxplot(
 )
 
 # Create boxplot for stopping times
-create_stopping_times_boxplot(stopping_times_to_plot, labels_stopping, fig_dir=fig_dir, name=f"stopping_times_{name}")
+create_log_boxplot(stopping_times_to_plot, labels_stopping, fig_dir=fig_dir, name=f"stopping_times_{name}")
+create_log_boxplot(errors_to_plot, labels_stopping, fig_dir=fig_dir, name=f"errors_{name}")
+# create_log_boxplot(oracles_to_plot, labels_stopping, fig_dir=fig_dir, name=f"oracle_{name}")

@@ -128,7 +128,7 @@ plot_range = 10000
 x_indices = np.arange(1, plot_range + 1)
 
 # Plot Landweber estimate
-plt.plot(x_indices, fft(landweber_estimate[:plot_range]), color="#CCCC00", label='Landweber')
+plt.plot(x_indices, fft(landweber_estimate[:plot_range]), color="red", label='Landweber')
 # Plot tSVD estimate
 plt.plot(x_indices, fft(tsvd_estimate[:plot_range]), color="purple", label='tSVD')
 # Plot Conjugate Gradient estimate
@@ -136,13 +136,13 @@ plt.plot(x_indices, fft(cg_estimate[:plot_range]), color="blue", label='Conjugat
 # Plot true signal
 plt.plot(x_indices, fft(true_signal[:plot_range]), color="black", label='True Signal')
 plt.tick_params(axis='both', which='major', labelsize=14)
-plt.yscale("log")
+# plt.yscale("log")
 
 # Add labels and title
 plt.xlabel('', fontsize=22)
 plt.ylabel('', fontsize=22)
-plt.ylim([0, 1000])
-plt.xlim([0, 1000])
+plt.ylim([40, 100])
+plt.xlim([250, 1000])
 plt.grid(True)
 
 # Save the figure
@@ -159,7 +159,7 @@ plot_range = 10000
 x_indices = np.arange(1, plot_range + 1)
 
 # Plot Landweber minimum risk estimate
-plt.plot(x_indices, landweber_estimate[:plot_range], color="#CCCC00", label='Landweber')
+plt.plot(x_indices, landweber_estimate[:plot_range], color="red", label='Landweber')
 # Plot tSVD estimate
 plt.plot(x_indices, tsvd_estimate[:plot_range], color="purple", label='tSVD')
 # Plot Conjugate Gradient estimate
