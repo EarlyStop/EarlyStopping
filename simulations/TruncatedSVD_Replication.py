@@ -139,28 +139,3 @@ fig_dir = ""
 
 create_custom_boxplot(data, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="efficiency_SVD")
 
-
-# Signal plot:
-
-plt.figure(figsize=(10, 6))
-plt.plot(indices, true_signal_supersmooth, color="blue")
-plt.plot(indices, true_signal_smooth, color="purple")
-plt.plot(indices, true_signal_rough, color="#CCCC00")
-plt.grid(True)
-plt.tick_params(axis="both", which="major", labelsize=14)
-plt.ylim([0, 1.6])
-# Add sub-label "weak" beneath the first three x-axis labels
-# plt.xticks(ticks=range(1, len(labels) + 1), labels=labels)
-
-# **Add the main x-axis label**
-# plt.xlabel(" ", fontsize=22)
-
-
-# Add a single "weak" label beneath the first three x-tick labels
-# plt.text(2, plt.ylim()[0] - 0.1, '', ha='center', va='top', fontsize=14)
-# plt.text(5, plt.ylim()[0] - 0.1, '', ha='center', va='top', fontsize=14)
-
-# plt.show()
-
-plt.savefig(os.path.join(fig_dir, f"signals.png"), bbox_inches="tight", dpi=300)
-print("saved the figure")
