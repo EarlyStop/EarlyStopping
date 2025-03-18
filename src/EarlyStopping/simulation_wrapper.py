@@ -58,7 +58,148 @@ class SimulationData:
     +----------------------------------------------------+----------------------------------------------------------------------------------------------+
     | phillips(``sample_size``)                          | Create data based on the famous Phillips example                                             |
     +----------------------------------------------------+----------------------------------------------------------------------------------------------+
+    | additive_smooth(``sample_size``, ``noise_level``)  | Create data with a smooth additive model using sine, quadratic, linear, and exp.components   |
+    +----------------------------------------------------+----------------------------------------------------------------------------------------------+
+    | additive_step(``sample_size``, ``noise_level``)    | Create data with a stepwise additive model using piecewise constant functions                |
+    +----------------------------------------------------+----------------------------------------------------------------------------------------------+
+    | additive_linear(``sample_size``, ``noise_level``)  | Create data with a linear additive model using piecewise linear interpolation                |
+    +----------------------------------------------------+----------------------------------------------------------------------------------------------+
+    | additive_hills(``sample_size``, ``noise_level``)   | Create data with a hills additive model using sinusoidal components with varying frequencies |
+    +----------------------------------------------------+----------------------------------------------------------------------------------------------+
     """
+
+
+    @staticmethod
+    def additive_smooth(sample_size, noise_level):
+
+        noise = np.random.normal(0, noise_level, sample_size)
+        design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
+
+        true_signal = -2 * np.sin(2 * design[:,0]) + (0.8 * design[:,1]**2 - 2.5) + (design[:,2] - 1/2) + (np.exp(-0.65 * design[:,3]) - 2.5)
+        response = true_signal + noise
+
+        return design, response, true_signal
+    
+    @staticmethod   
+    def additive_hills(sample_size, noise_level):
+
+        def func_hills(x, split=0, vals=(1, 1, 10), rev=False):
+            ans = np.full(len(x), np.nan)
+            if not rev:
+                ans[x < split] = vals[0] + np.sin(vals[1] * x[x < split])
+                eps = (vals[1] / vals[2]) * np.cos(vals[1] * split) / np.cos(vals[2] * split)
+                delta = vals[0] + np.sin(vals[1] * split) - eps * np.sin(vals[2] * split)
+                ans[x >= split] = delta + eps * np.sin(vals[2] * x[x >= split])
+            else:
+                ans[x > split] = vals[0] + np.sin(vals[1] * x[x > split])
+                eps = (vals[1] / vals[2]) * np.cos(vals[1] * split) / np.cos(vals[2] * split)
+                delta = vals[0] + np.sin(vals[1] * split) - eps * np.sin(vals[2] * split)
+                ans[x <= split] = delta + eps * np.sin(vals[2] * x[x <= split])
+            return ans
+        
+        noise = np.random.normal(0, noise_level, sample_size)
+        design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
+
+        f1 = func_hills(design[:,0], 0, (1, 1, 12))
+        f2 = func_hills(design[:,1], 1, (1, 2, 8))
+        f3 = func_hills(design[:,2], -1, (0, 3, 15), rev=True)
+        f4 = func_hills(design[:,3], 1, (0, 2.5, 10), rev=True)
+        true_signal = f1 + f2 + f3 + f4
+
+        response = true_signal + noise
+
+        return design, response, true_signal 
+    
+    @staticmethod
+    def additive_linear(sample_size, noise_level):
+
+        def f1_lin(x):
+            knots = [-2.5, -2.3, 1, 2.5]  
+            values = [0.5, -2.5, 1.8, 2.3]
+            return np.interp(x, knots, values)
+
+        def f2_lin(x):
+            knots = [-2.5, -2, -1, 1, 2, 2.5]  
+            values = [-0.5, 2.5, 1, -0.5, -2.2, -2.3]
+            return np.interp(x, knots, values)
+
+        def f3_lin(x):
+            knots = [-2.5, -1.5, 0.5, 2.5]  
+            values = [0, -3, 2.5, -1]  
+            return np.interp(x, knots, values)
+
+        def f4_lin(x):
+            knots = [-2.5, -1.8, -0.5, 1.5, 1.8, 2.5]  
+            values = [-1, -3.8, -1, -2.3, -0.5, 0.8]
+            return np.interp(x, knots, values)
+
+
+        noise = np.random.normal(0, noise_level, sample_size)
+        design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
+
+        y1 = f1_lin(design[:,0])
+        y2 = f2_lin(design[:,1])
+        y3 = f3_lin(design[:,2])
+        y4 = f4_lin(design[:,3])
+        true_signal = y1 + y2 + y3 + y4
+        response = true_signal + noise
+
+
+        return design, response, true_signal 
+
+    @staticmethod   
+    def additive_step(sample_size, noise_level):
+
+        def func_step(X, knots, vals):
+            """Apply piecewise constant values based on knots."""
+            # Start with the last value for all x (assuming x > last knot)
+            y = np.full_like(X, vals[-1], dtype=float)
+
+            # Assign values for intervals defined by knots
+            for i in range(len(knots)):
+                if i == 0:
+                    y[X <= knots[i]] = vals[i]
+                else:
+                    y[(X > knots[i - 1]) & (X <= knots[i])] = vals[i]
+
+            return y
+        
+        def f1(X):
+            knots = [-2.3, -1.8, -0.5, 1.1]
+            vals = [-3, -2.5, -1, 1, 1.8]
+            return func_step(X, knots, vals)
+
+
+        def f2(X):
+            knots = [-2, -1, 1, 2]
+            vals = [3, 1.4, 0, -1.7, -1.8]
+            return func_step(X, knots, vals)
+
+
+        def f3(X):
+            knots = [-1.5, 0.5]
+            vals = [-3.3, 2.5, -1]
+            return func_step(X, knots, vals)
+
+
+        def f4(X):
+            knots = [-1.7, -0.4, 1.5, 1.9]
+            vals = [-2.8, 0.3, -1.4, 0.4, 1.8]
+            return func_step(X, knots, vals)
+    
+        noise = np.random.normal(0, noise_level, sample_size)
+        design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
+
+            # Apply functions
+        y1 = f1(design[:,0])
+        y2 = f2(design[:,1])
+        y3 = f3(design[:,2])
+        y4 = f4(design[:,3])
+
+        true_signal = y1 + y2 + y3 + y4
+        response = true_signal + noise        
+
+        return design, response, true_signal 
 
     @staticmethod
     def diagonal_data(sample_size, type="supersmooth"):

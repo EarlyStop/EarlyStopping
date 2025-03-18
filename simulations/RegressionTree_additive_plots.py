@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import os
 import RegressionTree_additive_generation as data_gen
 
-
 # Ensure consistent style
 plt.rc('axes', titlesize=20)
 plt.rc('axes', labelsize=15)
@@ -63,6 +62,8 @@ y1 = data_gen.f1(x)
 y2 = data_gen.f2(x)
 y3 = data_gen.f3(x)
 y4 = data_gen.f4(x)
+
+
 
 # Plotting
 fig, ax = plt.subplots(figsize=(10, 6))
