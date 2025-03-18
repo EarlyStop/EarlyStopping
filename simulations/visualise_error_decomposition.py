@@ -44,10 +44,10 @@ m_gravity = model_svd.get_discrepancy_stop(sample_size * (true_noise_level ** 2)
 
 print(m_gravity)
 # Weak balanced oracle
-weak_oracle_gravity = model_svd.get_weak_balanced_oracle(max_iteration)
+weak_oracle = model_svd.get_weak_balanced_oracle(max_iteration)
 
 # Strong balanced oracle
-strong_oracle_gravity = model_svd.get_strong_balanced_oracle(max_iteration)
+strong_oracle = model_svd.get_strong_balanced_oracle(max_iteration)
 
 print(len(model_svd.residuals))
 
@@ -65,7 +65,7 @@ ax.plot(range(0, max_iteration + 1), model_svd.strong_risk, color="black", linew
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
 
 ax.axvline(x=m_gravity, ymin=0, ymax=0.6, color="green", linestyle="--", linewidth=1.5, label=r"$\tau$")
-ax.axvline(x=strong_oracle_gravity, ymin=0, ymax=0.6, color="orange", linestyle="--", linewidth=1.5, label=r"$t$ (oracle)")
+ax.axvline(x=strong_oracle, ymin=0, ymax=0.6, color="orange", linestyle="--", linewidth=1.5, label=r"$t$ (oracle)")
 ax.set_xlim([0, 50])
 ax.set_ylim([0, 20])
 # ax.set_xlabel("Iteration $m$")
@@ -85,12 +85,15 @@ ax.plot(range(0, max_iteration + 1), model_svd.weak_bias2, color="blue", linewid
 ax.plot(range(0, max_iteration + 1), model_svd.weak_variance, color="red", linewidth=2, label=r"$s_m$")
 ax.plot(range(0, max_iteration + 1), model_svd.weak_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
 
+print(np.argmax(model_svd.weak_bias2 <= model_svd.weak_variance))
+print(model_svd.weak_bias2 <= model_svd.weak_variance)
+
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_bias2, color="blue", linewidth=1.5, label=r"$a_m(g^*)$")
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_variance, color="red", linewidth=2, label=r"$s_m$")
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
-
+print(weak_oracle)
 ax.axvline(x=m_gravity, ymin=0, ymax=0.6, color="green", linestyle="--", linewidth=1.5, label=r"$\tau$")
-ax.axvline(x=weak_oracle_gravity, ymin=0, ymax=0.6, color="orange", linestyle="--", linewidth=1.5, label=r"$t$ (oracle)")
+ax.axvline(x=weak_oracle, ymin=0, ymax=0.6, color="orange", linestyle="--", linewidth=1.5, label=r"$t$ (oracle)")
 ax.set_xlim([0, 50])
 ax.set_ylim([0, 1])
 # ax.set_xlabel("Iteration $m$")
