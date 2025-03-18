@@ -124,9 +124,8 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
     plt.text(2, plt.ylim()[0] - 0.1, "weak norm", ha="center", va="top", fontsize=14)
     plt.text(5, plt.ylim()[0] - 0.1, "strong norm", ha="center", va="top", fontsize=14)
 
-    plt.savefig(os.path.join(fig_dir, f"boxplot_{name}.png"), bbox_inches="tight", dpi=300)
-
     plt.tight_layout()  # Adjust layout
+    plt.savefig(os.path.join(fig_dir, f"boxplot_{name}.png"), bbox_inches="tight", dpi=300)
 
     # Show the plot
     plt.show()
