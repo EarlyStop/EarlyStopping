@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import RegressionTree_additive_generation as data_gen
-import EarlyStopping as es
 
 # Ensure consistent style
 plt.rc('axes', titlesize=20)
