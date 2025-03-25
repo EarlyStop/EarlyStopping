@@ -4,11 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EarlyStopping"
-version = "0.0.1"
+version = "0.0.3"
 authors = [
-  { name="Example Author", email="author@example.com" },
+  { name="Eric Ziebell", email="ziebelle@hu-berlin.de" },
+  { name="Ratmir Miftachov", email="miftachr@hu-berlin.de"},
+  { name="Bernhard Stankewitz", email="bstankewitz@posteo.de"},
+  { name="Laura Hucker", email="huckerla@hu-berlin.de"},
 ]
-description = "A small example package"
+description = "EarlyStopping: Implicit Regularisation for Iterative Learning Procedures in Python"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
