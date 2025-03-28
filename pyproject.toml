@@ -21,3 +21,5 @@ classifiers = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/EarlyStop/EarlyStopping"
+Documentation = "https://earlystop.github.io/EarlyStopping/"
