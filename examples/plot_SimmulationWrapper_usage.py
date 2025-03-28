@@ -28,7 +28,6 @@ parameters_smooth = es.SimulationParameters(
     design=design_smooth,
     true_signal=true_signal_smooth,
     true_noise_level=0.01,
-    max_iteration=1000,
     monte_carlo_runs=3,
     cores=3,
 )
@@ -39,7 +38,7 @@ parameters_smooth = es.SimulationParameters(
 # Since the parameter is not specified, the results will not be saved
 # and are simply returned as a pd.DataFrame.
 simulation_smooth = es.SimulationWrapper(**parameters_smooth.__dict__)
-simmulation_results = simulation_smooth.run_simulation_landweber()
+simmulation_results = simulation_smooth.run_simulation_landweber(max_iteration=1000)
 
 pd.set_option("display.max_rows", None, "display.max_columns", None)  # Display all rows and columns of the DataFrame
 print(simmulation_results)
