@@ -84,7 +84,7 @@ print("The classical oracle is given by", classical_oracle, "with risk =", alg.r
 
 fig = plt.figure(figsize=(10, 7))
 plt.plot(alg.bias2)
-plt.plot(alg.stoch_error)
+plt.plot(alg.stochastic_error)
 plt.plot(alg.residuals)
 plt.plot(alg.risk)
 plt.ylim((0, 1.5))
