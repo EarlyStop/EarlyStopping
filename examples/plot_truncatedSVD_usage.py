@@ -10,6 +10,7 @@ small example.
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.sparse import dia_matrix
 import EarlyStopping as es
 
 np.random.seed(42)
