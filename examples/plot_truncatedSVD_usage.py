@@ -41,7 +41,7 @@ plt.show()
 # We simulate data from a prototypical inverse problem based on one of the signals
 true_signal = signal_rough
 eigenvalues = indices ** (-0.5)
-design = np.diag(eigenvalues)
+design = dia_matrix(np.diag(eigenvalues))
 true_noise_level = 0.01
 response = eigenvalues * true_signal + true_noise_level * np.random.normal(0, 1, sample_size)
 
