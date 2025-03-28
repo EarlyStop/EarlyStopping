@@ -20,7 +20,7 @@ Recently, it has been shown for several regularisation methods that sequential e
 
         .. code-block:: bash
 
-            pip install -i https://test.pypi.org/simple/ EarlyStopping
+            pip install EarlyStoppingPy
 
     .. tab-item:: development
 
