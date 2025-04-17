@@ -6,14 +6,14 @@ import os
 import seaborn as sns
 
 # Ensure consistent style - using the style from error_decomposition_plots.py
-plt.rc('axes', titlesize=20)
-plt.rc('axes', labelsize=15)
-plt.rc('xtick', labelsize=15)
-plt.rc('ytick', labelsize=15)
+plt.rc("axes", titlesize=20)
+plt.rc("axes", labelsize=15)
+plt.rc("xtick", labelsize=15)
+plt.rc("ytick", labelsize=15)
 plt.tick_params(axis="both", which="major", labelsize=14)
 
 importlib.reload(es)
-
+plt.close()
 sample_size = 1000
 max_iteration = 200
 
@@ -21,7 +21,7 @@ max_iteration = 200
 # design, response_noiseless, true_signal = es.SimulationData.phillips(sample_size=sample_size)
 design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=sample_size, type="supersmooth")
 
-print(true_signal)
+# print(true_signal)
 
 # simulation = es.SimulationWrapper(**parameters.__dict__)
 # results = simulation.run_simulation_landweber(data_set_name = "gravity_simulation")
@@ -39,27 +39,28 @@ model_svd = es.TruncatedSVD(design, response, true_signal=true_signal, true_nois
 model_svd.iterate(max_iteration)
 
 
-
 # Stopping index
-m_gravity = model_svd.get_discrepancy_stop(sample_size * (true_noise_level ** 2), max_iteration)
+m_gravity = model_svd.get_discrepancy_stop(sample_size * (true_noise_level**2), max_iteration)
 
-print(m_gravity)
+# print(m_gravity)
 # Weak balanced oracle
 weak_oracle = model_svd.get_weak_balanced_oracle(max_iteration)
 
 # Strong balanced oracle
 strong_oracle = model_svd.get_strong_balanced_oracle(max_iteration)
 
-print(len(model_svd.residuals))
+# print(len(model_svd.residuals))
 
 # Create separate figure for Strong Quantities
 fig, ax = plt.subplots(figsize=(10, 6))
-fig.patch.set_facecolor('white')
+fig.patch.set_facecolor("white")
 
 # Plot elements with matching colors and styles
 ax.plot(range(0, max_iteration + 1), model_svd.strong_bias2, color="blue", linewidth=1.5, label=r"$a_m(g^*)$")
 ax.plot(range(0, max_iteration + 1), model_svd.strong_variance, color="red", linewidth=2, label=r"$s_m$")
-ax.plot(range(0, max_iteration + 1), model_svd.strong_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
+ax.plot(
+    range(0, max_iteration + 1), model_svd.strong_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$"
+)
 
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_bias2, color="blue", linewidth=1.5, label=r"$a_m(g^*)$")
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_variance, color="red", linewidth=2, label=r"$s_m$")
@@ -78,18 +79,19 @@ plt.tight_layout()
 plt.tick_params(axis="both", which="major", labelsize=14)
 plt.savefig("demonstration_strong_quantities_plot.png", dpi=300, bbox_inches="tight")
 
+plt.show()
 
 # Create separate figure for Strong Quantities
 fig, ax = plt.subplots(figsize=(10, 6))
-fig.patch.set_facecolor('white')
+fig.patch.set_facecolor("white")
 
 # Plot elements with matching colors and styles
 ax.plot(range(0, max_iteration + 1), model_svd.weak_bias2, color="blue", linewidth=1.5, label=r"$a_m(g^*)$")
 ax.plot(range(0, max_iteration + 1), model_svd.weak_variance, color="red", linewidth=2, label=r"$s_m$")
 ax.plot(range(0, max_iteration + 1), model_svd.weak_risk, color="black", linewidth=1.5, label=r"$\mathcal{R}(g^*, m)$")
 
-print(np.argmax(model_svd.weak_bias2 <= model_svd.weak_variance))
-print(model_svd.weak_bias2 <= model_svd.weak_variance)
+# print(np.argmax(model_svd.weak_bias2 <= model_svd.weak_variance))
+# print(model_svd.weak_bias2 <= model_svd.weak_variance)
 
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_bias2, color="blue", linewidth=1.5, label=r"$a_m(g^*)$")
 # ax.plot(range(0, max_iteration + 1), model_landweber.strong_variance, color="red", linewidth=2, label=r"$s_m$")
@@ -106,3 +108,4 @@ ax.grid(True)
 plt.tight_layout()
 plt.tick_params(axis="both", which="major", labelsize=14)
 plt.savefig("demonstration_weak_quantities_plot.png", dpi=300, bbox_inches="tight")
+plt.show()

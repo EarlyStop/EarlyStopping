@@ -5,16 +5,16 @@ import pandas as pd
 import os
 
 
-plt.rc('axes', titlesize=20)
-plt.rc('axes', labelsize=15)
-plt.rc('xtick', labelsize=15)
-plt.rc('ytick', labelsize=15)
+plt.rc("axes", titlesize=20)
+plt.rc("axes", labelsize=15)
+plt.rc("xtick", labelsize=15)
+plt.rc("ytick", labelsize=15)
 # Signals and design
 # ------------------------------------------------------------------------------
 # From G. Blanchard, M. Hoffmann, M. Reiß. "Early stopping for statistical inverse problems via
 # truncated SVD estimation". In: Electronic Journal of Statistics 12(2): 3204-3231 (2018).
-sample_size  = 10000
-indices      = np.arange(sample_size) + 1
+sample_size = 10000
+indices = np.arange(sample_size) + 1
 # eigenvalues  = indices**(-0.5)
 # design       = np.diag(eigenvalues)
 
@@ -49,4 +49,4 @@ plt.text(5, plt.ylim()[0] - 0.1, " ", ha="center", va="top", fontsize=14)
 fig_dir = ""
 plt.tight_layout()
 plt.savefig(os.path.join(fig_dir, f"signals_new.png"), bbox_inches="tight", dpi=300)
-print("saved the figure")
+plt.show()
