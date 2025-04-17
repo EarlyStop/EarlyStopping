@@ -27,6 +27,7 @@ dependencies = [
     "scikit-learn==1.4.0",
     "scipy==1.10.1",
     "seaborn==0.13.2",
+    "setuptools>=61.0",
 ]
 
 [project.urls]
