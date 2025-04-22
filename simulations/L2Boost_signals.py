@@ -7,8 +7,8 @@ import os
 sample_size = 1000
 para_size = 1000
 
-cov    = np.identity(para_size)
-sigma  = np.sqrt(1)
+cov = np.identity(para_size)
+sigma = np.sqrt(1)
 design = np.random.multivariate_normal(np.zeros(para_size), cov, sample_size)
 
 # Gamma-sparse signals
@@ -45,18 +45,18 @@ plot_range = 100
 x_indices = np.arange(1, plot_range + 1)
 
 # Plot Landweber estimate
-plt.plot(x_indices, beta_3[:plot_range], color="purple", label='Landweber', linewidth=1.5)
+plt.plot(x_indices, beta_3[:plot_range], color="purple", linewidth=1.5)
 # Plot tSVD estimate
-plt.plot(x_indices, beta_2[:plot_range], color="#CCCC00", label='tSVD', linewidth=1.5)
+plt.plot(x_indices, beta_2[:plot_range], color="#CCCC00", linewidth=1.5)
 # Plot Conjugate Gradient estimate
-plt.plot(x_indices, beta_1[:plot_range], color="blue", label='Conjugate Gradient', linewidth=1.5)
+plt.plot(x_indices, beta_1[:plot_range], color="blue", linewidth=1.5)
 # Plot true signal
-#plt.plot(x_indices, true_signal[:plot_range], color="black", label='True Signal')
-plt.tick_params(axis='both', which='major', labelsize=14)
+# plt.plot(x_indices, true_signal[:plot_range], color="black", label='True Signal')
+plt.tick_params(axis="both", which="major", labelsize=14)
 
 # Add labels and title
-plt.xlabel('', fontsize=22)
-plt.ylabel('', fontsize=22)
+plt.xlabel("", fontsize=22)
+plt.ylabel("", fontsize=22)
 plt.ylim([0, 1])
 plt.xlim([0, plot_range])
 plt.grid(True)
@@ -64,5 +64,35 @@ plt.grid(True)
 plt.tick_params(axis="both", which="major", labelsize=14)
 # Save the figure
 plt.tight_layout()
-plt.savefig(f'boosting_signals.png', dpi=300, bbox_inches='tight')
+plt.savefig(f"boosting_signals.png", dpi=300, bbox_inches="tight")
+plt.show()
+
+
+plt.figure(figsize=(10, 6))
+
+# Plot only the first 1000 components for better visibility
+plot_range = 100
+x_indices = np.arange(1, plot_range + 1)
+
+# Plot Landweber estimate
+plt.plot(x_indices, beta_90[:plot_range], color="purple", linewidth=1.5)
+# Plot tSVD estimate
+plt.plot(x_indices, beta_60[:plot_range], color="#CCCC00", linewidth=1.5)
+# Plot Conjugate Gradient estimate
+plt.plot(x_indices, beta_15[:plot_range], color="blue", linewidth=1.5)
+# Plot true signal
+# plt.plot(x_indices, true_signal[:plot_range], color="black", label='True Signal')
+plt.tick_params(axis="both", which="major", labelsize=14)
+
+# Add labels and title
+plt.xlabel("", fontsize=22)
+plt.ylabel("", fontsize=22)
+plt.ylim([0, 1])
+plt.xlim([0, plot_range])
+plt.grid(True)
+
+plt.tick_params(axis="both", which="major", labelsize=14)
+# Save the figure
+plt.tight_layout()
+plt.savefig(f"boosting_signals.png", dpi=300, bbox_inches="tight")
 plt.show()
