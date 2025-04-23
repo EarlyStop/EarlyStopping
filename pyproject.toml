@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EarlyStoppingPy"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Eric Ziebell", email="ziebelle@hu-berlin.de" },
   { name="Ratmir Miftachov", email="miftachr@hu-berlin.de"},
