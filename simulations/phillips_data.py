@@ -16,10 +16,7 @@ importlib.reload(es)
 sample_size = 100
 max_iteration = 10000
 
-# design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=sample_size)
 design, response_noiseless, true_signal = es.SimulationData.phillips(sample_size=sample_size)
-# design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=sample_size, type="smooth")
-
 
 # Define a consistent colormap for both heatmaps
 colormap = "viridis"

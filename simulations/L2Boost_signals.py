@@ -1,8 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import EarlyStopping as es
-import pandas as pd
-import os
 
 sample_size = 1000
 para_size = 1000
@@ -51,7 +48,6 @@ plt.plot(x_indices, beta_2[:plot_range], color="#CCCC00", linewidth=1.5)
 # Plot Conjugate Gradient estimate
 plt.plot(x_indices, beta_1[:plot_range], color="blue", linewidth=1.5)
 # Plot true signal
-# plt.plot(x_indices, true_signal[:plot_range], color="black", label='True Signal')
 plt.tick_params(axis="both", which="major", labelsize=14)
 
 # Add labels and title
@@ -81,7 +77,6 @@ plt.plot(x_indices, beta_60[:plot_range], color="#CCCC00", linewidth=1.5)
 # Plot Conjugate Gradient estimate
 plt.plot(x_indices, beta_15[:plot_range], color="blue", linewidth=1.5)
 # Plot true signal
-# plt.plot(x_indices, true_signal[:plot_range], color="black", label='True Signal')
 plt.tick_params(axis="both", which="major", labelsize=14)
 
 # Add labels and title

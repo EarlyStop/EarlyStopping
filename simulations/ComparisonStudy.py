@@ -17,9 +17,6 @@ elif name == "gravity":
     # Generate data using the Gravity example
     design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=100, d=0.2)
 
-
-# design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=100, type="rough")
-
 # Define simulation parameters
 parameters = es.SimulationParameters(
     design=design, true_signal=true_signal, true_noise_level=0.1, monte_carlo_runs=100, cores=12  # 0.01,
@@ -149,12 +146,6 @@ def create_log_boxplot(data, labels, fig_dir, name):
     # Enable gridlines
     plt.grid(True)
 
-    # Add y-axis label
-    # plt.ylabel(r"$\tau^{DP}$", fontsize=14)
-
-    # Add norm type labels
-    # plt.text(2, plt.ylim()[0] - 0.1, " ", ha="center", va="top", fontsize=14)
-    # plt.text(5, plt.ylim()[0] - 0.1, " ", ha="center", va="top", fontsize=14)
 
     # Customize tick labels and layout
     plt.tick_params(axis="both", which="major", labelsize=14)

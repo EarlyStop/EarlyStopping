@@ -6,9 +6,7 @@ import numpy as np
 import importlib
 import EarlyStopping as es
 import matplotlib.pyplot as plt
-from scipy.sparse import dia_matrix
 import os
-import pandas as pd
 
 importlib.reload(es)
 
@@ -22,11 +20,6 @@ design_rough, response_noiseless_rough, true_signal_rough = es.SimulationData.di
     sample_size=10000, type="rough"
 )
 
-# design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=100)
-# design, response_noiseless, true_signal = es.SimulationData.heat(sample_size=100)
-# design, response_noiseless, true_signal = es.SimulationData.deriv2(sample_size=100)
-# design, response_noiseless, true_signal = es.SimulationData.phillips(sample_size=100)
-
 parameters_smooth = es.SimulationParameters(
     design=design_smooth, true_signal=true_signal_smooth, true_noise_level=0.01, monte_carlo_runs=10, cores=12
 )
@@ -35,7 +28,7 @@ parameters_supersmooth = es.SimulationParameters(
     design=design_supersmooth,
     true_signal=true_signal_supersmooth,
     true_noise_level=0.01,
-    monte_carlo_runs=500,  # 500
+    monte_carlo_runs=500,
     cores=12,
 )
 
@@ -117,7 +110,7 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
     # Enable gridlines
     plt.grid(True)
 
-    # Set y-axis limits (can adjust based on your data)
+    # Set y-axis limits
     plt.ylim(y_lim_lower, y_lim_upper)
 
     # Customize tick labels and layout
@@ -132,7 +125,7 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
 
     plt.savefig(os.path.join(fig_dir, f"boxplot_{name}.png"), bbox_inches="tight", dpi=300)
 
-    plt.tight_layout()  # Adjust layout
+    plt.tight_layout()
 
     # Show the plot
     plt.show()

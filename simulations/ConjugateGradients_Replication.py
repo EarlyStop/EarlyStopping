@@ -46,8 +46,6 @@ results_supersmooth = simulation_supersmooth.run_simulation_conjugate_gradients(
 results_rough = simulation_rough.run_simulation_conjugate_gradients(max_iteration=2000)
 
 # Extract strong relative efficiencies
-
-
 strong_relative_efficiency_smooth = np.array(results_smooth["strong_relative_efficiency"])
 strong_relative_efficiency_supersmooth = np.array(results_supersmooth["strong_relative_efficiency"])
 strong_relative_efficiency_rough = np.array(results_rough["strong_relative_efficiency"])

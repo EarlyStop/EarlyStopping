@@ -16,13 +16,6 @@ import os
 # truncated SVD estimation". In: Electronic Journal of Statistics 12(2): 3204-3231 (2018).
 sample_size  = 10000
 indices      = np.arange(sample_size) + 1
-# eigenvalues  = indices**(-0.5)
-# design       = np.diag(eigenvalues)
-
-# true_signal_supersmooth = 5    * np.exp(-0.1 * indices)
-# true_signal_smooth      = 5000 * np.abs(np.sin(0.01  * indices))  * indices**(-1.6)
-# true_signal_rough       = 250  * np.abs(np.sin(0.002 * indices))  * indices**(-0.8)
-
 
 design, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(
     sample_size=10000, type="smooth"
@@ -111,7 +104,7 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
     # Enable gridlines
     plt.grid(True)
 
-    # Set y-axis limits (can adjust based on your data)
+    # Set y-axis limits
     plt.ylim(y_lim_lower, y_lim_upper)
 
     # Customize tick labels and layout
@@ -124,7 +117,7 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
     plt.text(2, plt.ylim()[0] - 0.1, "weak norm", ha="center", va="top", fontsize=14)
     plt.text(5, plt.ylim()[0] - 0.1, "strong norm", ha="center", va="top", fontsize=14)
 
-    plt.tight_layout()  # Adjust layout
+    plt.tight_layout()
     plt.savefig(os.path.join(fig_dir, f"boxplot_{name}.png"), bbox_inches="tight", dpi=300)
 
     # Show the plot

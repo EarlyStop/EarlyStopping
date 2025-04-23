@@ -7,10 +7,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
-from scipy.fft import fft, ifft
+from scipy.fft import fft
 
-import pandas as pd
-import os
 
 # Generate signals and design matrix
 # ------------------------------------------------------------------------------

@@ -2,10 +2,7 @@ import numpy as np
 import importlib
 import EarlyStopping as es
 import matplotlib.pyplot as plt
-import os
-import seaborn as sns
 
-# Ensure consistent style - using the style from error_decomposition_plots.py
 plt.rc("axes", titlesize=20)
 plt.rc("axes", labelsize=15)
 plt.rc("xtick", labelsize=15)
@@ -16,14 +13,7 @@ importlib.reload(es)
 sample_size = 100
 max_iteration = 10000
 
-# design, response_noiseless, true_signal = es.SimulationData.gravity(sample_size=sample_size)
 design, response_noiseless, true_signal = es.SimulationData.phillips(sample_size=sample_size)
-# design, response_noiseless, true_signal = es.SimulationData.diagonal_data(sample_size=sample_size, type="smooth")
-
-print(true_signal)
-
-# simulation = es.SimulationWrapper(**parameters.__dict__)
-# results = simulation.run_simulation_landweber(data_set_name = "gravity_simulation")
 
 true_noise_level = 1 / 10
 noise = true_noise_level * np.random.normal(0, 1, sample_size)
@@ -39,14 +29,11 @@ model.iterate(max_iteration)
 # Stopping index
 m_gravity = model.get_discrepancy_stop(sample_size * (true_noise_level**2), max_iteration)
 
-print(m_gravity)
 # Weak balanced oracle
 weak_oracle_gravity = model.get_weak_balanced_oracle(max_iteration)
 
 # Strong balanced oracle
 strong_oracle_gravity = model.get_strong_balanced_oracle(max_iteration)
-
-print(len(model.residuals))
 
 # Create separate figure for Strong Quantities
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -62,14 +49,10 @@ ax.axvline(
 )
 ax.set_xlim([0, 400])
 ax.set_ylim([0, 0.5])
-# ax.set_xlabel("Iteration $m$")
-# ax.set_ylabel("Strong Quantities")
 ax.grid(True)
 ax.tick_params(axis="y", length=0)
 plt.tight_layout()
 plt.savefig("strong_quantities_plot.png", dpi=300, bbox_inches="tight")
-
-print(model.weak_variance)
 
 # Create separate figure for Weak Quantities
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -85,8 +68,6 @@ ax.axvline(
 )
 ax.set_xlim([0, 400])
 ax.set_ylim([0, 0.5])
-# ax.set_xlabel("Iteration $m$")
-# ax.set_ylabel("Weak Quantities")
 ax.grid(True)
 ax.tick_params(axis="y", length=0)
 plt.tight_layout()

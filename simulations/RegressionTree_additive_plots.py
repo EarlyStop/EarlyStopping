@@ -12,7 +12,6 @@ plt.rc('ytick', labelsize=15)
 
 def func_step(x, knots, vals):
     """Apply piecewise constant values based on knots."""
-    # Start with the last value for all x (assuming x > last knot)
     y = np.full_like(x, vals[-1], dtype=float)
 
     # Assign values for intervals defined by knots
@@ -54,7 +53,6 @@ def f4(x):
 x = np.linspace(-2.5, 2.5, 400)
 
 # Create a 2D array where each column is the same x values
-# This is needed because the functions in data_gen expect a 2D array
 X = np.column_stack([x, x, x, x])
 
 # Plot 1: Piecewise constant functions
@@ -131,22 +129,18 @@ plt.show()
 x_single = np.zeros((400, 4))
 x_single[:, 0] = x  # Set first column to x values
 
-# Function 1: -2 * np.sin(2 * X[:,0])
 f1_smooth = -2 * np.sin(2 * x)
 
 # Set second column to x values for function 2
 x_single[:, 1] = x
-# Function 2: (0.8 * X[:,1]**2 - 2.5)
 f2_smooth = 0.8 * x**2 - 2.5
 
 # Set third column to x values for function 3
 x_single[:, 2] = x
-# Function 3: (X[:,2] - 1/2)
 f3_smooth = x - 1/2
 
 # Set fourth column to x values for function 4
 x_single[:, 3] = x
-# Function 4: (np.exp(-0.65 * X[:,3]) - 2.5)
 f4_smooth = np.exp(-0.65 * x) - 2.5
 
 # Plotting

@@ -233,10 +233,8 @@ relative_efficiency_two_step_residual_ratio_stop_beta_1 = results_beta_1["relati
 
 
 aic_beta_60 = results_beta_60["aic_time"]
-print(aic_beta_60)
 
 dp_time_beta_60 = results_beta_60["discrepancy_time"]
-print(dp_time_beta_60)
 
 relative_efficiency_aic_beta_15 = results_beta_15["relative_efficiency_aic"]
 relative_efficiency_two_step_discrepancy_stop_beta_15 = results_beta_15["relative_efficiency_two_step_discrepancy_stop"]
