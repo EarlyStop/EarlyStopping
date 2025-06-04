@@ -54,6 +54,10 @@ Recently, it has been shown for several regularisation methods that sequential e
         **References**
         ^^^
 
+        - `EarlyStopping: Implicit Regularization for Iterative Learning Procedures in Python`<https://arxiv.org/pdf/2503.16753>`_.
+
+          - E. Ziebell, R. Miftachov, B. Stankewitz, L. Hucker
+
         - `Early stopping for statistical inverse problems via truncated SVD estimation <https://projecteuclid.org/journals/electronic-journal-of-statistics/volume-12/issue-2/Early-stopping-for-statistical-inverse-problems-via-truncated-SVD-estimation/10.1214/18-EJS1482.full>`_.
 
           - G. Blanchard, M. Hoffmann, M. Reiß. In *Electronic Journal of Statistics* 12(2): 3204-3231 (2018).
