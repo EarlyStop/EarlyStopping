@@ -54,7 +54,7 @@ Recently, it has been shown for several regularisation methods that sequential e
         **References**
         ^^^
 
-        - `EarlyStopping: Implicit Regularization for Iterative Learning Procedures in Python`<https://arxiv.org/pdf/2503.16753>`_.
+        - `EarlyStopping: Implicit Regularization for Iterative Learning Procedures in Python <https://arxiv.org/pdf/2503.16753>`_.
 
           - E. Ziebell, R. Miftachov, B. Stankewitz, L. Hucker
 
