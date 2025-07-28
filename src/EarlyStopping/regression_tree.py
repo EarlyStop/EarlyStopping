@@ -4,6 +4,7 @@ import pandas as pd
 from queue import Queue
 import warnings
 
+
 class RegressionTree:
     """
     A class for constructing a regression tree and computing theoretical quantities.
@@ -53,6 +54,7 @@ class RegressionTree:
         """
         A class representing a node of the regression tree.
         """
+
         def __init__(self):
             self.split_threshold = None
             self.variable = None
@@ -62,16 +64,13 @@ class RegressionTree:
             self.node_prediction = None
 
         def set_params(self, split_threshold: float, variable: int) -> None:
-            """ Set splitting observation and splitting variable for this node. """
+            """Set splitting observation and splitting variable for this node."""
             self.split_threshold = split_threshold
             self.variable = variable
 
-    def __init__(self,
-                 design: np.array,
-                 response: np.array,
-                 min_samples_split,
-                 true_signal = None,
-                 true_noise_vector = None):
+    def __init__(
+        self, design: np.array, response: np.array, min_samples_split, true_signal=None, true_noise_vector=None
+    ):
 
         self.true_signal = true_signal
         self.minimal_samples_split = min_samples_split
@@ -81,7 +80,61 @@ class RegressionTree:
         self.sample_size = self.design.shape[0]
         self.dimension = self.design.shape[1]
 
+    def __str__(self):
+        """Return a string representation of the RegressionTree model"""
+        lines = []
+        lines.append("RegressionTree class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.sample_size} × {self.dimension}")
+        lines.append(f"Min samples split: {self.minimal_samples_split}")
 
+        # Check if tree has been grown
+        if hasattr(self, "residuals") and self.residuals.size > 0:
+            lines.append(f"Tree depth: {len(self.residuals)}")
+            lines.append(f"Current residual: {self.residuals[-1]:.6f}")
+        else:
+            lines.append("Tree depth: Not grown yet")
+
+        # Check if theoretical quantities are available
+        has_theoretical = (self.true_signal is not None) and (self.true_noise_vector is not None)
+        lines.append(f"Theoretical quantities available: {'Yes' if has_theoretical else 'No'}")
+
+        if has_theoretical and hasattr(self, "bias2") and self.bias2.size > 0:
+            lines.append(f"Current bias²: {self.bias2[-1]:.6f}")
+            lines.append(f"Current variance: {self.variance[-1]:.6f}")
+            lines.append(f"Current risk: {self.risk[-1]:.6f}")
+
+        return "\n".join(lines)
+
+    def __repr__(self):
+        """Return a technical representation of the RegressionTree model"""
+        has_theoretical = (self.true_signal is not None) and (self.true_noise_vector is not None)
+
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.sample_size}x{self.dimension})",
+            f"response=array({self.sample_size},)",
+            f"min_samples_split={self.minimal_samples_split}",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_vector={'array' if self.true_noise_vector is not None else 'None'}",
+        ]
+
+        base_repr = f"RegressionTree({', '.join(args)})"
+
+        # Add current state information
+        state_info = ""
+        if hasattr(self, "residuals") and self.residuals.size > 0:
+            state_info += f" [depth={len(self.residuals)}"
+            state_info += f", residual={self.residuals[-1]:.6f}"
+            if has_theoretical and hasattr(self, "bias2") and self.bias2.size > 0:
+                state_info += f", bias2={self.bias2[-1]:.6f}"
+                state_info += f", variance={self.variance[-1]:.6f}"
+                state_info += f", risk={self.risk[-1]:.6f}"
+            state_info += "]"
+        else:
+            state_info = " [not_grown]"
+
+        return base_repr + state_info
 
     def iterate(self, max_depth: int = None):
         """
@@ -104,7 +157,7 @@ class RegressionTree:
         # Initialize root node of the tree
         self.regression_tree = self.Node()
         self.queue = Queue()
-        self.queue.put((self.regression_tree, np.arange(self.sample_size), 1)) # start with level 1
+        self.queue.put((self.regression_tree, np.arange(self.sample_size), 1))  # start with level 1
         self.terminal_indices = {}
 
         # Process all nodes at the current level (= perform 'one iteration'):
@@ -117,7 +170,7 @@ class RegressionTree:
         Grows one iteration of the regression tree using a breadth-first approach.
         """
 
-        #Initialize:
+        # Initialize:
         level_mse_sum = 0
         level_node_count = 0
         next_level_queue = Queue()
@@ -144,7 +197,9 @@ class RegressionTree:
                 continue
 
             else:
-                split_variable, split_value, left_indices, right_indices = self._find_best_split_parent(indices=parent_indices)
+                split_variable, split_value, left_indices, right_indices = self._find_best_split_parent(
+                    indices=parent_indices
+                )
 
                 # ILeft and right child node
                 self.node.left_child = self.Node()
@@ -172,12 +227,10 @@ class RegressionTree:
                         self.terminal_indices[level] = []
                     self.terminal_indices[level].append(right_indices)
 
-
         # Update the residuals, theoretical quantities, and queue for the next level
         self.residuals = np.append(self.residuals, level_mse_sum)
         self._update_theoretical_quantities(current_level_observations, level)
         self.queue = next_level_queue
-
 
     def _find_best_split_parent(self, indices):
         """
@@ -201,9 +254,9 @@ class RegressionTree:
                 if len(left_node_indices) == 0 or len(right_node_indices) == 0:
                     continue
                 impurity = (
-                            len(self.design[left_node_indices]) * self._impurity(left_node_indices)
-                            + len(self.design[right_node_indices]) * self._impurity(right_node_indices)
-                           ) / self.sample_size
+                    len(self.design[left_node_indices]) * self._impurity(left_node_indices)
+                    + len(self.design[right_node_indices]) * self._impurity(right_node_indices)
+                ) / self.sample_size
 
                 # Update the impurity and choice of variable/split
                 if impurity < best_impurity:
@@ -275,31 +328,33 @@ class RegressionTree:
         self._block_matrix_processing(current_level_observations, level)
         if self.true_signal is not None and self.true_noise_vector is not None:
             if self.block_matrix[level].shape[0] == self.sample_size:
-                self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_processed[level],
-                                                                                self.block_matrix[level])
+                self.new_bias2, self.new_variance = self._get_bias_and_variance(
+                    self.indices_processed[level], self.block_matrix[level]
+                )
                 self.bias2 = np.append(self.bias2, self.new_bias2)
                 self.variance = np.append(self.variance, self.new_variance)
                 self.new_risk = self.new_bias2 + self.new_variance
                 self.risk = np.append(self.risk, self.new_risk)
 
             else:
-                self.new_bias2, self.new_variance = self._get_bias_and_variance(self.indices_complete,
-                                                                                self.block_matrices_full[level])
+                self.new_bias2, self.new_variance = self._get_bias_and_variance(
+                    self.indices_complete, self.block_matrices_full[level]
+                )
                 self.bias2 = np.append(self.bias2, self.new_bias2)
                 self.variance = np.append(self.variance, self.new_variance)
                 self.new_risk = self.new_bias2 + self.new_variance
                 self.risk = np.append(self.risk, self.new_risk)
 
-    def get_discrepancy_stop(self, critical_value, max_depth = None):
+    def get_discrepancy_stop(self, critical_value, max_depth=None):
         """
-         Finds the first generation where the discrepancy principle is met.
+        Finds the first generation where the discrepancy principle is met.
 
-         **Parameters**
+        **Parameters**
 
-         *critical_value*: ``float``. Threshold for discrepancy-based stopping.
+        *critical_value*: ``float``. Threshold for discrepancy-based stopping.
 
-         *max_depth*: ``None``. Maximum depth for the tree if it has not been grown yet.
-         """
+        *max_depth*: ``None``. Maximum depth for the tree if it has not been grown yet.
+        """
 
         # If no iteration done before, grow the tree until max_depth
         if self.residuals.size == 0:
@@ -315,7 +370,7 @@ class RegressionTree:
             warnings.warn("Early stopping index not found. Returning None.", category=UserWarning)
             return None
 
-    def get_balanced_oracle(self, max_depth = None):
+    def get_balanced_oracle(self, max_depth=None):
         """
         Computes the balanced oracle iteration based on the bias and variance.
 
@@ -336,9 +391,7 @@ class RegressionTree:
             return balanced_oracle
 
         else:
-            warnings.warn(
-                "Balanced oracle not found. Returning None.", category=UserWarning
-            )
+            warnings.warn("Balanced oracle not found. Returning None.", category=UserWarning)
             return None
 
     def _block_matrix_processing(self, current_level_observations, level):
@@ -355,10 +408,10 @@ class RegressionTree:
                 print("No indices to concatenate.")
                 return
 
-            self.block_matrices_full[level] = self._append_block_matrix(self.block_matrix[level],
-                                                                            filtered_indices)
+            self.block_matrices_full[level] = self._append_block_matrix(self.block_matrix[level], filtered_indices)
             indices_append = np.concatenate(
-                [idx for level in range(1, level) for idx in self.terminal_indices.get(level, [])])
+                [idx for level in range(1, level) for idx in self.terminal_indices.get(level, [])]
+            )
             self.indices_complete = np.append(indices_pre_append, indices_append)
 
     def _impurity(self, indices) -> float:
@@ -370,33 +423,33 @@ class RegressionTree:
         *indices*: ``list``. Indices of samples to compute impurity on.
         """
         response_node = self.response[indices]
-        mse = np.sum((response_node -  np.mean(response_node)) ** 2) / len(response_node)
+        mse = np.sum((response_node - np.mean(response_node)) ** 2) / len(response_node)
         return mse
 
     def _append_block_matrix(self, existing_matrix, filtered_indices):
         """
-            Appends new block matrices to an existing block-diagonal
-            matrix to create an expanded block-diagonal matrix.
+        Appends new block matrices to an existing block-diagonal
+        matrix to create an expanded block-diagonal matrix.
 
-            This method constructs a larger block-diagonal matrix by appending
-            new blocks derived from `filtered_indices`
-            to an `existing_matrix`. Each new block corresponds to the size of
-            index arrays provided in `filtered_indices`
-            and contains entries that are the reciprocal of the block size (1/size).
+        This method constructs a larger block-diagonal matrix by appending
+        new blocks derived from `filtered_indices`
+        to an `existing_matrix`. Each new block corresponds to the size of
+        index arrays provided in `filtered_indices`
+        and contains entries that are the reciprocal of the block size (1/size).
 
-            Parameters:
-                existing_matrix (np.ndarray or None): The existing block-diagonal matrix
-                to which new blocks will be appended.
-                    - If `None` or an empty array, a new block-diagonal matrix is created from the new blocks alone.
-                filtered_indices (dict): A dictionary where each key corresponds to a level
-                or identifier, and each value
-                    is a list of NumPy arrays. Each array represents indices of data points, and its size determines
-                    the dimensions of the corresponding block matrix.
+        Parameters:
+            existing_matrix (np.ndarray or None): The existing block-diagonal matrix
+            to which new blocks will be appended.
+                - If `None` or an empty array, a new block-diagonal matrix is created from the new blocks alone.
+            filtered_indices (dict): A dictionary where each key corresponds to a level
+            or identifier, and each value
+                is a list of NumPy arrays. Each array represents indices of data points, and its size determines
+                the dimensions of the corresponding block matrix.
 
-            Returns:
-                np.ndarray: A new block-diagonal matrix that includes the existing matrix and the newly appended blocks.
+        Returns:
+            np.ndarray: A new block-diagonal matrix that includes the existing matrix and the newly appended blocks.
 
-            """
+        """
         elements_count = {key: [arr.size for arr in value] for key, value in filtered_indices.items()}
 
         # Collect all block sizes and create each block
@@ -420,10 +473,12 @@ class RegressionTree:
             # If no existing matrix, simply concatenate all new blocks
             new_block_matrix = block_matrices[0]
             for block in block_matrices[1:]:
-                new_block_matrix = np.block([
-                    [new_block_matrix, np.zeros((new_block_matrix.shape[0], block.shape[1]))],
-                    [np.zeros((block.shape[0], new_block_matrix.shape[1])), block]
-                ])
+                new_block_matrix = np.block(
+                    [
+                        [new_block_matrix, np.zeros((new_block_matrix.shape[0], block.shape[1]))],
+                        [np.zeros((block.shape[0], new_block_matrix.shape[1])), block],
+                    ]
+                )
             return new_block_matrix
         else:
             # Existing matrix is present; calculate its dimension
@@ -443,21 +498,21 @@ class RegressionTree:
 
     def _get_bias_and_variance(self, indices, block_matrix):
         """
-           Calculates the bias squared and variance for a given iteration level to
-           determine the balanced oracle iteration.
+        Calculates the bias squared and variance for a given iteration level to
+        determine the balanced oracle iteration.
 
-           Parameters:
-               indices (np.ndarray): An array of indices corresponding to the data points being considered.
-               block_matrix (np.ndarray): A matrix used in the computation of bias and variance.
-           Returns:
-               tuple:
-                   balanced_oracle_iteration (int or None): The current `level` if `bias2` is less than
-                   or equal to `variance`;
-                       otherwise, `None`.
-                   bias2 (float): The computed bias squared value.
-                   variance (float): The computed variance value.
+        Parameters:
+            indices (np.ndarray): An array of indices corresponding to the data points being considered.
+            block_matrix (np.ndarray): A matrix used in the computation of bias and variance.
+        Returns:
+            tuple:
+                balanced_oracle_iteration (int or None): The current `level` if `bias2` is less than
+                or equal to `variance`;
+                    otherwise, `None`.
+                bias2 (float): The computed bias squared value.
+                variance (float): The computed variance value.
 
-           """
+        """
 
         # Squared Bias:
         bias2 = np.mean(((np.eye(indices.shape[0]) - block_matrix) @ self.true_signal[indices]) ** 2)
@@ -468,25 +523,24 @@ class RegressionTree:
 
     def _process_level_observations(self, observations):
         """
-            Constructs a block-diagonal matrix from observations at a specific level of the tree.
+        Constructs a block-diagonal matrix from observations at a specific level of the tree.
 
-            This method processes the observations collected from nodes at a particular level during
-            the tree-growing process and creates a block-diagonal matrix. Each block corresponds to
-            a node and is a square matrix of size equal to the number of observations at that node.
+        This method processes the observations collected from nodes at a particular level during
+        the tree-growing process and creates a block-diagonal matrix. Each block corresponds to
+        a node and is a square matrix of size equal to the number of observations at that node.
 
-            Parameters:
-                observations (dict): A dictionary where each key is a node object, and each value is
-                    an integer representing the number of observations at that node.
+        Parameters:
+            observations (dict): A dictionary where each key is a node object, and each value is
+                an integer representing the number of observations at that node.
 
-            Returns:
-                np.ndarray or None:
-                    - If observations are provided and valid blocks are created, returns a NumPy ndarray
-                      representing the assembled block-diagonal matrix.
-                    - If there are no observations (empty dictionary), returns `None`.
-                    - If no valid block matrices are created (e.g., all counts are zero), returns an empty array.
+        Returns:
+            np.ndarray or None:
+                - If observations are provided and valid blocks are created, returns a NumPy ndarray
+                  representing the assembled block-diagonal matrix.
+                - If there are no observations (empty dictionary), returns `None`.
+                - If no valid block matrices are created (e.g., all counts are zero), returns an empty array.
 
-            """
-
+        """
 
         block_matrices = []
         dimensions = []
@@ -507,10 +561,7 @@ class RegressionTree:
         current_position = 0
         for i, block in enumerate(block_matrices):
             dim = dimensions[i]
-            full_matrix[current_position:current_position + dim, current_position:current_position + dim] = block
+            full_matrix[current_position : current_position + dim, current_position : current_position + dim] = block
             current_position += dim
 
         return full_matrix
-
-
-
