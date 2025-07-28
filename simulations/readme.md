@@ -1,0 +1,17 @@
+Here is an overview of the scripts available in this directory:
+
+Script 1. "Replicating the weak and strong error decompositions from Figure 2 (a) and (b)"
+Script 2. "Replicating the signals from Figure 2 (c)"
+Script 3. "Replicating the relative efficiencies from Figure 2 (d) [Truncated SVD]"
+Script 4. "Replicating the relative efficiencies from Figure 3 (a) and (b) [Landweber]"
+Script 5. "Replicating the relative efficiencies from Figure 4 (a) and (b) [Conjugate gradients]"
+Script 6. "Replicating the signals from Figure 5 (a) and (b) [L2Boost - signals]"
+Script 7. "Replicating the relative efficiencies from Figure 6 [L2Boost - Replication]"
+Script 8. "Replicating the signals from Figure 7 [Regression tree - additive model]"
+Script 9. "Replicating the relative efficiencies from Figure 8 [Regression tree - Replication]"
+Script 10. "Replicating the signal estimation from Figure 9 (a) and (b)"
+Script 11. "Replicating the signal estimation from Figure 10 (a) and (b)"
+Script 12. "Replicating the stopping times and errors from Figure 11 (a) and (b)"
+Script 13. "Replicating the stopping times and errors from Table 1"
+Script 14. "Replicating the error decomposition from Figure 12 (b) and (d) [Landweber]"
+Script 15. "Replicating the error decomposition from Figure 12 (a) and (c) [Truncated SVD]"
