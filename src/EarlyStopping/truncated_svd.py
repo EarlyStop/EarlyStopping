@@ -359,3 +359,57 @@ class TruncatedSVD:
             self.strong_risk = np.append(self.strong_risk, new_strong_risk)
 
         self.iteration += 1
+
+    def __str__(self):
+        """Return a string representation of the TruncatedSVD model"""
+        lines = []
+        lines.append("TruncatedSVD class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.sample_size} × {self.parameter_size}")
+        lines.append(f"Diagonal mode: {'Yes' if self.diagonal else 'No'}")
+        lines.append(f"Current iteration: {self.iteration}")
+
+        if self.iteration > 0:
+            lines.append(f"Current residual: {self.residuals[self.iteration]:.6f}")
+
+        # Check if theoretical quantities are available
+        has_theoretical = (self.true_signal is not None) and (self.true_noise_level is not None)
+        lines.append(f"Theoretical quantities available: {'Yes' if has_theoretical else 'No'}")
+
+        if has_theoretical:
+            lines.append(f"True noise level: {self.true_noise_level}")
+            if self.iteration > 0:
+                lines.append(f"Strong bias²: {self.strong_bias2[self.iteration]:.6f}")
+                lines.append(f"Strong variance: {self.strong_variance[self.iteration]:.6f}")
+                lines.append(f"Strong risk: {self.strong_risk[self.iteration]:.6f}")
+                lines.append(f"Weak bias²: {self.weak_bias2[self.iteration]:.6f}")
+                lines.append(f"Weak variance: {self.weak_variance[self.iteration]:.6f}")
+                lines.append(f"Weak risk: {self.weak_risk[self.iteration]:.6f}")
+
+        return "\n".join(lines)
+
+    def __repr__(self):
+        """Return a technical representation of the TruncatedSVD model"""
+        has_theoretical = (self.true_signal is not None) and (self.true_noise_level is not None)
+
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.sample_size}x{self.parameter_size})",
+            f"response=array({self.sample_size},)",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_level={self.true_noise_level}",
+            f"diagonal={self.diagonal}",
+        ]
+
+        base_repr = f"TruncatedSVD({', '.join(args)})"
+
+        # Add current state information
+        state_info = f" [iteration={self.iteration}"
+        if self.iteration > 0:
+            state_info += f", residual={self.residuals[self.iteration]:.6f}"
+        if has_theoretical and self.iteration > 0:
+            state_info += f", strong_risk={self.strong_risk[self.iteration]:.6f}"
+            state_info += f", weak_risk={self.weak_risk[self.iteration]:.6f}"
+        state_info += "]"
+
+        return base_repr + state_info

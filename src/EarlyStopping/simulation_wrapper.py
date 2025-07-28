@@ -68,56 +68,6 @@ class SimulationData:
     +----------------------------------------------------+----------------------------------------------------------------------------------------------+
     """
 
-    @classmethod
-    def __str__(cls):
-        """Return a string representation of the SimulationData class"""
-        lines = []
-        lines.append("SimulationData class")
-        lines.append("=" * 30)
-        lines.append("Collection of static methods for simulation data generation")
-        lines.append("")
-        lines.append("Available inverse problems:")
-        lines.append("- diagonal_data: Diagonal design with smooth/supersmooth/rough signals")
-        lines.append("- gravity: Discretized gravity operator")
-        lines.append("- heat: Discretized heat semigroup")
-        lines.append("- deriv2: Fredholm integral with Green's function kernel")
-        lines.append("- phillips: Famous Phillips example")
-        lines.append("")
-        lines.append("Available additive models:")
-        lines.append("- additive_smooth: Smooth additive model (sine, quadratic, linear, exp)")
-        lines.append("- additive_step: Stepwise additive model (piecewise constant)")
-        lines.append("- additive_linear: Linear additive model (piecewise linear)")
-        lines.append("- additive_hills: Hills additive model (sinusoidal components)")
-        lines.append("")
-        lines.append("Available sparse models:")
-        lines.append("- beta_sparse: Sparse signal with power decay")
-        lines.append("- s_sparse: Sparse signal with custom segments")
-
-        return "\n".join(lines)
-
-    @classmethod
-    def __repr__(cls):
-        """Return a technical representation of the SimulationData class"""
-        methods = [
-            "diagonal_data",
-            "gravity",
-            "heat",
-            "deriv2",
-            "phillips",
-            "additive_smooth",
-            "additive_step",
-            "additive_linear",
-            "additive_hills",
-            "beta_sparse",
-            "s_sparse",
-        ]
-        return f"SimulationData(static_methods={methods})"
-
-    @classmethod
-    def help(cls):
-        """Show available simulation data methods"""
-        return cls.__str__()
-
     @staticmethod
     def additive_smooth(sample_size, noise_level):
 
@@ -582,6 +532,57 @@ class SimulationData:
         return design, response_noiseless, true_signal
 
 
+    @classmethod
+    def __str__(cls):
+        """Return a string representation of the SimulationData class"""
+        lines = []
+        lines.append("SimulationData class")
+        lines.append("=" * 30)
+        lines.append("Collection of static methods for simulation data generation")
+        lines.append("")
+        lines.append("Available inverse problems:")
+        lines.append("- diagonal_data: Diagonal design with smooth/supersmooth/rough signals")
+        lines.append("- gravity: Discretized gravity operator")
+        lines.append("- heat: Discretized heat semigroup")
+        lines.append("- deriv2: Fredholm integral with Green's function kernel")
+        lines.append("- phillips: Famous Phillips example")
+        lines.append("")
+        lines.append("Available additive models:")
+        lines.append("- additive_smooth: Smooth additive model (sine, quadratic, linear, exp)")
+        lines.append("- additive_step: Stepwise additive model (piecewise constant)")
+        lines.append("- additive_linear: Linear additive model (piecewise linear)")
+        lines.append("- additive_hills: Hills additive model (sinusoidal components)")
+        lines.append("")
+        lines.append("Available sparse models:")
+        lines.append("- beta_sparse: Sparse signal with power decay")
+        lines.append("- s_sparse: Sparse signal with custom segments")
+
+        return "\n".join(lines)
+
+    @classmethod
+    def __repr__(cls):
+        """Return a technical representation of the SimulationData class"""
+        methods = [
+            "diagonal_data",
+            "gravity",
+            "heat",
+            "deriv2",
+            "phillips",
+            "additive_smooth",
+            "additive_step",
+            "additive_linear",
+            "additive_hills",
+            "beta_sparse",
+            "s_sparse",
+        ]
+        return f"SimulationData(static_methods={methods})"
+
+    @classmethod
+    def help(cls):
+        """Show available simulation data methods"""
+        return cls.__str__()
+
+
 class SimulationParameters:
     """
     `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/simulation_wrapper.py>`_
@@ -781,44 +782,6 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
-    def __str__(self):
-        """Return a string representation of the SimulationWrapper"""
-        lines = []
-        lines.append("SimulationWrapper class")
-        lines.append("=" * 30)
-        lines.append(f"Problem dimensions: {self.sample_size} × {self.design.shape[1]}")
-        lines.append(f"Monte Carlo runs: {self.monte_carlo_runs}")
-        lines.append(f"True noise level: {self.true_noise_level}")
-        lines.append(f"Parallel cores: {self.cores}")
-        lines.append(f"Computation threshold: {self.computation_threshold}")
-
-        # Check available data
-        lines.append(f"True signal available: {'Yes' if self.true_signal is not None else 'No'}")
-        lines.append(f"Custom noise provided: {'Yes' if self.noise is not None else 'No'}")
-        lines.append(f"Critical value: {self.critical_value if self.critical_value is not None else 'Auto'}")
-        lines.append(f"Interpolation enabled: {'Yes' if self.interpolation else 'No'}")
-
-        return "\n".join(lines)
-
-    def __repr__(self):
-        """Return a technical representation of the SimulationWrapper"""
-        # Build constructor-like representation
-        args = [
-            f"design=array({self.sample_size}x{self.design.shape[1]})",
-            f"true_signal={'array' if self.true_signal is not None else 'None'}",
-            f"true_noise_level={self.true_noise_level}",
-            f"monte_carlo_runs={self.monte_carlo_runs}",
-            f"noise={'array' if self.noise is not None else 'None'}",
-            f"response_noiseless={'array' if self.response_noiseless is not None else 'None'}",
-            f"critical_value={self.critical_value}",
-            f"interpolation={self.interpolation}",
-            f"computation_threshold={self.computation_threshold}",
-            f"cores={self.cores}",
-        ]
-
-        base_repr = f"SimulationWrapper({', '.join(args)})"
-
-        return base_repr
 
     def run_simulation_landweber(self, max_iteration, learning_rate=1, data_set_name=None):
         """
@@ -1328,6 +1291,45 @@ class SimulationWrapper:
             weak_relative_efficiency,
             terminal_iteration,
         )
+
+        def __str__(self):
+                """Return a string representation of the SimulationWrapper"""
+                lines = []
+                lines.append("SimulationWrapper class")
+                lines.append("=" * 30)
+                lines.append(f"Problem dimensions: {self.sample_size} × {self.design.shape[1]}")
+                lines.append(f"Monte Carlo runs: {self.monte_carlo_runs}")
+                lines.append(f"True noise level: {self.true_noise_level}")
+                lines.append(f"Parallel cores: {self.cores}")
+                lines.append(f"Computation threshold: {self.computation_threshold}")
+
+                # Check available data
+                lines.append(f"True signal available: {'Yes' if self.true_signal is not None else 'No'}")
+                lines.append(f"Custom noise provided: {'Yes' if self.noise is not None else 'No'}")
+                lines.append(f"Critical value: {self.critical_value if self.critical_value is not None else 'Auto'}")
+                lines.append(f"Interpolation enabled: {'Yes' if self.interpolation else 'No'}")
+
+                return "\n".join(lines)
+
+            def __repr__(self):
+                """Return a technical representation of the SimulationWrapper"""
+                # Build constructor-like representation
+                args = [
+                    f"design=array({self.sample_size}x{self.design.shape[1]})",
+                    f"true_signal={'array' if self.true_signal is not None else 'None'}",
+                    f"true_noise_level={self.true_noise_level}",
+                    f"monte_carlo_runs={self.monte_carlo_runs}",
+                    f"noise={'array' if self.noise is not None else 'None'}",
+                    f"response_noiseless={'array' if self.response_noiseless is not None else 'None'}",
+                    f"critical_value={self.critical_value}",
+                    f"interpolation={self.interpolation}",
+                    f"computation_threshold={self.computation_threshold}",
+                    f"cores={self.cores}",
+                ]
+
+                base_repr = f"SimulationWrapper({', '.join(args)})"
+
+                return base_repr
 
 
 def info(message, color="green"):

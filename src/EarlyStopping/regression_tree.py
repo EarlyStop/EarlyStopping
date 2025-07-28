@@ -80,62 +80,6 @@ class RegressionTree:
         self.sample_size = self.design.shape[0]
         self.dimension = self.design.shape[1]
 
-    def __str__(self):
-        """Return a string representation of the RegressionTree model"""
-        lines = []
-        lines.append("RegressionTree class")
-        lines.append("=" * 30)
-        lines.append(f"Problem dimensions: {self.sample_size} × {self.dimension}")
-        lines.append(f"Min samples split: {self.minimal_samples_split}")
-
-        # Check if tree has been grown
-        if hasattr(self, "residuals") and self.residuals.size > 0:
-            lines.append(f"Tree depth: {len(self.residuals)}")
-            lines.append(f"Current residual: {self.residuals[-1]:.6f}")
-        else:
-            lines.append("Tree depth: Not grown yet")
-
-        # Check if theoretical quantities are available
-        has_theoretical = (self.true_signal is not None) and (self.true_noise_vector is not None)
-        lines.append(f"Theoretical quantities available: {'Yes' if has_theoretical else 'No'}")
-
-        if has_theoretical and hasattr(self, "bias2") and self.bias2.size > 0:
-            lines.append(f"Current bias²: {self.bias2[-1]:.6f}")
-            lines.append(f"Current variance: {self.variance[-1]:.6f}")
-            lines.append(f"Current risk: {self.risk[-1]:.6f}")
-
-        return "\n".join(lines)
-
-    def __repr__(self):
-        """Return a technical representation of the RegressionTree model"""
-        has_theoretical = (self.true_signal is not None) and (self.true_noise_vector is not None)
-
-        # Build constructor-like representation
-        args = [
-            f"design=array({self.sample_size}x{self.dimension})",
-            f"response=array({self.sample_size},)",
-            f"min_samples_split={self.minimal_samples_split}",
-            f"true_signal={'array' if self.true_signal is not None else 'None'}",
-            f"true_noise_vector={'array' if self.true_noise_vector is not None else 'None'}",
-        ]
-
-        base_repr = f"RegressionTree({', '.join(args)})"
-
-        # Add current state information
-        state_info = ""
-        if hasattr(self, "residuals") and self.residuals.size > 0:
-            state_info += f" [depth={len(self.residuals)}"
-            state_info += f", residual={self.residuals[-1]:.6f}"
-            if has_theoretical and hasattr(self, "bias2") and self.bias2.size > 0:
-                state_info += f", bias2={self.bias2[-1]:.6f}"
-                state_info += f", variance={self.variance[-1]:.6f}"
-                state_info += f", risk={self.risk[-1]:.6f}"
-            state_info += "]"
-        else:
-            state_info = " [not_grown]"
-
-        return base_repr + state_info
-
     def iterate(self, max_depth: int = None):
         """
         Grows the regression tree up to the specified depth.
@@ -565,3 +509,59 @@ class RegressionTree:
             current_position += dim
 
         return full_matrix
+
+    def __str__(self):
+            """Return a string representation of the RegressionTree model"""
+            lines = []
+            lines.append("RegressionTree class")
+            lines.append("=" * 30)
+            lines.append(f"Problem dimensions: {self.sample_size} × {self.dimension}")
+            lines.append(f"Min samples split: {self.minimal_samples_split}")
+
+            # Check if tree has been grown
+            if hasattr(self, "residuals") and self.residuals.size > 0:
+                lines.append(f"Tree depth: {len(self.residuals)}")
+                lines.append(f"Current residual: {self.residuals[-1]:.6f}")
+            else:
+                lines.append("Tree depth: Not grown yet")
+
+            # Check if theoretical quantities are available
+            has_theoretical = (self.true_signal is not None) and (self.true_noise_vector is not None)
+            lines.append(f"Theoretical quantities available: {'Yes' if has_theoretical else 'No'}")
+
+            if has_theoretical and hasattr(self, "bias2") and self.bias2.size > 0:
+                lines.append(f"Current bias²: {self.bias2[-1]:.6f}")
+                lines.append(f"Current variance: {self.variance[-1]:.6f}")
+                lines.append(f"Current risk: {self.risk[-1]:.6f}")
+
+            return "\n".join(lines)
+
+        def __repr__(self):
+            """Return a technical representation of the RegressionTree model"""
+            has_theoretical = (self.true_signal is not None) and (self.true_noise_vector is not None)
+
+            # Build constructor-like representation
+            args = [
+                f"design=array({self.sample_size}x{self.dimension})",
+                f"response=array({self.sample_size},)",
+                f"min_samples_split={self.minimal_samples_split}",
+                f"true_signal={'array' if self.true_signal is not None else 'None'}",
+                f"true_noise_vector={'array' if self.true_noise_vector is not None else 'None'}",
+            ]
+
+            base_repr = f"RegressionTree({', '.join(args)})"
+
+            # Add current state information
+            state_info = ""
+            if hasattr(self, "residuals") and self.residuals.size > 0:
+                state_info += f" [depth={len(self.residuals)}"
+                state_info += f", residual={self.residuals[-1]:.6f}"
+                if has_theoretical and hasattr(self, "bias2") and self.bias2.size > 0:
+                    state_info += f", bias2={self.bias2[-1]:.6f}"
+                    state_info += f", variance={self.variance[-1]:.6f}"
+                    state_info += f", risk={self.risk[-1]:.6f}"
+                state_info += "]"
+            else:
+                state_info = " [not_grown]"
+
+            return base_repr + state_info
