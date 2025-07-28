@@ -531,7 +531,6 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
-
     @classmethod
     def __str__(cls):
         """Return a string representation of the SimulationData class"""
@@ -781,7 +780,6 @@ class SimulationWrapper:
             self.response_noiseless = response_noiseless
 
         self.sample_size = design.shape[0]
-
 
     def run_simulation_landweber(self, max_iteration, learning_rate=1, data_set_name=None):
         """
@@ -1292,44 +1290,44 @@ class SimulationWrapper:
             terminal_iteration,
         )
 
-        def __str__(self):
-                """Return a string representation of the SimulationWrapper"""
-                lines = []
-                lines.append("SimulationWrapper class")
-                lines.append("=" * 30)
-                lines.append(f"Problem dimensions: {self.sample_size} × {self.design.shape[1]}")
-                lines.append(f"Monte Carlo runs: {self.monte_carlo_runs}")
-                lines.append(f"True noise level: {self.true_noise_level}")
-                lines.append(f"Parallel cores: {self.cores}")
-                lines.append(f"Computation threshold: {self.computation_threshold}")
+    def __str__(self):
+        """Return a string representation of the SimulationWrapper"""
+        lines = []
+        lines.append("SimulationWrapper class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.sample_size} × {self.design.shape[1]}")
+        lines.append(f"Monte Carlo runs: {self.monte_carlo_runs}")
+        lines.append(f"True noise level: {self.true_noise_level}")
+        lines.append(f"Parallel cores: {self.cores}")
+        lines.append(f"Computation threshold: {self.computation_threshold}")
 
-                # Check available data
-                lines.append(f"True signal available: {'Yes' if self.true_signal is not None else 'No'}")
-                lines.append(f"Custom noise provided: {'Yes' if self.noise is not None else 'No'}")
-                lines.append(f"Critical value: {self.critical_value if self.critical_value is not None else 'Auto'}")
-                lines.append(f"Interpolation enabled: {'Yes' if self.interpolation else 'No'}")
+        # Check available data
+        lines.append(f"True signal available: {'Yes' if self.true_signal is not None else 'No'}")
+        lines.append(f"Custom noise provided: {'Yes' if self.noise is not None else 'No'}")
+        lines.append(f"Critical value: {self.critical_value if self.critical_value is not None else 'Auto'}")
+        lines.append(f"Interpolation enabled: {'Yes' if self.interpolation else 'No'}")
 
-                return "\n".join(lines)
+        return "\n".join(lines)
 
-            def __repr__(self):
-                """Return a technical representation of the SimulationWrapper"""
-                # Build constructor-like representation
-                args = [
-                    f"design=array({self.sample_size}x{self.design.shape[1]})",
-                    f"true_signal={'array' if self.true_signal is not None else 'None'}",
-                    f"true_noise_level={self.true_noise_level}",
-                    f"monte_carlo_runs={self.monte_carlo_runs}",
-                    f"noise={'array' if self.noise is not None else 'None'}",
-                    f"response_noiseless={'array' if self.response_noiseless is not None else 'None'}",
-                    f"critical_value={self.critical_value}",
-                    f"interpolation={self.interpolation}",
-                    f"computation_threshold={self.computation_threshold}",
-                    f"cores={self.cores}",
-                ]
+    def __repr__(self):
+        """Return a technical representation of the SimulationWrapper"""
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.sample_size}x{self.design.shape[1]})",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_level={self.true_noise_level}",
+            f"monte_carlo_runs={self.monte_carlo_runs}",
+            f"noise={'array' if self.noise is not None else 'None'}",
+            f"response_noiseless={'array' if self.response_noiseless is not None else 'None'}",
+            f"critical_value={self.critical_value}",
+            f"interpolation={self.interpolation}",
+            f"computation_threshold={self.computation_threshold}",
+            f"cores={self.cores}",
+        ]
 
-                base_repr = f"SimulationWrapper({', '.join(args)})"
+        base_repr = f"SimulationWrapper({', '.join(args)})"
 
-                return base_repr
+        return base_repr
 
 
 def info(message, color="green"):
