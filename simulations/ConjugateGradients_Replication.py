@@ -4,8 +4,9 @@ import EarlyStopping as es
 import matplotlib.pyplot as plt
 import os
 
-
 importlib.reload(es)
+
+np.random.seed(42)
 
 # Generate data for different signals
 design_smooth, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(
@@ -133,7 +134,9 @@ efficiency_to_plot = [
 labels = ["supersmooth", "smooth", "rough", "supersmooth", "smooth", "rough"]
 fig_dir = ""
 
-create_custom_boxplot(efficiency_to_plot, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="cg_efficiency")
+create_custom_boxplot(
+    efficiency_to_plot, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="cg_efficiency"
+)
 create_custom_boxplot(
     efficiency_iteration_plot, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="cg_efficiency_iteration"
 )

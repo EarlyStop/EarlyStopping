@@ -3,6 +3,8 @@ import importlib
 import EarlyStopping as es
 import matplotlib.pyplot as plt
 
+np.random.seed(42)
+
 # Ensure consistent style - using the style from error_decomposition_plots.py
 plt.rc("axes", titlesize=20)
 plt.rc("axes", labelsize=15)
@@ -26,7 +28,9 @@ model_landweber = es.Landweber(
 )
 model_landweber.iterate(max_iteration)
 
-model_svd = es.TruncatedSVD(design, response, true_signal=true_signal, true_noise_level=true_noise_level, diagonal=True)
+model_svd = es.TruncatedSVD(
+    design, response, true_signal=true_signal, true_noise_level=true_noise_level, diagonal=True
+)
 model_svd.iterate(max_iteration)
 
 

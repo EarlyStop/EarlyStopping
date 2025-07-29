@@ -13,6 +13,12 @@ def info(message, color="blue"):
 script_number = 1
 
 
+info(
+    f"Script number {script_number}: Replicating the decompositions for two different signals from Figure 1 (a) and (b)"
+)
+subprocess.run(["python", "error_decomposition_plots.py"])
+script_number = script_number + 1
+
 info(f"Script number {script_number}: Replicating the weak and strong error decompositions from Figure 2 (a) and (b)")
 subprocess.run(["python", "visualise_error_decomposition.py"])
 script_number = script_number + 1
@@ -43,18 +49,6 @@ script_number = script_number + 1
 info(f"Script number {script_number}: Replicating the relative efficiencies from Figure 6 [L2Boost - Replication]")
 subprocess.run(["python", "L2Boost_Replication.py"])
 script_number = script_number + 1
-
-
-info(f"Script number {script_number}: Replicating the signals from Figure 7 [Regression tree - additive model]")
-subprocess.run(["python", "RegressionTree_additive_plots.py"])
-script_number = script_number + 1
-
-info(
-    f"Script number {script_number}: Replicating the relative efficiencies from Figure 8 [Regression tree - Replication]"
-)
-subprocess.run(["python", "RegressionTree_Replication.py"])
-script_number = script_number + 1
-
 
 info(f"Script number {script_number}: Replicating the signal estimation from Figure 9 (a) and (b)")
 subprocess.run(["python", "signal_estimation_comparison.py"])

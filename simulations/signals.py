@@ -9,6 +9,7 @@ plt.rc("axes", titlesize=20)
 plt.rc("axes", labelsize=15)
 plt.rc("xtick", labelsize=15)
 plt.rc("ytick", labelsize=15)
+
 # Signals and design
 # ------------------------------------------------------------------------------
 # From G. Blanchard, M. Hoffmann, M. Reiß. "Early stopping for statistical inverse problems via

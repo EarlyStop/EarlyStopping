@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+np.random.seed(42)
+
 sample_size = 1000
 para_size = 1000
 

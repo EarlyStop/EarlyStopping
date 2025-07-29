@@ -6,6 +6,7 @@ import os
 
 importlib.reload(es)
 
+np.random.seed(42)
 
 sample_size = 100
 name = "phillips"
@@ -115,9 +116,6 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
     plt.text(2, plt.ylim()[0] - 0.1, "weak norm", ha="center", va="top", fontsize=14)
     plt.text(5, plt.ylim()[0] - 0.1, "strong norm", ha="center", va="top", fontsize=14)
 
-    # Add title
-    # plt.title("Method Comparison - Gravity Example", fontsize=16, pad=20)
-
     plt.savefig(os.path.join(fig_dir, f"boxplot_{name}.png"), bbox_inches="tight", dpi=300)
     plt.tight_layout()
     plt.show()
@@ -146,7 +144,6 @@ def create_log_boxplot(data, labels, fig_dir, name):
     # Enable gridlines
     plt.grid(True)
 
-
     # Customize tick labels and layout
     plt.tick_params(axis="both", which="major", labelsize=14)
     plt.xticks(ticks=range(1, len(labels) + 1), labels=labels)
@@ -159,7 +156,6 @@ def create_log_boxplot(data, labels, fig_dir, name):
     plt.savefig(os.path.join(fig_dir, f"stopping_times_{name}.png"), bbox_inches="tight", dpi=300)
     plt.tight_layout()
     plt.show()
-
 
 
 # Labels for the efficiency boxplot
