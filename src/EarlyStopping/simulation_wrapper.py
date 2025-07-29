@@ -68,19 +68,23 @@ class SimulationData:
     +----------------------------------------------------+----------------------------------------------------------------------------------------------+
     """
 
-
     @staticmethod
     def additive_smooth(sample_size, noise_level):
 
         noise = np.random.normal(0, noise_level, sample_size)
         design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
 
-        true_signal = -2 * np.sin(2 * design[:,0]) + (0.8 * design[:,1]**2 - 2.5) + (design[:,2] - 1/2) + (np.exp(-0.65 * design[:,3]) - 2.5)
+        true_signal = (
+            -2 * np.sin(2 * design[:, 0])
+            + (0.8 * design[:, 1] ** 2 - 2.5)
+            + (design[:, 2] - 1 / 2)
+            + (np.exp(-0.65 * design[:, 3]) - 2.5)
+        )
         response = true_signal + noise
 
         return design, response, true_signal
-    
-    @staticmethod   
+
+    @staticmethod
     def additive_hills(sample_size, noise_level):
 
         def func_hills(x, split=0, vals=(1, 1, 10), rev=False):
@@ -96,58 +100,56 @@ class SimulationData:
                 delta = vals[0] + np.sin(vals[1] * split) - eps * np.sin(vals[2] * split)
                 ans[x <= split] = delta + eps * np.sin(vals[2] * x[x <= split])
             return ans
-        
+
         noise = np.random.normal(0, noise_level, sample_size)
         design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
 
-        f1 = func_hills(design[:,0], 0, (1, 1, 12))
-        f2 = func_hills(design[:,1], 1, (1, 2, 8))
-        f3 = func_hills(design[:,2], -1, (0, 3, 15), rev=True)
-        f4 = func_hills(design[:,3], 1, (0, 2.5, 10), rev=True)
+        f1 = func_hills(design[:, 0], 0, (1, 1, 12))
+        f2 = func_hills(design[:, 1], 1, (1, 2, 8))
+        f3 = func_hills(design[:, 2], -1, (0, 3, 15), rev=True)
+        f4 = func_hills(design[:, 3], 1, (0, 2.5, 10), rev=True)
         true_signal = f1 + f2 + f3 + f4
 
         response = true_signal + noise
 
-        return design, response, true_signal 
-    
+        return design, response, true_signal
+
     @staticmethod
     def additive_linear(sample_size, noise_level):
 
         def f1_lin(x):
-            knots = [-2.5, -2.3, 1, 2.5]  
+            knots = [-2.5, -2.3, 1, 2.5]
             values = [0.5, -2.5, 1.8, 2.3]
             return np.interp(x, knots, values)
 
         def f2_lin(x):
-            knots = [-2.5, -2, -1, 1, 2, 2.5]  
+            knots = [-2.5, -2, -1, 1, 2, 2.5]
             values = [-0.5, 2.5, 1, -0.5, -2.2, -2.3]
             return np.interp(x, knots, values)
 
         def f3_lin(x):
-            knots = [-2.5, -1.5, 0.5, 2.5]  
-            values = [0, -3, 2.5, -1]  
+            knots = [-2.5, -1.5, 0.5, 2.5]
+            values = [0, -3, 2.5, -1]
             return np.interp(x, knots, values)
 
         def f4_lin(x):
-            knots = [-2.5, -1.8, -0.5, 1.5, 1.8, 2.5]  
+            knots = [-2.5, -1.8, -0.5, 1.5, 1.8, 2.5]
             values = [-1, -3.8, -1, -2.3, -0.5, 0.8]
             return np.interp(x, knots, values)
-
 
         noise = np.random.normal(0, noise_level, sample_size)
         design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
 
-        y1 = f1_lin(design[:,0])
-        y2 = f2_lin(design[:,1])
-        y3 = f3_lin(design[:,2])
-        y4 = f4_lin(design[:,3])
+        y1 = f1_lin(design[:, 0])
+        y2 = f2_lin(design[:, 1])
+        y3 = f3_lin(design[:, 2])
+        y4 = f4_lin(design[:, 3])
         true_signal = y1 + y2 + y3 + y4
         response = true_signal + noise
 
+        return design, response, true_signal
 
-        return design, response, true_signal 
-
-    @staticmethod   
+    @staticmethod
     def additive_step(sample_size, noise_level):
 
         def func_step(X, knots, vals):
@@ -163,43 +165,40 @@ class SimulationData:
                     y[(X > knots[i - 1]) & (X <= knots[i])] = vals[i]
 
             return y
-        
+
         def f1(X):
             knots = [-2.3, -1.8, -0.5, 1.1]
             vals = [-3, -2.5, -1, 1, 1.8]
             return func_step(X, knots, vals)
-
 
         def f2(X):
             knots = [-2, -1, 1, 2]
             vals = [3, 1.4, 0, -1.7, -1.8]
             return func_step(X, knots, vals)
 
-
         def f3(X):
             knots = [-1.5, 0.5]
             vals = [-3.3, 2.5, -1]
             return func_step(X, knots, vals)
 
-
         def f4(X):
             knots = [-1.7, -0.4, 1.5, 1.9]
             vals = [-2.8, 0.3, -1.4, 0.4, 1.8]
             return func_step(X, knots, vals)
-    
+
         noise = np.random.normal(0, noise_level, sample_size)
         design = np.random.uniform(-2.5, 2.5, size=(sample_size, 30))
 
-            # Apply functions
-        y1 = f1(design[:,0])
-        y2 = f2(design[:,1])
-        y3 = f3(design[:,2])
-        y4 = f4(design[:,3])
+        # Apply functions
+        y1 = f1(design[:, 0])
+        y2 = f2(design[:, 1])
+        y3 = f3(design[:, 2])
+        y4 = f4(design[:, 3])
 
         true_signal = y1 + y2 + y3 + y4
-        response = true_signal + noise        
+        response = true_signal + noise
 
-        return design, response, true_signal 
+        return design, response, true_signal
 
     @staticmethod
     def diagonal_data(sample_size, type="supersmooth"):
@@ -532,6 +531,56 @@ class SimulationData:
 
         return design, response_noiseless, true_signal
 
+    @classmethod
+    def __str__(cls):
+        """Return a string representation of the SimulationData class"""
+        lines = []
+        lines.append("SimulationData class")
+        lines.append("=" * 30)
+        lines.append("Collection of static methods for simulation data generation")
+        lines.append("")
+        lines.append("Available inverse problems:")
+        lines.append("- diagonal_data: Diagonal design with smooth/supersmooth/rough signals")
+        lines.append("- gravity: Discretized gravity operator")
+        lines.append("- heat: Discretized heat semigroup")
+        lines.append("- deriv2: Fredholm integral with Green's function kernel")
+        lines.append("- phillips: Famous Phillips example")
+        lines.append("")
+        lines.append("Available additive models:")
+        lines.append("- additive_smooth: Smooth additive model (sine, quadratic, linear, exp)")
+        lines.append("- additive_step: Stepwise additive model (piecewise constant)")
+        lines.append("- additive_linear: Linear additive model (piecewise linear)")
+        lines.append("- additive_hills: Hills additive model (sinusoidal components)")
+        lines.append("")
+        lines.append("Available sparse models:")
+        lines.append("- beta_sparse: Sparse signal with power decay")
+        lines.append("- s_sparse: Sparse signal with custom segments")
+
+        return "\n".join(lines)
+
+    @classmethod
+    def __repr__(cls):
+        """Return a technical representation of the SimulationData class"""
+        methods = [
+            "diagonal_data",
+            "gravity",
+            "heat",
+            "deriv2",
+            "phillips",
+            "additive_smooth",
+            "additive_step",
+            "additive_linear",
+            "additive_hills",
+            "beta_sparse",
+            "s_sparse",
+        ]
+        return f"SimulationData(static_methods={methods})"
+
+    @classmethod
+    def help(cls):
+        """Show available simulation data methods"""
+        return cls.__str__()
+
 
 class SimulationParameters:
     """
@@ -622,6 +671,46 @@ class SimulationParameters:
                 "PARAMETER WARNING: The inverse problem is ill-posed, which is currently not fully supported by landweber.",
                 category=UserWarning,
             )
+
+    def __str__(self):
+        """Return a string representation of the SimulationParameters"""
+        lines = []
+        lines.append("SimulationParameters class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.design.shape[0]} × {self.design.shape[1]}")
+        lines.append(f"Monte Carlo runs: {self.monte_carlo_runs}")
+        lines.append(f"True noise level: {self.true_noise_level}")
+        lines.append(f"Parallel cores: {self.cores}")
+        lines.append(f"Computation threshold: {self.computation_threshold}")
+
+        # Check available data
+        lines.append(f"True signal available: {'Yes' if self.true_signal is not None else 'No'}")
+        lines.append(f"Custom noise provided: {'Yes' if self.noise is not None else 'No'}")
+        lines.append(f"Response noiseless provided: {'Yes' if self.response_noiseless is not None else 'No'}")
+        lines.append(f"Critical value: {self.critical_value if self.critical_value is not None else 'Auto'}")
+        lines.append(f"Interpolation enabled: {'Yes' if self.interpolation else 'No'}")
+
+        return "\n".join(lines)
+
+    def __repr__(self):
+        """Return a technical representation of the SimulationParameters"""
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.design.shape[0]}x{self.design.shape[1]})",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_level={self.true_noise_level}",
+            f"monte_carlo_runs={self.monte_carlo_runs}",
+            f"noise={'array' if self.noise is not None else 'None'}",
+            f"response_noiseless={'array' if self.response_noiseless is not None else 'None'}",
+            f"critical_value={self.critical_value}",
+            f"interpolation={self.interpolation}",
+            f"computation_threshold={self.computation_threshold}",
+            f"cores={self.cores}",
+        ]
+
+        base_repr = f"SimulationParameters({', '.join(args)})"
+
+        return base_repr
 
 
 class SimulationWrapper:
@@ -860,7 +949,7 @@ class SimulationWrapper:
             "relative_efficiency_residual_ratio",
             "relative_efficiency_aic",
             "relative_efficiency_two_step_discrepancy_stop",
-            "relative_efficiency_two_step_residual_ratio_stop"
+            "relative_efficiency_two_step_residual_ratio_stop",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -873,7 +962,6 @@ class SimulationWrapper:
     def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
         model_L2_boost = L2_boost(design=self.design, response=self.response[:, m], true_signal=self.true_signal)
-
 
         model_L2_boost.iterate(max_iteration)
 
@@ -927,7 +1015,7 @@ class SimulationWrapper:
             relative_efficiency_residual_ratio,
             relative_efficiency_aic,
             relative_efficiency_two_step_discrepancy_stop,
-            relative_efficiency_two_step_residual_ratio_stop
+            relative_efficiency_two_step_residual_ratio_stop,
         )
 
     def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):
@@ -1201,6 +1289,45 @@ class SimulationWrapper:
             weak_relative_efficiency,
             terminal_iteration,
         )
+
+    def __str__(self):
+        """Return a string representation of the SimulationWrapper"""
+        lines = []
+        lines.append("SimulationWrapper class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.sample_size} × {self.design.shape[1]}")
+        lines.append(f"Monte Carlo runs: {self.monte_carlo_runs}")
+        lines.append(f"True noise level: {self.true_noise_level}")
+        lines.append(f"Parallel cores: {self.cores}")
+        lines.append(f"Computation threshold: {self.computation_threshold}")
+
+        # Check available data
+        lines.append(f"True signal available: {'Yes' if self.true_signal is not None else 'No'}")
+        lines.append(f"Custom noise provided: {'Yes' if self.noise is not None else 'No'}")
+        lines.append(f"Critical value: {self.critical_value if self.critical_value is not None else 'Auto'}")
+        lines.append(f"Interpolation enabled: {'Yes' if self.interpolation else 'No'}")
+
+        return "\n".join(lines)
+
+    def __repr__(self):
+        """Return a technical representation of the SimulationWrapper"""
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.sample_size}x{self.design.shape[1]})",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_level={self.true_noise_level}",
+            f"monte_carlo_runs={self.monte_carlo_runs}",
+            f"noise={'array' if self.noise is not None else 'None'}",
+            f"response_noiseless={'array' if self.response_noiseless is not None else 'None'}",
+            f"critical_value={self.critical_value}",
+            f"interpolation={self.interpolation}",
+            f"computation_threshold={self.computation_threshold}",
+            f"cores={self.cores}",
+        ]
+
+        base_repr = f"SimulationWrapper({', '.join(args)})"
+
+        return base_repr
 
 
 def info(message, color="green"):

@@ -155,7 +155,9 @@ class ConjugateGradients:
         *conjugate_gradient_estimate*: ``ndarray``. The conjugate gradient estimate at iteration.
         """
         if iteration is None:
-            raise ValueError("iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration.")
+            raise ValueError(
+                "iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration."
+            )
 
         iteration_ceil = np.ceil(iteration).astype("int")
 
@@ -473,3 +475,57 @@ class ConjugateGradients:
                 self.__weak_estimator_distances,
                 np.sum(transformed_conjugate_gradient_estimates_distance**2),
             )
+
+    def __str__(self):
+            """Return a string representation of the ConjugateGradients model"""
+            lines = []
+            lines.append("ConjugateGradients class")
+            lines.append("=" * 30)
+            lines.append(f"Problem dimensions: {self.sample_size} × {self.parameter_size}")
+            lines.append(f"Computation threshold: {self.computation_threshold}")
+            lines.append(f"Current iteration: {self.iteration}")
+
+            if self.iteration > 0:
+                lines.append(f"Current residual: {self.residuals[self.iteration]:.6f}")
+                lines.append(f"Current transformed residual: {self.__transformed_residuals[self.iteration]:.6f}")
+
+            # Check if theoretical quantities are available
+            has_true_signal = self.true_signal is not None
+            lines.append(f"True signal available: {'Yes' if has_true_signal else 'No'}")
+
+            if has_true_signal:
+                if self.true_noise_level is not None:
+                    lines.append(f"True noise level: {self.true_noise_level}")
+                if self.iteration > 0:
+                    lines.append(f"Strong empirical risk: {self.strong_empirical_risk[self.iteration]:.6f}")
+                    lines.append(f"Weak empirical risk: {self.weak_empirical_risk[self.iteration]:.6f}")
+
+            return "\n".join(lines)
+
+    def __repr__(self):
+        """Return a technical representation of the ConjugateGradients model"""
+        has_true_signal = self.true_signal is not None
+
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.sample_size}x{self.parameter_size})",
+            f"response=array({self.sample_size},)",
+            f"initial_value={'array' if self.initial_value is not None else 'None'}",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_level={self.true_noise_level}",
+            f"computation_threshold={self.computation_threshold}",
+        ]
+
+        base_repr = f"ConjugateGradients({', '.join(args)})"
+
+        # Add current state information
+        state_info = f" [iteration={self.iteration}"
+        if self.iteration > 0:
+            state_info += f", residual={self.residuals[self.iteration]:.6f}"
+            state_info += f", transformed_residual={self.__transformed_residuals[self.iteration]:.6f}"
+        if has_true_signal and self.iteration > 0:
+            state_info += f", strong_risk={self.strong_empirical_risk[self.iteration]:.6f}"
+            state_info += f", weak_risk={self.weak_empirical_risk[self.iteration]:.6f}"
+        state_info += "]"
+
+        return base_repr + state_info

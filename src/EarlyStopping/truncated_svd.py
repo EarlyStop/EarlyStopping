@@ -5,9 +5,10 @@ from scipy.sparse.linalg import svds
 from scipy.sparse import dia_matrix
 import warnings
 
+
 class TruncatedSVD:
     """
-    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_ 
+    `[Source] <https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/truncated_svd.py>`_
     A class to perform estimation using truncated SVD estimation.
 
     **Parameters**
@@ -27,7 +28,7 @@ class TruncatedSVD:
     *diagonal*: ``bool, default = False`` The user may set this to true if the design matrix is
     diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal
     sequence space model.
-    # 2024-10-14, Bernhard: Checked docu of the parameters. 
+    # 2024-10-14, Bernhard: Checked docu of the parameters.
 
     **Attributes**
 
@@ -75,13 +76,8 @@ class TruncatedSVD:
     +---------------------------------------------------------+--------------------------------------------------------------------------+
 
     """
-    def __init__(self,
-        design,
-        response,
-        true_signal = None,
-        true_noise_level = None,
-        diagonal = False
-    ):
+
+    def __init__(self, design, response, true_signal=None, true_noise_level=None, diagonal=False):
 
         self.design = design
         self.response = response
@@ -96,10 +92,10 @@ class TruncatedSVD:
         self.iteration = 0
 
         # Quantities in terms of the SVD
-        self.diagonal_design      = np.array([])
+        self.diagonal_design = np.array([])
         self.diagonal_true_signal = np.array([])
-        self.diagonal_response    = np.array([])
-        self.diagonal_estimate    = np.array([])
+        self.diagonal_response = np.array([])
+        self.diagonal_estimate = np.array([])
 
         self.reduced_design = design
         self.eigenvector_matrix = np.empty((self.parameter_size, 0))
@@ -110,18 +106,18 @@ class TruncatedSVD:
         # Check for sparsity
         if (self.diagonal == True) and (not isinstance(self.design, dia_matrix)):
             raise TypeError("The diagonal design matrix is not of dia_sparse type. Please refine!")
-        elif (self.diagonal == True):
+        elif self.diagonal == True:
             self.diagonal_design = self.design.diagonal()
 
         # Initialize theoretical quantities
         if self.true_signal is not None:
-            self.weak_bias2    = np.array([np.sum((self.design @ self.true_signal)**2)])
+            self.weak_bias2 = np.array([np.sum((self.design @ self.true_signal) ** 2)])
             self.weak_variance = np.array([0])
-            self.weak_risk      = np.array([np.sum((self.design @ self.true_signal)**2)])
+            self.weak_risk = np.array([np.sum((self.design @ self.true_signal) ** 2)])
 
-            self.strong_bias2    = np.array([np.sum(self.true_signal**2)])
+            self.strong_bias2 = np.array([np.sum(self.true_signal**2)])
             self.strong_variance = np.array([0])
-            self.strong_risk      = np.array([np.sum(self.true_signal**2)])
+            self.strong_risk = np.array([np.sum(self.true_signal**2)])
 
     def iterate(self, number_of_iterations):
         """Performs number_of_iterations iterations of the algorithm.
@@ -130,7 +126,7 @@ class TruncatedSVD:
 
         *number_of_iterations*: ``int``. The number of iterations to perform.
         """
-        if not self.diagonal: 
+        if not self.diagonal:
             for _ in range(number_of_iterations):
                 self.__truncated_SVD_one_iteration()
         else:
@@ -149,7 +145,9 @@ class TruncatedSVD:
         *truncated_svd_estimate*: ``ndarray``. The truncated svd estimate at iteration.
         """
         if iteration is None:
-            raise ValueError("iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration.")
+            raise ValueError(
+                "iteration is None. Potentially from querying the estimate at an oracle or stopping time that was not found until max_iteration."
+            )
 
         if iteration > self.iteration:
             self.iterate(iteration - self.iteration)
@@ -189,7 +187,7 @@ class TruncatedSVD:
             warnings.warn("Early stopping index not found up to max_iteration. Returning None.", category=UserWarning)
             return None
 
-    def get_aic(self, max_iteration, K = 2):
+    def get_aic(self, max_iteration, K=2):
         """Returns the iteration chosen by the Akaike information criterion computed up max_iteration.
 
         **Parameters**
@@ -209,12 +207,12 @@ class TruncatedSVD:
             # It's allowed to overwrite this because it is not used if self.diagonal == True
             self.diagonal_response = self.response
 
-        data_fit_term = - np.cumsum(self.diagonal_response[:max_iteration]**2 / \
-                                    self.diagonal_design[:max_iteration]**2)
-        penalty_term  = K * self.true_noise_level**2 * \
-                            np.cumsum(self.diagonal_design[:max_iteration]**(-2))
-        aic           = data_fit_term + penalty_term 
-        aic_index     = np.argmin(aic)
+        data_fit_term = -np.cumsum(
+            self.diagonal_response[:max_iteration] ** 2 / self.diagonal_design[:max_iteration] ** 2
+        )
+        penalty_term = K * self.true_noise_level**2 * np.cumsum(self.diagonal_design[:max_iteration] ** (-2))
+        aic = data_fit_term + penalty_term
+        aic_index = np.argmin(aic)
 
         return [aic_index, aic]
 
@@ -236,17 +234,16 @@ class TruncatedSVD:
             return int(weak_balanced_oracle)
 
         if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
-            while (self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and
-                   self.iteration <= max_iteration
-                  ):
+            while (
+                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
+            ):
                 self.iterate(1)
 
         if self.weak_bias2[self.iteration] <= self.weak_variance[self.iteration]:
             weak_balanced_oracle = self.iteration
             return weak_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.",
-                          category=UserWarning)
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
             return None
 
     def get_strong_balanced_oracle(self, max_iteration):
@@ -267,17 +264,17 @@ class TruncatedSVD:
             return int(strong_balanced_oracle)
 
         if self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]:
-            while (self.strong_bias2[self.iteration] > self.strong_variance[self.iteration] and
-                   self.iteration <= max_iteration
-                  ):
+            while (
+                self.strong_bias2[self.iteration] > self.strong_variance[self.iteration]
+                and self.iteration <= max_iteration
+            ):
                 self.iterate(1)
 
         if self.strong_bias2[self.iteration] <= self.strong_variance[self.iteration]:
             strong_balanced_oracle = self.iteration
             return strong_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.",
-                          category=UserWarning)
+            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
             return None
 
     def __truncated_SVD_one_iteration(self):
@@ -285,37 +282,37 @@ class TruncatedSVD:
         u, s, vh = svds(self.reduced_design, k=1)
 
         # Get diagonal sequence model quantities
-        self.diagonal_design    = np.append(self.diagonal_design, s)
-        self.diagonal_response  = np.append(self.diagonal_response, u.transpose() @ self.response)
+        self.diagonal_design = np.append(self.diagonal_design, s)
+        self.diagonal_response = np.append(self.diagonal_response, u.transpose() @ self.response)
         self.eigenvector_matrix = np.append(self.eigenvector_matrix, vh.transpose(), axis=1)
-        self.diagonal_estimate  = np.append(self.diagonal_estimate,
-                                            self.diagonal_response[self.iteration] / s)
+        self.diagonal_estimate = np.append(self.diagonal_estimate, self.diagonal_response[self.iteration] / s)
 
         # Update full model quantities
-        new_truncated_svd_estimate = self.truncated_svd_estimate_list[self.iteration] + \
-                                     self.diagonal_estimate[self.iteration] * vh.flatten()
-        self.truncated_svd_estimate_list.append(new_truncated_svd_estimate) 
+        new_truncated_svd_estimate = (
+            self.truncated_svd_estimate_list[self.iteration] + self.diagonal_estimate[self.iteration] * vh.flatten()
+        )
+        self.truncated_svd_estimate_list.append(new_truncated_svd_estimate)
 
-        new_residual   = self.residuals[self.iteration] - (u.transpose() @ self.response)**2
+        new_residual = self.residuals[self.iteration] - (u.transpose() @ self.response) ** 2
         self.residuals = np.append(self.residuals, new_residual)
 
-        # Reduce design by one eigen triplet 
+        # Reduce design by one eigen triplet
         self.reduced_design = self.reduced_design - s * u @ vh
 
         # Updating theoretical quantities
         if self.true_signal is not None:
             self.diagonal_true_signal = np.append(self.diagonal_true_signal, u.transpose() @ self.true_signal)
 
-            new_weak_bias2  = self.weak_bias2[self.iteration] - s**2 * self.diagonal_true_signal[self.iteration]**2
+            new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.diagonal_true_signal[self.iteration] ** 2
             self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
 
-            new_weak_variance  = self.weak_variance[self.iteration] + self.true_noise_level**2
+            new_weak_variance = self.weak_variance[self.iteration] + self.true_noise_level**2
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
             new_weak_risk = new_weak_bias2 + new_weak_variance
             self.weak_risk = np.append(self.weak_risk, new_weak_risk)
 
-            new_strong_bias2  = self.strong_bias2[self.iteration] - self.diagonal_true_signal[self.iteration]**2
+            new_strong_bias2 = self.strong_bias2[self.iteration] - self.diagonal_true_signal[self.iteration] ** 2
             self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
 
             new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
@@ -323,41 +320,96 @@ class TruncatedSVD:
 
             new_strong_risk = new_strong_bias2 + new_strong_variance
             self.strong_risk = np.append(self.strong_risk, new_strong_risk)
-        
+
         self.iteration += 1
 
     def __truncated_SVD_one_iteration_diagonal(self):
         s = self.diagonal_design[self.iteration]
 
         # Estimator update
-        standard_basis_vector                 = np.zeros(self.parameter_size)
+        standard_basis_vector = np.zeros(self.parameter_size)
         standard_basis_vector[self.iteration] = 1.0
-        new_truncated_svd_estimate            = self.truncated_svd_estimate_list[self.iteration] + \
-                                                self.response[self.iteration] / s * standard_basis_vector
-        self.truncated_svd_estimate_list.append(new_truncated_svd_estimate) 
+        new_truncated_svd_estimate = (
+            self.truncated_svd_estimate_list[self.iteration] + self.response[self.iteration] / s * standard_basis_vector
+        )
+        self.truncated_svd_estimate_list.append(new_truncated_svd_estimate)
 
         # Residual update
-        new_residual   = self.residuals[self.iteration] - self.response[self.iteration]**2
+        new_residual = self.residuals[self.iteration] - self.response[self.iteration] ** 2
         self.residuals = np.append(self.residuals, new_residual)
 
         # Updating theoretical quantities
         if self.true_signal is not None:
-            new_weak_bias2  = self.weak_bias2[self.iteration] - s**2 * self.true_signal[self.iteration]**2
+            new_weak_bias2 = self.weak_bias2[self.iteration] - s**2 * self.true_signal[self.iteration] ** 2
             self.weak_bias2 = np.append(self.weak_bias2, new_weak_bias2)
 
-            new_weak_variance  = self.weak_variance[self.iteration] + self.true_noise_level**2
+            new_weak_variance = self.weak_variance[self.iteration] + self.true_noise_level**2
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
             new_weak_risk = new_weak_bias2 + new_weak_variance
             self.weak_risk = np.append(self.weak_risk, new_weak_risk)
 
-            new_strong_bias2  = self.strong_bias2[self.iteration] - self.true_signal[self.iteration]**2
+            new_strong_bias2 = self.strong_bias2[self.iteration] - self.true_signal[self.iteration] ** 2
             self.strong_bias2 = np.append(self.strong_bias2, new_strong_bias2)
 
-            new_strong_variance  = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
+            new_strong_variance = self.strong_variance[self.iteration] + self.true_noise_level**2 / s**2
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
             new_strong_risk = new_strong_bias2 + new_strong_variance
             self.strong_risk = np.append(self.strong_risk, new_strong_risk)
 
         self.iteration += 1
+
+    def __str__(self):
+        """Return a string representation of the TruncatedSVD model"""
+        lines = []
+        lines.append("TruncatedSVD class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.sample_size} × {self.parameter_size}")
+        lines.append(f"Diagonal mode: {'Yes' if self.diagonal else 'No'}")
+        lines.append(f"Current iteration: {self.iteration}")
+
+        if self.iteration > 0:
+            lines.append(f"Current residual: {self.residuals[self.iteration]:.6f}")
+
+        # Check if theoretical quantities are available
+        has_theoretical = (self.true_signal is not None) and (self.true_noise_level is not None)
+        lines.append(f"Theoretical quantities available: {'Yes' if has_theoretical else 'No'}")
+
+        if has_theoretical:
+            lines.append(f"True noise level: {self.true_noise_level}")
+            if self.iteration > 0:
+                lines.append(f"Strong bias²: {self.strong_bias2[self.iteration]:.6f}")
+                lines.append(f"Strong variance: {self.strong_variance[self.iteration]:.6f}")
+                lines.append(f"Strong risk: {self.strong_risk[self.iteration]:.6f}")
+                lines.append(f"Weak bias²: {self.weak_bias2[self.iteration]:.6f}")
+                lines.append(f"Weak variance: {self.weak_variance[self.iteration]:.6f}")
+                lines.append(f"Weak risk: {self.weak_risk[self.iteration]:.6f}")
+
+        return "\n".join(lines)
+
+    def __repr__(self):
+        """Return a technical representation of the TruncatedSVD model"""
+        has_theoretical = (self.true_signal is not None) and (self.true_noise_level is not None)
+
+        # Build constructor-like representation
+        args = [
+            f"design=array({self.sample_size}x{self.parameter_size})",
+            f"response=array({self.sample_size},)",
+            f"true_signal={'array' if self.true_signal is not None else 'None'}",
+            f"true_noise_level={self.true_noise_level}",
+            f"diagonal={self.diagonal}",
+        ]
+
+        base_repr = f"TruncatedSVD({', '.join(args)})"
+
+        # Add current state information
+        state_info = f" [iteration={self.iteration}"
+        if self.iteration > 0:
+            state_info += f", residual={self.residuals[self.iteration]:.6f}"
+        if has_theoretical and self.iteration > 0:
+            state_info += f", strong_risk={self.strong_risk[self.iteration]:.6f}"
+            state_info += f", weak_risk={self.weak_risk[self.iteration]:.6f}"
+        state_info += "]"
+
+        return base_repr + state_info
