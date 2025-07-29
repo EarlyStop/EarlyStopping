@@ -261,7 +261,7 @@ class L2_boost():
 
             # Update estimation quantities
             coefficient_entry                    = np.dot(self.response, weak_learner) / self.sample_size
-            new_coefficients                     = self.coefficients_list[self.iteration]
+            new_coefficients                     = np.copy(self.coefficients_list[self.iteration])
             new_coefficients[weak_learner_index] = coefficient_entry
             self.coefficients_list.append(new_coefficients)
 
