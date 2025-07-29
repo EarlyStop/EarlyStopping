@@ -1,6 +1,6 @@
 # Clear all variables from the global namespace
 for name in list(globals()):
-    if not name.startswith('_'):
+    if not name.startswith("_"):
         del globals()[name]
 
 # Import required libraries and modules
@@ -14,19 +14,27 @@ from joblib import Parallel, delayed
 
 # Reload modules to ensure changes are applied
 importlib.reload(data_generation)
-importlib.reload(es) 
+importlib.reload(es)
+
 
 def methods_stopping(X_train, y_train, X_test, noise_level, noise, true_signal, true_signal_test):
 
-    return global_ES(X_train=X_train, y_train=y_train, X_test=X_test, noise=noise,
-                     true_signal=true_signal, signal_test=true_signal_test, kappa=noise_level)
+    return global_ES(
+        X_train=X_train,
+        y_train=y_train,
+        X_test=X_test,
+        noise=noise,
+        true_signal=true_signal,
+        signal_test=true_signal_test,
+        kappa=noise_level,
+    )
 
 
 def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
 
-
-    regression_tree = es.RegressionTree(design=X_train, response=y_train, min_samples_split=1, true_signal=true_signal,
-                                        true_noise_vector=noise)
+    regression_tree = es.RegressionTree(
+        design=X_train, response=y_train, min_samples_split=1, true_signal=true_signal, true_noise_vector=noise
+    )
     regression_tree.iterate(max_depth=30)
     early_stopping_iteration = regression_tree.get_discrepancy_stop(critical_value=kappa)
 
@@ -37,7 +45,7 @@ def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
     # Interpolation:
     if early_stopping_iteration == 0:
         mse_global_inter = mse_global
-        print('No Interpolation done.')
+        print("No Interpolation done.")
     else:
         prediction_global_k = regression_tree.predict(X_test, depth=early_stopping_iteration - 1)
         residuals = regression_tree.residuals
@@ -67,8 +75,9 @@ def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
         mse_global_list.append(mse_global_temp)
 
     global_stopping_iteration_oracle = np.argmin(mse_global_list) + 1
-    oracle_tree = es.RegressionTree(design=X_train, response=y_train, min_samples_split=1, true_signal=true_signal,
-                                        true_noise_vector=noise)
+    oracle_tree = es.RegressionTree(
+        design=X_train, response=y_train, min_samples_split=1, true_signal=true_signal, true_noise_vector=noise
+    )
     oracle_tree.iterate(max_depth=global_stopping_iteration_oracle + 1)
 
     # Interpolated oracle:
@@ -88,13 +97,12 @@ def run_simulation(dgp, M=15, noise_level=1):
 
     for _ in range(M):
 
-        if dgp == 'additive_smooth' or dgp == 'additive_step' or 'additive_linear' or 'additive_hills':
+        if dgp == "additive_smooth" or dgp == "additive_step" or "additive_linear" or "additive_hills":
             n_train = 1000
             n_test = 1000
             d = 30
             X_train = np.random.uniform(-2.5, 2.5, size=(n_train, d))
             X_test = np.random.uniform(-2.5, 2.5, size=(n_test, d))
-
 
         y_train, noise = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=True)
         y_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=True)
@@ -119,9 +127,15 @@ def run_simulation(dgp, M=15, noise_level=1):
         for i in range(M):
             print(dgp, stopping_method, i)
 
-            results = methods_stopping(all_X_train[i], all_y_train[i], all_X_test[i], noise_level=noise_level, noise=noise,
-                                               true_signal=all_f[i],
-                                               true_signal_test = all_f_test[i])
+            results = methods_stopping(
+                all_X_train[i],
+                all_y_train[i],
+                all_X_test[i],
+                noise_level=noise_level,
+                noise=noise,
+                true_signal=all_f[i],
+                true_signal_test=all_f_test[i],
+            )
             if not isinstance(results, tuple):
                 results = (results,)
             mspe = results[0]
@@ -133,30 +147,25 @@ def run_simulation(dgp, M=15, noise_level=1):
             if len(results) > 2:
                 additional_metric2_list.append(results[2])
 
-
         mean_mspe = np.array(mspe_list)
         mean_additional_metric = np.array(additional_metric_list) if additional_metric_list else None
         mean_additional_metric2 = np.array(additional_metric2_list) if additional_metric2_list else None
 
         return mean_mspe, mean_additional_metric, mean_additional_metric2
 
-    mspe_global, mspe_global_inter, mspe_oracle_inter = monte_carlo(stopping_method='global', noise=noise)
+    mspe_global, mspe_global_inter, mspe_oracle_inter = monte_carlo(stopping_method="global", noise=noise)
     # global ES, global inter ES, global inter Oracle
 
-
-    return np.column_stack(( mspe_global, mspe_global_inter, mspe_oracle_inter ))
-
-
+    return np.column_stack((mspe_global, mspe_global_inter, mspe_oracle_inter))
 
 
 def run_simulation_wrapper(dgp_name):
 
-    if dgp_name == 'smooth_signal':
+    if dgp_name == "smooth_signal":
         return run_simulation(dgp_name, noise_level=1)
-    elif dgp_name == 'breiman84':
+    elif dgp_name == "breiman84":
         return run_simulation(dgp_name, noise_level=1)
     return run_simulation(dgp_name)
-
 
 
 def create_custom_boxplot(data, labels, dgp_names, y_lim_lower, y_lim_upper, fig_dir, name):
@@ -167,46 +176,38 @@ def create_custom_boxplot(data, labels, dgp_names, y_lim_lower, y_lim_upper, fig
     bp = ax.boxplot(data, patch_artist=True, labels=labels)
 
     # Define custom colors
-    colors = ['blue', 'purple'] * (len(labels) // 2)
+    colors = ["blue", "purple"] * (len(labels) // 2)
 
     # Set colors for each box
-    for patch, color in zip(bp['boxes'], colors):
+    for patch, color in zip(bp["boxes"], colors):
         patch.set_facecolor(color)
         patch.set_linewidth(1.5)
 
     # Making whiskers, caps, and medians thicker and grey
-    for whisker in bp['whiskers']:
+    for whisker in bp["whiskers"]:
         whisker.set_linewidth(1.5)
-    for cap in bp['caps']:
+    for cap in bp["caps"]:
         cap.set_linewidth(1.5)
-    for median in bp['medians']:
+    for median in bp["medians"]:
         median.set_linewidth(1.5)
 
     # Add a horizontal line at y=1
-    ax.axhline(y=1, color='black', linestyle='--', linewidth=1.5)
+    ax.axhline(y=1, color="black", linestyle="--", linewidth=1.5)
 
     # Enable gridlines and set y-axis limits
     ax.grid(True)
     ax.set_ylim(y_lim_lower, y_lim_upper)
 
     # Customize tick labels
-    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis="both", which="major", labelsize=14)
 
     # Add second-row DGP labels beneath the x-ticks
     for i, dgp_label in enumerate(dgp_names):
         x_pos = 2 * i + 1.5  # Center position for each pair (Global, Global Int)
-        plt.text(
-            x_pos,
-            y_lim_lower - 0.1,
-            dgp_label,
-            ha='center',
-            va='top',
-            fontsize=14,
-            color='black'
-        )
+        plt.text(x_pos, y_lim_lower - 0.1, dgp_label, ha="center", va="top", fontsize=14, color="black")
 
     # Save the plot
-    plt.savefig(os.path.join(fig_dir, f'regtree_{name}.png'), bbox_inches='tight', dpi=300)
+    plt.savefig(os.path.join(fig_dir, f"regtree_{name}.png"), bbox_inches="tight", dpi=300)
 
     plt.tight_layout()
     plt.show()
@@ -214,15 +215,15 @@ def create_custom_boxplot(data, labels, dgp_names, y_lim_lower, y_lim_upper, fig
 
 def main():
 
-    dgps = ['additive_smooth', 'additive_step', 'additive_linear', 'additive_hills']
+    dgps = ["additive_smooth", "additive_step", "additive_linear", "additive_hills"]
 
     results = Parallel(n_jobs=12)(delayed(run_simulation_wrapper)(dgp) for dgp in dgps)
     results = np.round(results, 6)
 
     # Specify the directory:
-    fig_dir = '/Users/ratmir/PycharmProjects/RandomForest'
+    fig_dir = "."  # Change to desired directory
 
-    dgps = ['additive smooth', 'additive step', 'additive linear', 'additive hills']
+    dgps = ["additive smooth", "additive step", "additive linear", "additive hills"]
 
     dgp_groups = [
         {"dgps": dgps[:2], "results": results[:2], "plot_title": "First and Second DGPs", "file_name": "plot_1"},
@@ -250,7 +251,7 @@ def main():
             all_data.append(filtered_relative_inter.flatten())
 
             # Add 'Global' and 'Global Int' for each DGP
-            labels.extend(['global', 'global inter'])
+            labels.extend(["global", "global inter"])
 
             # Add the DGP name for the second axis
             dgp_names.append(dgp_name)

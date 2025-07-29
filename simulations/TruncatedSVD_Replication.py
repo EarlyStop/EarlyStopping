@@ -10,12 +10,14 @@ import EarlyStopping as es
 import pandas as pd
 import os
 
+np.random.seed(42)
+
 # Signals and design
 # ------------------------------------------------------------------------------
 # From G. Blanchard, M. Hoffmann, M. Reiß. "Early stopping for statistical inverse problems via
 # truncated SVD estimation". In: Electronic Journal of Statistics 12(2): 3204-3231 (2018).
-sample_size  = 10000
-indices      = np.arange(sample_size) + 1
+sample_size = 10000
+indices = np.arange(sample_size) + 1
 
 design, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(
     sample_size=10000, type="smooth"
@@ -130,4 +132,3 @@ labels = ["supersmooth", "smooth", "rough", "supersmooth", "smooth", "rough"]
 fig_dir = ""
 
 create_custom_boxplot(data, labels, y_lim_lower=0, y_lim_upper=1.3, fig_dir=fig_dir, name="efficiency_SVD")
-

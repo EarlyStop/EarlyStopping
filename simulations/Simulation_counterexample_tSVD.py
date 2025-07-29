@@ -10,6 +10,8 @@ plt.rc("ytick", labelsize=15)
 
 importlib.reload(es)
 
+np.random.seed(42)
+
 sample_size = 100
 max_iteration = 100
 
