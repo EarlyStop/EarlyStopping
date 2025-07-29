@@ -1,0 +1,1 @@
+{"cmd": "np.std(training_design[:, 70])", "cmd_opts": "", "import_complete": 1, "terminal": "tmux"}

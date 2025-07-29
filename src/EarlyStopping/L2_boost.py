@@ -64,7 +64,7 @@ class L2_boost:
 
         # Estimation quantities
         self.iteration = 0
-        self.selected_components = np.array([])
+        self.selected_components = []
         self.orth_directions = []
         self.coefficients_list = [np.zeros(self.parameter_size)]
         self.boost_estimate_list = [np.zeros(self.sample_size)]
@@ -102,7 +102,7 @@ class L2_boost:
         *input_variable*: ``array``. The size of input_variable has to match parameter_size.
         """
         return np.dot(design_observation, self.coefficients)
-        # 2025-03-10-TODO-BS: adjust coefficients.
+        # 2025-07-29-TODO: Needs to be repaired. 
 
     def get_discrepancy_stop(self, critical_value, max_iteration):
         """Early stopping for the boosting procedure based on the discrepancy principle.
@@ -250,22 +250,23 @@ class L2_boost:
             print("Algorithm terminated")
         else:
             # Update selected variables
-            self.selected_components = np.append(self.selected_components, weak_learner_index)
+            self.selected_components.append(weak_learner_index)
             self.__update_orth_directions(self.design[:, weak_learner_index])
             weak_learner = self.orth_directions[-1]
 
             # Update estimation quantities
-<<<<<<< HEAD
-            coefficient_entry                    = np.dot(self.response, weak_learner) / self.sample_size
-            new_coefficients                     = np.copy(self.coefficients_list[self.iteration])
-=======
-            coefficient_entry = np.dot(self.response, weak_learner) / self.sample_size
-            new_coefficients = self.coefficients_list[self.iteration]
->>>>>>> 803b92c518343593d07a7dcad388e7294b7bf0db
-            new_coefficients[weak_learner_index] = coefficient_entry
+            weak_learner_coefficient = np.dot(self.response, weak_learner) / self.sample_size
+
+            submodel = linear_model.LinearRegression(fit_intercept = False)
+            submodel.fit(self.design[:, self.selected_components], self.response)
+            submodel_coefficients = submodel.coef_
+
+            new_coefficients = np.zeros(self.parameter_size)
+            for index in range(self.iteration + 1):
+                new_coefficients[self.selected_components[index]] = submodel_coefficients[index]
             self.coefficients_list.append(new_coefficients)
 
-            new_boost_estimate = self.boost_estimate_list[self.iteration] + coefficient_entry * weak_learner
+            new_boost_estimate = self.boost_estimate_list[self.iteration] + weak_learner_coefficient * weak_learner
             self.boost_estimate_list.append(new_boost_estimate)
 
             self.__residual_vector = self.response - new_boost_estimate
