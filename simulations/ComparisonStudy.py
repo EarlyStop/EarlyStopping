@@ -6,7 +6,7 @@ import os
 
 importlib.reload(es)
 
-np.random.seed(42)
+np.random.seed(21)
 
 sample_size = 100
 name = "phillips"
@@ -153,7 +153,7 @@ def create_log_boxplot(data, labels, fig_dir, name):
         plt.yscale("log")
         plt.grid(True, which="both")
 
-    plt.savefig(os.path.join(fig_dir, f"stopping_times_{name}.png"), bbox_inches="tight", dpi=300)
+    plt.savefig(os.path.join(fig_dir, f"{name}.png"), bbox_inches="tight", dpi=300)
     plt.tight_layout()
     plt.show()
 

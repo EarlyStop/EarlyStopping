@@ -10,7 +10,7 @@ import os
 
 importlib.reload(es)
 
-np.random.seed(42)
+np.random.seed(21)
 
 design_smooth, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(
     sample_size=10000, type="smooth"

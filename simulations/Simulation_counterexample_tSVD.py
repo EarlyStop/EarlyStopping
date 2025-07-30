@@ -10,7 +10,7 @@ plt.rc("ytick", labelsize=15)
 
 importlib.reload(es)
 
-np.random.seed(42)
+np.random.seed(21)
 
 sample_size = 100
 max_iteration = 100
@@ -53,7 +53,7 @@ ax.set_ylim([0, 0.5])
 ax.grid(True)
 ax.tick_params(axis="y", length=0)
 plt.tight_layout()
-plt.savefig("strong_quantities_plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("tSVD_strong_quantities_plot.png", dpi=300, bbox_inches="tight")
 
 # Create separate figure for Weak Quantities
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -72,6 +72,6 @@ ax.set_ylim([0, 0.5])
 ax.grid(True)
 ax.tick_params(axis="y", length=0)
 plt.tight_layout()
-plt.savefig("weak_quantities_plot.png", dpi=300, bbox_inches="tight")
+plt.savefig("tSVD_weak_quantities_plot.png", dpi=300, bbox_inches="tight")
 
 plt.show()

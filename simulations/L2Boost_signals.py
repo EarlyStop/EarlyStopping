@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-np.random.seed(42)
+np.random.seed(21)
 
 sample_size = 1000
 para_size = 1000
@@ -37,19 +37,17 @@ beta_90[30:60] = 0.5
 beta_90[60:90] = 0.25
 beta_90 = 10 * beta_90 / np.sum(np.abs(beta_90))
 
+############################################################
+
 plt.figure(figsize=(10, 6))
 
 # Plot only the first 1000 components for better visibility
 plot_range = 100
 x_indices = np.arange(1, plot_range + 1)
 
-# Plot Landweber estimate
-plt.plot(x_indices, beta_3[:plot_range], color="purple", linewidth=1.5)
-# Plot tSVD estimate
-plt.plot(x_indices, beta_2[:plot_range], color="#CCCC00", linewidth=1.5)
-# Plot Conjugate Gradient estimate
-plt.plot(x_indices, beta_1[:plot_range], color="blue", linewidth=1.5)
-# Plot true signal
+plt.plot(x_indices, beta_15[:plot_range], color="purple", linewidth=1.5)
+plt.plot(x_indices, beta_60[:plot_range], color="#CCCC00", linewidth=1.5)
+plt.plot(x_indices, beta_90[:plot_range], color="blue", linewidth=1.5)
 plt.tick_params(axis="both", which="major", labelsize=14)
 
 # Add labels and title
@@ -62,9 +60,10 @@ plt.grid(True)
 plt.tick_params(axis="both", which="major", labelsize=14)
 # Save the figure
 plt.tight_layout()
-plt.savefig(f"boosting_signals.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"boosting_signals_1.png", dpi=300, bbox_inches="tight")
 plt.show()
 
+############################################################
 
 plt.figure(figsize=(10, 6))
 
@@ -72,13 +71,9 @@ plt.figure(figsize=(10, 6))
 plot_range = 100
 x_indices = np.arange(1, plot_range + 1)
 
-# Plot Landweber estimate
-plt.plot(x_indices, beta_90[:plot_range], color="purple", linewidth=1.5)
-# Plot tSVD estimate
-plt.plot(x_indices, beta_60[:plot_range], color="#CCCC00", linewidth=1.5)
-# Plot Conjugate Gradient estimate
-plt.plot(x_indices, beta_15[:plot_range], color="blue", linewidth=1.5)
-# Plot true signal
+plt.plot(x_indices, beta_3[:plot_range], color="purple", linewidth=1.5)
+plt.plot(x_indices, beta_2[:plot_range], color="#CCCC00", linewidth=1.5)
+plt.plot(x_indices, beta_1[:plot_range], color="blue", linewidth=1.5)
 plt.tick_params(axis="both", which="major", labelsize=14)
 
 # Add labels and title
@@ -91,5 +86,5 @@ plt.grid(True)
 plt.tick_params(axis="both", which="major", labelsize=14)
 # Save the figure
 plt.tight_layout()
-plt.savefig(f"boosting_signals.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"boosting_signals_2.png", dpi=300, bbox_inches="tight")
 plt.show()

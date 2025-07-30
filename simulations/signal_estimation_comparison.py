@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import EarlyStopping as es
 from scipy.fft import fft
 
-np.random.seed(42)
+np.random.seed(21)
 
 # Generate signals and design matrix
 # ------------------------------------------------------------------------------

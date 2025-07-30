@@ -11,7 +11,7 @@ plt.rc("ytick", labelsize=15)
 
 importlib.reload(es)
 
-np.random.seed(42)
+np.random.seed(21)
 
 sample_size = 1000
 

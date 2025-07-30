@@ -3,7 +3,7 @@ import importlib
 import EarlyStopping as es
 import matplotlib.pyplot as plt
 
-np.random.seed(42)
+np.random.seed(21)
 
 # Ensure consistent style - using the style from error_decomposition_plots.py
 plt.rc("axes", titlesize=20)

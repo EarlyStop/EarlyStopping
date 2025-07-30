@@ -10,7 +10,7 @@ import EarlyStopping as es
 import pandas as pd
 import os
 
-np.random.seed(42)
+np.random.seed(21)
 
 
 # Signals and design
