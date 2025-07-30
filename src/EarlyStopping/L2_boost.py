@@ -24,7 +24,7 @@ class L2_boost:
 
     *iteration*: ``int``. Current boosting iteration of the algorithm.
 
-    *boost_estimate*: ``array``. Boosting estimate at the current iteration for the data given in design.
+    *boost_estimate_list*: ``list``. List of boosting estimate as arrays up to the current iteration for the data given in design.
 
     *residuals*: ``array``. Lists the sequence of the residual mean of squares betwean the data and the boosting estimator.
 
@@ -39,7 +39,7 @@ class L2_boost:
     +-----------------------------------------------------------------+------------------------------------------------------------------+
     | iterate( ``number_of_iterations=1`` )                           | Performs number of iterations of the boosting algorithm.         |
     +-----------------------------------------------------------------+------------------------------------------------------------------+
-    | predict( ``design_observation`` )                               | Predicts the response based on the current boosting estimate.    |
+    | predict( ``design_observation, iteration`` )                    | Predicts the response based on the current boosting estimate.    |
     +-----------------------------------------------------------------+------------------------------------------------------------------+
     | get_discrepancy_stop( ``critical_value, max_iteration`` )       | Stops the boosting algorithm based on the discrepancy principle. |
     +-----------------------------------------------------------------+------------------------------------------------------------------+
@@ -64,7 +64,7 @@ class L2_boost:
 
         # Estimation quantities
         self.iteration = 0
-        self.selected_components = np.array([])
+        self.selected_components = []
         self.orth_directions = []
         self.coefficients_list = [np.zeros(self.parameter_size)]
         self.boost_estimate_list = [np.zeros(self.sample_size)]
@@ -94,15 +94,16 @@ class L2_boost:
         for _ in range(number_of_iterations):
             self.__boost_one_iteration()
 
-    def predict(self, design_observation):
+    def predict(self, new_design, iteration):
         """Predicts the output variable based on the current boosting estimate.
 
         **Parameters**
 
-        *input_variable*: ``array``. The size of input_variable has to match parameter_size.
+        *new_design*: ``array``. New observations of a kxp-Design matrix of the linear model.
+
+        *iteration*: ``int``. Boosting iterations to be used for the prediction.
         """
-        return np.dot(design_observation, self.coefficients)
-        # 2025-03-10-TODO-BS: adjust coefficients.
+        return new_design @ self.coefficients_list[iteration]
 
     def get_discrepancy_stop(self, critical_value, max_iteration):
         """Early stopping for the boosting procedure based on the discrepancy principle.
@@ -250,17 +251,23 @@ class L2_boost:
             print("Algorithm terminated")
         else:
             # Update selected variables
-            self.selected_components = np.append(self.selected_components, weak_learner_index)
+            self.selected_components.append(weak_learner_index)
             self.__update_orth_directions(self.design[:, weak_learner_index])
             weak_learner = self.orth_directions[-1]
 
             # Update estimation quantities
-            coefficient_entry = np.dot(self.response, weak_learner) / self.sample_size
-            new_coefficients = self.coefficients_list[self.iteration]
-            new_coefficients[weak_learner_index] = coefficient_entry
+            weak_learner_coefficient = np.dot(self.response, weak_learner) / self.sample_size
+
+            submodel = linear_model.LinearRegression(fit_intercept = False)
+            submodel.fit(self.design[:, self.selected_components], self.response)
+            submodel_coefficients = submodel.coef_
+
+            new_coefficients = np.zeros(self.parameter_size)
+            for index in range(self.iteration + 1):
+                new_coefficients[self.selected_components[index]] = submodel_coefficients[index]
             self.coefficients_list.append(new_coefficients)
 
-            new_boost_estimate = self.boost_estimate_list[self.iteration] + coefficient_entry * weak_learner
+            new_boost_estimate = self.boost_estimate_list[self.iteration] + weak_learner_coefficient * weak_learner
             self.boost_estimate_list.append(new_boost_estimate)
 
             self.__residual_vector = self.response - new_boost_estimate

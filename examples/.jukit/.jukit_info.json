@@ -1,0 +1,1 @@
+{"cmd": "fig, ax = plt.subplots()\nax.plot(np.arange(50), out_of_sample_mse)\nax.set_ylim(0, 2)\nplt.show()", "cmd_opts": "", "import_complete": 1, "terminal": "tmux"}
