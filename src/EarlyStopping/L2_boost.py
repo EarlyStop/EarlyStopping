@@ -24,7 +24,7 @@ class L2_boost:
 
     *iteration*: ``int``. Current boosting iteration of the algorithm.
 
-    *boost_estimate*: ``array``. Boosting estimate at the current iteration for the data given in design.
+    *boost_estimate_list*: ``list``. List of boosting estimate as arrays up to the current iteration for the data given in design.
 
     *residuals*: ``array``. Lists the sequence of the residual mean of squares betwean the data and the boosting estimator.
 
@@ -39,7 +39,7 @@ class L2_boost:
     +-----------------------------------------------------------------+------------------------------------------------------------------+
     | iterate( ``number_of_iterations=1`` )                           | Performs number of iterations of the boosting algorithm.         |
     +-----------------------------------------------------------------+------------------------------------------------------------------+
-    | predict( ``design_observation`` )                               | Predicts the response based on the current boosting estimate.    |
+    | predict( ``design_observation, iteration`` )                    | Predicts the response based on the current boosting estimate.    |
     +-----------------------------------------------------------------+------------------------------------------------------------------+
     | get_discrepancy_stop( ``critical_value, max_iteration`` )       | Stops the boosting algorithm based on the discrepancy principle. |
     +-----------------------------------------------------------------+------------------------------------------------------------------+
@@ -94,15 +94,16 @@ class L2_boost:
         for _ in range(number_of_iterations):
             self.__boost_one_iteration()
 
-    def predict(self, design_observation):
+    def predict(self, new_design, iteration):
         """Predicts the output variable based on the current boosting estimate.
 
         **Parameters**
 
-        *input_variable*: ``array``. The size of input_variable has to match parameter_size.
+        *new_design*: ``array``. New observations of a kxp-Design matrix of the linear model.
+
+        *iteration*: ``int``. Boosting iterations to be used for the prediction.
         """
-        return np.dot(design_observation, self.coefficients)
-        # 2025-07-29-TODO: Needs to be repaired. 
+        return new_design @ self.coefficients_list[iteration]
 
     def get_discrepancy_stop(self, critical_value, max_iteration):
         """Early stopping for the boosting procedure based on the discrepancy principle.
