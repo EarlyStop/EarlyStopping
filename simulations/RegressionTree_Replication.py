@@ -1,10 +1,11 @@
-# Clear all variables from the global namespace
+# Clear all variables from the global namespace 
 for name in list(globals()):
     if not name.startswith("_"):
         del globals()[name]
 
 # Import required libraries and modules
 import numpy as np
+np.random.seed(21)
 import os
 import EarlyStopping as es
 import importlib
@@ -90,82 +91,70 @@ def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
     return mse_global, mse_global_inter, mse_oracle_early_stopping
 
 
-def run_simulation(dgp, M=15, noise_level=1):
+def single_monte_carlo_run(dgp, noise_level, run_idx):
+    """Execute a single Monte Carlo run for the given DGP."""
+    
+    if dgp == "additive_smooth" or dgp == "additive_step" or "additive_linear" or "additive_hills":
+        n_train = 1000
+        n_test = 1000
+        d = 30
+        X_train = np.random.uniform(-2.5, 2.5, size=(n_train, d))
+        X_test = np.random.uniform(-2.5, 2.5, size=(n_test, d))
 
-    all_X_train, all_y_train, all_f, all_f_test = [], [], [], []
-    all_X_test, all_y_test = [], []
-
-    for _ in range(M):
-
-        if dgp == "additive_smooth" or dgp == "additive_step" or "additive_linear" or "additive_hills":
-            n_train = 1000
-            n_test = 1000
-            d = 30
-            X_train = np.random.uniform(-2.5, 2.5, size=(n_train, d))
-            X_test = np.random.uniform(-2.5, 2.5, size=(n_test, d))
-
-        y_train, noise = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=True)
-        y_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=True)
-        f, nuisance = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=False)
-        f_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=False)
-
-        all_f.append(f)
-        all_f_test.append(f_test)
-
-        all_X_train.append(X_train)
-        all_y_train.append(y_train)
-
-        all_X_test.append(X_test)
-        all_y_test.append(y_test)
-
-    def monte_carlo(stopping_method, noise):
-
-        mspe_list = []
-        additional_metric_list = []
-        additional_metric2_list = []
-
-        for i in range(M):
-            print(dgp, stopping_method, i)
-
-            results = methods_stopping(
-                all_X_train[i],
-                all_y_train[i],
-                all_X_test[i],
-                noise_level=noise_level,
-                noise=noise,
-                true_signal=all_f[i],
-                true_signal_test=all_f_test[i],
-            )
-            if not isinstance(results, tuple):
-                results = (results,)
-            mspe = results[0]
-            mspe_list.append(mspe)
-
-            # Handle the additional metric if it exists
-            if len(results) > 1:
-                additional_metric_list.append(results[1])
-            if len(results) > 2:
-                additional_metric2_list.append(results[2])
-
-        mean_mspe = np.array(mspe_list)
-        mean_additional_metric = np.array(additional_metric_list) if additional_metric_list else None
-        mean_additional_metric2 = np.array(additional_metric2_list) if additional_metric2_list else None
-
-        return mean_mspe, mean_additional_metric, mean_additional_metric2
-
-    mspe_global, mspe_global_inter, mspe_oracle_inter = monte_carlo(stopping_method="global", noise=noise)
-    # global ES, global inter ES, global inter Oracle
-
-    return np.column_stack((mspe_global, mspe_global_inter, mspe_oracle_inter))
+    y_train, noise = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=True)
+    y_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=True)
+    f, nuisance = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=False)
+    f_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=False)
+    
+    print(f"{dgp}, global, {run_idx}")
+    
+    results = methods_stopping(
+        X_train,
+        y_train,
+        X_test,
+        noise_level=noise_level,
+        noise=noise,
+        true_signal=f,
+        true_signal_test=f_test,
+    )
+    
+    if not isinstance(results, tuple):
+        results = (results,)
+    
+    return results
 
 
-def run_simulation_wrapper(dgp_name):
+def run_simulation_wrapper(dgp, M=200, noise_level=1):
+    """Run simulation with parallel Monte Carlo runs."""
+    
+    # Parallelize across Monte Carlo runs (auto-detect CPU cores, leave one free for system)
+    n_cores = max(1, os.cpu_count() - 1)
+    results_list = Parallel(n_jobs=n_cores)(delayed(single_monte_carlo_run)(dgp, noise_level, i) for i in range(M))
+    
+    # Aggregate results
+    mspe_list = []
+    additional_metric_list = []
+    additional_metric2_list = []
+    
+    for results in results_list:
+        mspe = results[0]
+        mspe_list.append(mspe)
+        
+        # Handle the additional metric if it exists
+        if len(results) > 1:
+            additional_metric_list.append(results[1])
+        if len(results) > 2:
+            additional_metric2_list.append(results[2])
+    
+    mean_mspe = np.array(mspe_list)
+    mean_additional_metric = np.array(additional_metric_list) if additional_metric_list else None
+    mean_additional_metric2 = np.array(additional_metric2_list) if additional_metric2_list else None
+    
+    # Return in the same format as before (global ES, global inter ES, global inter Oracle)
+    return np.column_stack((mean_mspe, mean_additional_metric, mean_additional_metric2))
 
-    if dgp_name == "smooth_signal":
-        return run_simulation(dgp_name, noise_level=1)
-    elif dgp_name == "breiman84":
-        return run_simulation(dgp_name, noise_level=1)
-    return run_simulation(dgp_name)
+
+
 
 
 def create_custom_boxplot(data, labels, dgp_names, y_lim_lower, y_lim_upper, fig_dir, name):
@@ -217,11 +206,17 @@ def main():
 
     dgps = ["additive_smooth", "additive_step", "additive_linear", "additive_hills"]
 
-    results = Parallel(n_jobs=12)(delayed(run_simulation_wrapper)(dgp) for dgp in dgps)
+    # Run DGPs sequentially, but parallelize Monte Carlo runs within each DGP
+    results = []
+    for dgp in dgps:
+        print(f"Running DGP: {dgp}")
+        dgp_result = run_simulation_wrapper(dgp)
+        results.append(dgp_result)
+    
     results = np.round(results, 6)
 
-    # Specify the directory:
-    fig_dir = "."  # Change to desired directory
+    # Automatically determine the directory for saving plots (same as script location)
+    fig_dir = os.path.dirname(os.path.abspath(__file__))
 
     dgps = ["additive smooth", "additive step", "additive linear", "additive hills"]
 
