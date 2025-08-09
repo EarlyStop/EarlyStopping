@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 import EarlyStopping as es
 
@@ -11,7 +12,8 @@ import EarlyStopping as es
 
 data = pd.read_csv("/home/be5tan/Projects/EarlyStopping/data/riboflavin_dataset.csv")
 data.insert(1, "constant", 1)
-training_data, validation_data = train_test_split(data, test_size=11, random_state=100)
+training_data, validation_data = train_test_split(data, test_size=11, random_state=1)
+# random_state = 100 for very U-shaped out of sample mse
 
 training_response = training_data.iloc[:, 0].to_numpy()
 training_design   = training_data.iloc[:, 1:].to_numpy()
@@ -44,9 +46,15 @@ out_of_sample_mse = np.zeros(50)
 for iteration in range(50):
     out_of_sample_mse[iteration] = np.mean((validation_response - alg.predict(validation_design, iteration))**2)
 
-
 fig, ax = plt.subplots()
 ax.plot(np.arange(50), out_of_sample_mse)
 ax.set_ylim(0, 2)
 plt.show()
 
+
+# Comparison w/ the cross validated Lasso ----------------------------------------------------------
+
+lasso_cv = linear_model.LassoCV(fit_intercept = False)
+lasso_cv.fit(training_design, training_response)
+lasso_cv_mse = np.mean((validation_response - lasso_cv.predict(validation_design))**2)
+lasso_cv_mse
