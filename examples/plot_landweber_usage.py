@@ -54,21 +54,20 @@ alg = es.Landweber(design, response, learning_rate=1, true_signal=true_signal, t
 alg.iterate(3000)
 
 # %%
-# Bias-variance decomposition (weak)
+# Bias-variance decomposition (weak/strong)
 plt.figure()
-plt.plot(indices[0 : alg.iteration + 1], alg.weak_variance, label="Variance")
-plt.plot(indices[0 : alg.iteration + 1], alg.weak_bias2, label="Bias2")
+plt.plot(indices[0 : alg.iteration + 1], alg.weak_variance, label="Weak variance")
+plt.plot(indices[0 : alg.iteration + 1], alg.weak_bias2, label="Weak squared bias")
+plt.legend(loc="upper right")
+plt.show()
+
+plt.figure()
+plt.plot(indices[0 : alg.iteration + 1], alg.strong_variance, label="Strong variance")
+plt.plot(indices[0 : alg.iteration + 1], alg.strong_bias2, label="Strong squared bias")
+plt.legend(loc="upper right")
 plt.show()
 
 print(f"Weak balanced oracle: {alg.get_weak_balanced_oracle(3000)}")
-
-# %%
-# Bias-variance decomposition (strong)
-plt.figure()
-plt.plot(indices[0 : alg.iteration + 1], alg.strong_variance, label="Variance")
-plt.plot(indices[0 : alg.iteration + 1], alg.strong_bias2, label="Bias2")
-plt.show()
-
 print(f"Strong balanced oracle: {alg.get_strong_balanced_oracle(3000)}")
 
 # %%
@@ -77,7 +76,12 @@ critical_value = sample_size * true_noise_level**2
 discrepancy_time = alg.get_discrepancy_stop(critical_value, 3000)
 estimated_signal = alg.get_estimate(discrepancy_time)
 
+print(f"Critical value: {critical_value}.")
+print(f"Discrepancy stopping time: {discrepancy_time}")
+
 plt.figure(figsize=(14, 4))
-plt.plot(indices, estimated_signal)
-plt.plot(indices, true_signal)
+plt.plot(indices, estimated_signal, label="Estimated signal at stopping time")
+plt.plot(indices, true_signal, label="True signal")
 plt.ylim([0, 2])
+plt.legend(loc="upper right")
+plt.show()
