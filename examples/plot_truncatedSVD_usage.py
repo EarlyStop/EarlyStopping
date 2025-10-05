@@ -7,11 +7,14 @@ We illustrate the usage and available methods of the TruncatedSVD class via a
 small example.
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.sparse import dia_matrix
 import EarlyStopping as es
+
+print(os.environ["PASSWORD"])
 
 np.random.seed(42)
 sns.set_theme()
