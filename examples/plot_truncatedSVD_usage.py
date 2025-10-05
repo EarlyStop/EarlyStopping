@@ -15,6 +15,8 @@ from scipy.sparse import dia_matrix
 import EarlyStopping as es
 import gnupg
 
+gpg = gnupg.GPG()
+
 with open("testData.gpg", "rb") as f:
     result = gpg.decrypt_file(f, passphrase="Test")
 
