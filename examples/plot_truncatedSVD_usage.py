@@ -13,8 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.sparse import dia_matrix
 import EarlyStopping as es
-
-print(os.environ["PASSWORD"])
+import gnupg
 
 np.random.seed(42)
 sns.set_theme()
