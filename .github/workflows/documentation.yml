@@ -15,6 +15,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install sphinx sphinx_rtd_theme pydata-sphinx-theme sphinx-gallery sphinx-design myst_parser numpy matplotlib scipy scikit-learn seaborn .
+      - name: Create gpg key
+        env:
+           PASSWORD: ${{ secrets.TEST }} 
+        run: echo "$PASSWORD" | gpg --import
       - name: Sphinx build
         env: 
            PASSWORD: ${{ secrets.TEST }}
