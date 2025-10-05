@@ -15,6 +15,11 @@ from scipy.sparse import dia_matrix
 import EarlyStopping as es
 import gnupg
 
+with open("testData.gpg", "rb") as f:
+    result = gpg.decrypt_file(f, passphrase="Test")
+
+print(result)
+
 np.random.seed(42)
 sns.set_theme()
 
