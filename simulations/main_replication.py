@@ -16,7 +16,7 @@ script_number = 1
 info(
     f"Script number {script_number}: Replicating the decompositions for two different signals from Figure 1 (a) and (b)"
 )
-subprocess.run(["python", "error_decomposition_plots.py"])
+subprocess.run(["python", "general_error_decomposition_plots.py"])
 script_number = script_number + 1
 
 info(f"Script number {script_number}: Replicating the weak and strong error decompositions from Figure 2 (a) and (b)")
