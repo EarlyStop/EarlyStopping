@@ -70,7 +70,7 @@ Running the ```main_replication.py``` script will reproduce all figures exactly 
 From the repository root:
 
 ```bash
-cd simulations #Step into the simulations folder so that the base path is correct
+cd simulations   # Step into the simulations folder so that the base path is correct.
 python {insert_script_name}.py   # e.g. python RegressionTree_additive_plots.py
 ```
 
