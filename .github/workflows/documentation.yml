@@ -19,7 +19,7 @@ jobs:
         env:
            PASSWORD: ${{ secrets.PASSWORD }}
            KEY: ${{ secrets.KEY }}
-        run: echo "$PASSWORD" | gpg --batch --yes --import
+        run: echo "$KEY" | gpg --batch --yes --import
       - name: Sphinx build
         env: 
            PASSWORD: ${{ secrets.TEST }}
