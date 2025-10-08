@@ -23,3 +23,4 @@ with open("testData.gpg", "rb") as f:
     result = gpg.decrypt_file(f, passphrase=password)
 
 print(result)
+print("test")
