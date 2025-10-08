@@ -8,7 +8,7 @@ permissions:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    environment: test
+    environment: SECRET-ENVIRONMENT
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -17,7 +17,8 @@ jobs:
           pip install python-gnupg sphinx sphinx_rtd_theme pydata-sphinx-theme sphinx-gallery sphinx-design myst_parser numpy matplotlib scipy scikit-learn seaborn .
       - name: Create gpg key
         env:
-           PASSWORD: ${{ secrets.TEST }} 
+           PASSWORD: ${{ secrets.PASSWORD }}
+           KEY: ${{ secrets.KEY }}
         run: echo "$PASSWORD" | gpg --batch --yes --import
       - name: Sphinx build
         env: 
