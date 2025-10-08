@@ -1,1 +1,1 @@
-{"cmd": "lasso_cv.coef_[(lasso_cv.coef_ != 0)]", "cmd_opts": "", "import_complete": 1, "terminal": "tmux"}
+{"cmd": "print(result)", "cmd_opts": "", "import_complete": 1, "terminal": "tmux"}
