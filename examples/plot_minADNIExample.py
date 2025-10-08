@@ -17,10 +17,6 @@ password =  os.environ.get("PASSWORD")
 if os.path.exists("testData.gpg"):
     print("File exists!")
 
-gpg = gnupg.GPG()
-with open("testData.gpg", "rb") as f:
-    result = gpg.decrypt_file(f, passphrase="HeadPhoneChalkEraserMat")
-
 # %%
 # Opening the file
 # -------------------------
