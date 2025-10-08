@@ -14,7 +14,6 @@ import seaborn as sns
 from scipy.sparse import dia_matrix
 import EarlyStopping as es
 
-print(os.environ["PASSWORD"])
 
 np.random.seed(42)
 sns.set_theme()

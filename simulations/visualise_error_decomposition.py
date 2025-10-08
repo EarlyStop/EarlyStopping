@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(21)
 
-# Ensure consistent style - using the style from error_decomposition_plots.py
+# Ensure consistent style - using the style from general_error_decomposition_plots.py
 plt.rc("axes", titlesize=20)
 plt.rc("axes", labelsize=15)
 plt.rc("xtick", labelsize=15)
