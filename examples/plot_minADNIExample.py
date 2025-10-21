@@ -8,20 +8,23 @@ import subprocess
 import pandas as pd
 from io import StringIO
 
+# Path to your encrypted file
+encrypted_file = "testData.gpg"
 
-# password1 = os.environ["PASSWORD"]
-# print(password1)
-# password1
-# 
-password2 = os.environ.get("PASSWORD")
-print(password2)
-password2
-# 
-# key2 = os.environ["KEY"]
-# print(key2)
-# key2
+password = os.environ.get("PASSWORD")
 
-# key1 = os.environ.get("KEY")
-# print(key1)
-# key1
+# Run GPG and capture the decrypted output
+result = subprocess.run(
+    ["gpg", "--batch", "--yes", "--passphrase", password, "--decrypt", encrypted_file],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    check=True
+)
 
+# Convert decrypted bytes to text
+decrypted_text = result.stdout.decode("utf-8")
+
+# Load the CSV content into a DataFrame
+df = pd.read_csv(StringIO(decrypted_text))
+
+print(df.head())
