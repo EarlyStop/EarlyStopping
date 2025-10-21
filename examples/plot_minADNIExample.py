@@ -2,34 +2,66 @@
 A minimal example for the ADNI application
 ==========================================
 """
-
 import os
 import subprocess
 import pandas as pd
 from io import StringIO
-
+from pathlib import Path
 
 password = os.environ.get("PASSWORD")
 
-# Run GPG and capture the decrypted output
+gpg_file = Path(__file__).with_name("testData.gpg")  # examples/testData.gpg
+
 result = subprocess.run(
     [
         "gpg",
-        "--batch",              # no interactive prompts
-        "--yes",                # assume "yes" on overwrite
+        "--batch",
+        "--yes",
+        "--pinentry-mode", "loopback",           # <-- important in CI
         "--passphrase", password,
-        "--decrypt", "testData.gpg",
+        "--decrypt", str(gpg_file),
     ],
     capture_output=True,
     check=True,
+    text=True,  # so result.stdout is already str
 )
 
-type(result)
-type(result.stdout.decode("utf-8"))
-
-df = pd.read_csv(StringIO(result.stdout.decode("utf-8")))
-
+df = pd.read_csv(StringIO(result.stdout))
 print(df.head())
+
+
+# """
+# A minimal example for the ADNI application
+# ==========================================
+# """
+
+# import os
+# import subprocess
+# import pandas as pd
+# from io import StringIO
+
+
+# password = os.environ.get("PASSWORD")
+
+# # Run GPG and capture the decrypted output
+# result = subprocess.run(
+#     [
+#         "gpg",
+#         "--batch",              # no interactive prompts
+#         "--yes",                # assume "yes" on overwrite
+#         "--passphrase", password,
+#         "--decrypt", "testData.gpg",
+#     ],
+#     capture_output=True,
+#     check=True,
+# )
+
+# type(result)
+# type(result.stdout.decode("utf-8"))
+
+# df = pd.read_csv(StringIO(result.stdout.decode("utf-8")))
+
+# print(df.head())
 
 # Path to your encrypted file
 # encrypted_file = "testData.gpg"
