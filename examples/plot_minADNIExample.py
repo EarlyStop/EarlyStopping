@@ -10,7 +10,7 @@ from pathlib import Path
 
 password = os.environ.get("PASSWORD")
 
-gpg_file = Path(__file__).with_name("testData.gpg")  # examples/testData.gpg
+#gpg_file = Path(__file__).with_name("testData.gpg")  # examples/testData.gpg
 
 result = subprocess.run(
     [
@@ -18,8 +18,10 @@ result = subprocess.run(
         "--batch",
         "--yes",
         "--pinentry-mode", "loopback",           # <-- important in CI
-        "--passphrase", password,
-        "--decrypt", str(gpg_file),
+        "--passphrase", 
+        password,
+        "--decrypt", 
+        "testData.gpg",
     ],
     capture_output=True,
     check=True,
