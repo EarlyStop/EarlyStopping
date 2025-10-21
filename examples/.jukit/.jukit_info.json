@@ -1,1 +1,1 @@
-{"cmd": "# Decrypt the file\nresult = subprocess.run(\n    [\"gpg\", \"--decrypt\", encrypted_file],\n    capture_output=True,\n    check=True\n)", "cmd_opts": "", "import_complete": 1, "terminal": "tmux"}
+{"cmd": "print(df.head())", "cmd_opts": "", "import_complete": 1, "terminal": "tmux"}
