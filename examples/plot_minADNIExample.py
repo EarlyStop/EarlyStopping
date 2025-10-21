@@ -9,6 +9,6 @@ import pandas as pd
 from io import StringIO
 
 
-password = os.environ.get("PASSWORD")
+password = os.environ["PASSWORD"]
 print(password)
 password
