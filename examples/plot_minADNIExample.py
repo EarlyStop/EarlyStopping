@@ -19,7 +19,7 @@ result = subprocess.run(
         "--passphrase", 
         password,
         "--decrypt", 
-        "data/testData.gpg",
+        "data/ADNI_data.gpg",
     ],
     capture_output=True,
     check=True,
