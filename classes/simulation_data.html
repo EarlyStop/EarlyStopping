@@ -1,0 +1,604 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Simulation Data &#8212; EarlyStopping 0.0.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=8c5712d9"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'classes/simulation_data';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Simulation Parameters" href="simulation_parameters.html" />
+    <link rel="prev" title="Regression tree" href="regression_tree.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">EarlyStopping 0.0.4 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/EarlyStop/EarlyStopping">
+    Github
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/EarlyStop/EarlyStopping">
+    Github
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="truncated_svd.html">Truncated SVD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="landweber.html">Landweber iteration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conjugate_gradients.html">Conjugate gradients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="L2-boosting.html">L2-boosting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="regression_tree.html">Regression tree</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Simulation Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_parameters.html">Simulation Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation_wrapper.html">Simulation Wrapper</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/plot_truncatedSVD_usage.html">Usage of the TruncatedSVD class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/plot_landweber_usage.html">Usage of the Landweber class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/plot_ConjugateGradients_usage.html">Usage of the ConjugateGradients class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/plot_L2boost_usage.html">Usage of the L2-boost class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/plot_RegressionTree_usage.html">Usage of the RegressionTree class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_examples/plot_SimulationWrapper_usage.html">Usage of the SimulationWrapper class</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="documentation.html" class="nav-link">Documentation</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Simulation Data</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="simulation-data">
+<h1>Simulation Data<a class="headerlink" href="#simulation-data" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="EarlyStopping.SimulationData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">EarlyStopping.</span></span><span class="sig-name descname"><span class="pre">SimulationData</span></span><a class="headerlink" href="#EarlyStopping.SimulationData" title="Link to this definition">#</a></dt>
+<dd><blockquote>
+<div><p><a class="reference external" href="https://github.com/ESFIEP/EarlyStopping/edit/main/src/EarlyStopping/simulation_wrapper.py">[Source]</a> A collection of static methods for the creation of simmulation data.</p>
+</div></blockquote>
+<p><strong>Description</strong></p>
+<p>Collection of serveral important examples of inverse problems.</p>
+<p><strong>References</strong></p>
+<blockquote>
+<div><p><a class="reference external" href="https://www.mathworks.com/matlabcentral/fileexchange/52-regtools">[Toolbox]</a> The ill-posed inverse problems heat, deriv2, gravity, phillips are based on the Hansen-Matlab toolbox.</p>
+</div></blockquote>
+<p><strong>Methods</strong></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p>diagonal_data(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">type</span></code>)</p></td>
+<td><p>Creation of diagonal design with <cite>smooth</cite>, <cite>supersmooth</cite> and <cite>rough</cite> signals</p></td>
+</tr>
+<tr class="row-even"><td><p>gravity(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">d</span></code>)</p></td>
+<td><p>Discretised gravity operator with parameters controlling the ill-posedness  of the problem</p></td>
+</tr>
+<tr class="row-odd"><td><p>heat(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">kappa</span></code>)</p></td>
+<td><p>Discretised heat semigroup with parameter controlling the ill-conditioning of the matrix</p></td>
+</tr>
+<tr class="row-even"><td><p>deriv2(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">example</span></code>)</p></td>
+<td><p>Discretisation of a Fredholm integral equation whose kernel K is the Green’s function</p></td>
+</tr>
+<tr class="row-odd"><td><p>phillips(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>)</p></td>
+<td><p>Create data based on the famous Phillips example</p></td>
+</tr>
+<tr class="row-even"><td><p>additive_smooth(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">noise_level</span></code>)</p></td>
+<td><p>Create data with a smooth additive model using sine, quadratic, linear, and exp.components</p></td>
+</tr>
+<tr class="row-odd"><td><p>additive_step(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">noise_level</span></code>)</p></td>
+<td><p>Create data with a stepwise additive model using piecewise constant functions</p></td>
+</tr>
+<tr class="row-even"><td><p>additive_linear(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">noise_level</span></code>)</p></td>
+<td><p>Create data with a linear additive model using piecewise linear interpolation</p></td>
+</tr>
+<tr class="row-odd"><td><p>additive_hills(<code class="docutils literal notranslate"><span class="pre">sample_size</span></code>, <code class="docutils literal notranslate"><span class="pre">noise_level</span></code>)</p></td>
+<td><p>Create data with a hills additive model using sinusoidal components with varying frequencies</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="EarlyStopping.SimulationData.deriv2">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SimulationData.</span></span><span class="sig-name descname"><span class="pre">deriv2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">example</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#EarlyStopping.SimulationData.deriv2" title="Link to this definition">#</a></dt>
+<dd><p>Mildly ill-posed inverse problem based on the discretization of a
+Fredholm integral equation of the first kind whose kernel K is the
+Green’s function for the second derivative:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}K(s,t) = \begin{cases}s(t-1)  ,  &amp;s &lt;  t, \\ t(s-1)  ,  &amp;s \geq t.\end{cases}\end{split}\]</div>
+<p>The right hand side <span class="math notranslate nohighlight">\(g\)</span> and the solution <span class="math notranslate nohighlight">\(f\)</span> can be chosen as follows:</p>
+<ol class="arabic simple">
+<li><p><span class="math notranslate nohighlight">\(g(s) = (s^3 - s)/6\)</span> and <span class="math notranslate nohighlight">\(f(t) = t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(g(s) = \exp(s) + (1-e)s - 1\)</span> and <span class="math notranslate nohighlight">\(f(t) = \exp(t)\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(g(s) = \begin{cases}(4s^3 - 3s)/24,  &amp;s &lt;  0.5,\\(-4s^3 + 12s^2 - 9s + 1)/24,  &amp;s \geq 0.5.\end{cases}\)</span> and <span class="math notranslate nohighlight">\(f(t) = \begin{cases}t,  &amp;t &lt;  0.5,\\1-t,  &amp;t \geq 0.5.\end{cases}\)</span>.</p></li>
+</ol>
+<p><strong>Parameters</strong></p>
+<p><em>sample_size</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. Specifies the size of the design matrix to be generated.</p>
+<p><em>example</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. The example to be used. Must be 1, 2 or 3.</p>
+<p><strong>Returns</strong></p>
+<p><em>design</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The design matrix.</p>
+<p><em>response_noiseless</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The noiseless response. (Based on discretisation).</p>
+<p><em>true_signal</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The true signal.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="EarlyStopping.SimulationData.heat">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SimulationData.</span></span><span class="sig-name descname"><span class="pre">heat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#EarlyStopping.SimulationData.heat" title="Link to this definition">#</a></dt>
+<dd><p>A first kind Volterra integral equation with <span class="math notranslate nohighlight">\([0,1]\)</span> as integration interval. The kernel is <span class="math notranslate nohighlight">\(K(s,t) = k(s-t)\)</span> with the heat kernel</p>
+<div class="math notranslate nohighlight">
+\[k(t) = \frac{t^{-1/2}}{2\kappa \sqrt{\pi}}\exp\left(-\frac{1}{4 \kappa^2 t}\right) .\]</div>
+<p><strong>Parameters</strong></p>
+<p><em>sample_size</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. Specifies the size of the design matrix to be generated.</p>
+<p><em>kappa</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. Here, kappa controls the ill-conditioning of the matrix:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\kappa = 5\)</span> gives a well-conditioned problem.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\kappa = 1\)</span> gives an ill-conditioned problem.</p></li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><em>design</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The design matrix.</p>
+<p><em>response_noiseless</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The noiseless response. An exact soltuion is constructed, and the response is produced by applying the design to the signal.</p>
+<p><em>true_signal</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The true signal.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="EarlyStopping.SimulationData.gravity">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SimulationData.</span></span><span class="sig-name descname"><span class="pre">gravity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#EarlyStopping.SimulationData.gravity" title="Link to this definition">#</a></dt>
+<dd><p>Discretisation of a 1-D model problem in gravity surveying, in which
+a mass distribution <span class="math notranslate nohighlight">\(f(t)\)</span> is located at depth d, while the vertical
+component of the gravity field <span class="math notranslate nohighlight">\(g(s)\)</span> is measured at the surface.</p>
+<p>The resulting problem is a first-kind Fredholm integral equation  with kernel</p>
+<div class="math notranslate nohighlight">
+\[K(s,t) = d(d^2 + (s-t)^2)^{-3/2},\]</div>
+<p>with the right-hand side given by</p>
+<div class="math notranslate nohighlight">
+\[f(t) = \sin(\pi t) + 0.5\sin(2\pi t).\]</div>
+<p>The problem is discretized by means of the midpoint quadrature rule.</p>
+<p><strong>Parameters</strong></p>
+<p><em>sample_size</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. Specifies the size of the design matrix to be generated.</p>
+<p><em>a</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. The lower bound of the integration interval.</p>
+<p><em>b</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. The upper bound of the integration interval.</p>
+<p><em>d</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. The depth at which the magnetic deposit is located.</p>
+<p><strong>Returns</strong></p>
+<p><em>design</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The design matrix.</p>
+<p><em>response_noiseless</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The noiseless response. The response is produced by applying the design to the signal.</p>
+<p><em>true_signal</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The true signal.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="EarlyStopping.SimulationData.phillips">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SimulationData.</span></span><span class="sig-name descname"><span class="pre">phillips</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#EarlyStopping.SimulationData.phillips" title="Link to this definition">#</a></dt>
+<dd><p>Discretization of the <em>famous</em> first-kind Fredholm integral equation deviced by D. L. Phillips.</p>
+<p>Define the function</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\phi(x) = \begin{cases}1 + \cos(x\pi/3), &amp; |x| &lt; 3,\\0, &amp; |x| \geq 3.\end{cases}\end{split}\]</div>
+<p>The kernel K, the solution f, and the right-hand side g are given by:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(K(s,t) = \phi(s-t)\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(f(t) = \phi(t)\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(g(s) = (6-|s|)(1+0.5 \cos(s\pi/3)) + 9/(2\pi)\sin(|s|\pi/3)\)</span></p></li>
+</ul>
+<p>Both integration intervals are [-6,6].</p>
+<p><strong>Parameters</strong></p>
+<p><em>sample_size</em>: <code class="docutils literal notranslate"><span class="pre">int</span></code>. Specifies the size of the design matrix to be generated. Must be a multiple of 4.</p>
+<p><strong>Returns</strong></p>
+<p><em>design</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The design matrix.</p>
+<p><em>response_noiseless</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The noiseless response. (obtained from discretisation).</p>
+<p><em>true_signal</em>: <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>. The true signal.</p>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="regression_tree.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Regression tree</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="simulation_parameters.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Simulation Parameters</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#EarlyStopping.SimulationData"><code class="docutils literal notranslate"><span class="pre">SimulationData</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#EarlyStopping.SimulationData.deriv2"><code class="docutils literal notranslate"><span class="pre">SimulationData.deriv2()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#EarlyStopping.SimulationData.heat"><code class="docutils literal notranslate"><span class="pre">SimulationData.heat()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#EarlyStopping.SimulationData.gravity"><code class="docutils literal notranslate"><span class="pre">SimulationData.gravity()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#EarlyStopping.SimulationData.phillips"><code class="docutils literal notranslate"><span class="pre">SimulationData.phillips()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Eric Ziebell, Ratmir Miftachov, Bernhard Stankewitz, Laura Hucker.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
