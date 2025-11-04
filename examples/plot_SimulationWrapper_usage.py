@@ -2,12 +2,11 @@
 Usage of the SimulationWrapper class
 ============================================
 
-We illustrate how the SimmulationWrapper class can be used to simplify 
+We illustrate how the SimmulationWrapper class can be used to simplify
 the process of creating a Montecarlo simmulation for analying the performance of the Landweber method.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import seaborn as sns
 import EarlyStopping as es
 import pandas as pd

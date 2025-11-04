@@ -477,30 +477,30 @@ class ConjugateGradients:
             )
 
     def __str__(self):
-            """Return a string representation of the ConjugateGradients model"""
-            lines = []
-            lines.append("ConjugateGradients class")
-            lines.append("=" * 30)
-            lines.append(f"Problem dimensions: {self.sample_size} × {self.parameter_size}")
-            lines.append(f"Computation threshold: {self.computation_threshold}")
-            lines.append(f"Current iteration: {self.iteration}")
+        """Return a string representation of the ConjugateGradients model"""
+        lines = []
+        lines.append("ConjugateGradients class")
+        lines.append("=" * 30)
+        lines.append(f"Problem dimensions: {self.sample_size} × {self.parameter_size}")
+        lines.append(f"Computation threshold: {self.computation_threshold}")
+        lines.append(f"Current iteration: {self.iteration}")
 
+        if self.iteration > 0:
+            lines.append(f"Current residual: {self.residuals[self.iteration]:.6f}")
+            lines.append(f"Current transformed residual: {self.__transformed_residuals[self.iteration]:.6f}")
+
+        # Check if theoretical quantities are available
+        has_true_signal = self.true_signal is not None
+        lines.append(f"True signal available: {'Yes' if has_true_signal else 'No'}")
+
+        if has_true_signal:
+            if self.true_noise_level is not None:
+                lines.append(f"True noise level: {self.true_noise_level}")
             if self.iteration > 0:
-                lines.append(f"Current residual: {self.residuals[self.iteration]:.6f}")
-                lines.append(f"Current transformed residual: {self.__transformed_residuals[self.iteration]:.6f}")
+                lines.append(f"Strong empirical risk: {self.strong_empirical_risk[self.iteration]:.6f}")
+                lines.append(f"Weak empirical risk: {self.weak_empirical_risk[self.iteration]:.6f}")
 
-            # Check if theoretical quantities are available
-            has_true_signal = self.true_signal is not None
-            lines.append(f"True signal available: {'Yes' if has_true_signal else 'No'}")
-
-            if has_true_signal:
-                if self.true_noise_level is not None:
-                    lines.append(f"True noise level: {self.true_noise_level}")
-                if self.iteration > 0:
-                    lines.append(f"Strong empirical risk: {self.strong_empirical_risk[self.iteration]:.6f}")
-                    lines.append(f"Weak empirical risk: {self.weak_empirical_risk[self.iteration]:.6f}")
-
-            return "\n".join(lines)
+        return "\n".join(lines)
 
     def __repr__(self):
         """Return a technical representation of the ConjugateGradients model"""
