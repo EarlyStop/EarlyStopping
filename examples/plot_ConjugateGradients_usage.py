@@ -40,7 +40,7 @@ plt.legend(loc="upper right")
 plt.show()
 
 # %%
-# We simulate data from a prototypical inverse problem based on one of the signals
+# We simulate data from a prototypical inverse problem based on one of the signals.
 true_noise_level = 0.01
 noise = true_noise_level * np.random.normal(0, 1, sample_size)
 
@@ -63,7 +63,7 @@ alg.iterate(sample_size)
 # %%
 # Empirical risk (weak/strong)
 plt.figure()
-plt.plot(indices[0 : alg.iteration + 1], alg.weak_empirical_risk, label="Weak risk")
+plt.plot(indices[0 : alg.iteration + 1], alg.weak_empirical_risk, label="Weak empirical risk")
 plt.legend(loc="upper right")
 plt.show()
 

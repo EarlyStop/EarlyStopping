@@ -7,10 +7,10 @@ Iterative estimation procedures
 ===============================
 
 .. toctree::
-   L2-boosting 
+   truncated_svd
    landweber
    conjugate_gradients
-   truncated_svd
+   L2-boosting 
    regression_tree
    :maxdepth: 2
 
@@ -26,8 +26,9 @@ Examples
 ===========
 .. toctree::
    ../auto_examples/plot_truncatedSVD_usage
-   ../auto_examples/plot_L2boost_usage
    ../auto_examples/plot_landweber_usage
-   ../auto_examples/plot_SimmulationWrapper_usage
+   ../auto_examples/plot_ConjugateGradients_usage
+   ../auto_examples/plot_L2boost_usage
    ../auto_examples/plot_RegressionTree_usage
+   ../auto_examples/plot_SimulationWrapper_usage
    :maxdepth: 1
