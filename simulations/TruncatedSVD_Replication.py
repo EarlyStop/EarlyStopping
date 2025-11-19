@@ -7,7 +7,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
-import pandas as pd
 import os
 
 np.random.seed(21)
@@ -57,17 +56,17 @@ results_rough = simulation_rough.run_simulation_truncated_svd(
 )
 
 
-# Figures figures
+# Figures
 # ------------------------------------------------------------------------------
 # Strong relative efficiency
-supersmooth_strong_relative_efficiency = results_supersmooth["strong_relative_efficiency"]
-smooth_strong_relative_efficiency = results_smooth["strong_relative_efficiency"]
-rough_strong_relative_efficiency = results_rough["strong_relative_efficiency"]
+supersmooth_strong_relative_efficiency = results_supersmooth["strong_empirical_relative_efficiency"]
+smooth_strong_relative_efficiency = results_smooth["strong_empirical_relative_efficiency"]
+rough_strong_relative_efficiency = results_rough["strong_empirical_relative_efficiency"]
 
 # Weak relative efficiency
-supersmooth_weak_relative_efficiency = results_supersmooth["weak_relative_efficiency"]
-smooth_weak_relative_efficiency = results_smooth["weak_relative_efficiency"]
-rough_weak_relative_efficiency = results_rough["weak_relative_efficiency"]
+supersmooth_weak_relative_efficiency = results_supersmooth["weak_empirical_relative_efficiency"]
+smooth_weak_relative_efficiency = results_smooth["weak_empirical_relative_efficiency"]
+rough_weak_relative_efficiency = results_rough["weak_empirical_relative_efficiency"]
 
 data = [
     supersmooth_strong_relative_efficiency,

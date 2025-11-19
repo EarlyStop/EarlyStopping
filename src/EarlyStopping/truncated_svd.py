@@ -235,7 +235,8 @@ class TruncatedSVD:
 
         if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
             while (
-                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
+                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]
+                and self.iteration <= max_iteration
             ):
                 self.iterate(1)
 
@@ -243,7 +244,9 @@ class TruncatedSVD:
             weak_balanced_oracle = self.iteration
             return weak_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn(
+                "Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
+            )
             return None
 
     def get_strong_balanced_oracle(self, max_iteration):
@@ -274,7 +277,9 @@ class TruncatedSVD:
             strong_balanced_oracle = self.iteration
             return strong_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn(
+                "Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
+            )
             return None
 
     def __truncated_SVD_one_iteration(self):
@@ -330,7 +335,8 @@ class TruncatedSVD:
         standard_basis_vector = np.zeros(self.parameter_size)
         standard_basis_vector[self.iteration] = 1.0
         new_truncated_svd_estimate = (
-            self.truncated_svd_estimate_list[self.iteration] + self.response[self.iteration] / s * standard_basis_vector
+            self.truncated_svd_estimate_list[self.iteration]
+            + self.response[self.iteration] / s * standard_basis_vector
         )
         self.truncated_svd_estimate_list.append(new_truncated_svd_estimate)
 

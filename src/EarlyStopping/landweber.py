@@ -187,7 +187,6 @@ class Landweber:
         for _ in range(number_of_iterations):
             self.__landweber_one_iteration()
 
-
     def get_estimate(self, iteration):
         """Returns the Landweber estimate at iteration
 
@@ -260,7 +259,8 @@ class Landweber:
 
         if self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]:
             while (
-                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration] and self.iteration <= max_iteration
+                self.weak_bias2[self.iteration] > self.weak_variance[self.iteration]
+                and self.iteration <= max_iteration
             ):
                 self.__landweber_one_iteration()
 
@@ -268,7 +268,9 @@ class Landweber:
             weak_balanced_oracle = self.iteration
             return weak_balanced_oracle
         else:
-            warnings.warn("Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning)
+            warnings.warn(
+                "Weakly balanced oracle not found up to max_iteration. Returning None.", category=UserWarning
+            )
             return None
 
     def get_strong_balanced_oracle(self, max_iteration):
@@ -352,7 +354,7 @@ class Landweber:
         """
         if self.illposed:
             warnings.warn(
-                "PARAMETER WARNING: The inverse problem is ill-posed. Switching to longfrom variane computation.",
+                "PARAMETER WARNING: The inverse problem is ill-posed. Switching to longform variance computation.",
                 category=UserWarning,
             )
             square_matrix = (
@@ -365,7 +367,6 @@ class Landweber:
             )
 
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
-            # print(new_strong_variance)
         else:
             # presquare_temporary_matrix = self.identity - self.perturbation_congruency_matrix_power
             pretrace_temporary_matrix = (
@@ -375,7 +376,6 @@ class Landweber:
                 @ (self.identity - self.perturbation_congruency_matrix_power)
             )
             new_strong_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
-            # print(new_strong_variance)
             self.strong_variance = np.append(self.strong_variance, new_strong_variance)
 
     def __update_weak_variance(self):
@@ -386,7 +386,7 @@ class Landweber:
         """
         if self.illposed:
             warnings.warn(
-                "PARAMETER WARNING: The inverse problem is ill-posed. Switching to longfrom variane computation.",
+                "PARAMETER WARNING: The inverse problem is ill-posed. Switching to longform variance computation.",
                 category=UserWarning,
             )
 
@@ -402,10 +402,7 @@ class Landweber:
                 self.identity - self.perturbation_congruency_matrix_power
             )
 
-            # print(self.true_noise_level)
-
             new_weak_variance = self.true_noise_level**2 * pretrace_temporary_matrix.trace()
-            # print(new_weak_variance)
 
             self.weak_variance = np.append(self.weak_variance, new_weak_variance)
 
@@ -451,7 +448,6 @@ class Landweber:
 
             self.__update_strong_empirical_risk()
             self.__update_weak_empirical_risk()
-
 
     def __str__(self):
         """Return a string representation of the Landweber model"""

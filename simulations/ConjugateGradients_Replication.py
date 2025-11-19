@@ -9,21 +9,17 @@ importlib.reload(es)
 np.random.seed(21)
 
 # Generate data for different signals
-design_smooth, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(
-    sample_size=10000, type="smooth"
-)
 design_supersmooth, response_noiseless_supersmooth, true_signal_supersmooth = es.SimulationData.diagonal_data(
     sample_size=10000, type="supersmooth"
+)
+design_smooth, response_noiseless_smooth, true_signal_smooth = es.SimulationData.diagonal_data(
+    sample_size=10000, type="smooth"
 )
 design_rough, response_noiseless_rough, true_signal_rough = es.SimulationData.diagonal_data(
     sample_size=10000, type="rough"
 )
 
 # Define simulation parameters
-parameters_smooth = es.SimulationParameters(
-    design=design_smooth, true_signal=true_signal_smooth, true_noise_level=0.01, monte_carlo_runs=1000, cores=12
-)
-
 parameters_supersmooth = es.SimulationParameters(
     design=design_supersmooth,
     true_signal=true_signal_supersmooth,
@@ -31,55 +27,56 @@ parameters_supersmooth = es.SimulationParameters(
     monte_carlo_runs=1000,
     cores=12,
 )
-
+parameters_smooth = es.SimulationParameters(
+    design=design_smooth, true_signal=true_signal_smooth, true_noise_level=0.01, monte_carlo_runs=1000, cores=12
+)
 parameters_rough = es.SimulationParameters(
     design=design_rough, true_signal=true_signal_rough, true_noise_level=0.01, monte_carlo_runs=1000, cores=12
 )
 
 # Create SimulationWrapper instances
-simulation_smooth = es.SimulationWrapper(**parameters_smooth.__dict__)
 simulation_supersmooth = es.SimulationWrapper(**parameters_supersmooth.__dict__)
+simulation_smooth = es.SimulationWrapper(**parameters_smooth.__dict__)
 simulation_rough = es.SimulationWrapper(**parameters_rough.__dict__)
 
 # Run Conjugate Gradients simulations
-results_smooth = simulation_smooth.run_simulation_conjugate_gradients(max_iteration=2000)
 results_supersmooth = simulation_supersmooth.run_simulation_conjugate_gradients(max_iteration=2000)
+results_smooth = simulation_smooth.run_simulation_conjugate_gradients(max_iteration=2000)
 results_rough = simulation_rough.run_simulation_conjugate_gradients(max_iteration=2000)
 
 # Extract strong relative efficiencies
-strong_relative_efficiency_smooth = np.array(results_smooth["strong_relative_efficiency"])
-strong_relative_efficiency_supersmooth = np.array(results_supersmooth["strong_relative_efficiency"])
-strong_relative_efficiency_rough = np.array(results_rough["strong_relative_efficiency"])
+strong_relative_efficiency_supersmooth = np.array(results_supersmooth["strong_empirical_relative_efficiency"])
+strong_relative_efficiency_smooth = np.array(results_smooth["strong_empirical_relative_efficiency"])
+strong_relative_efficiency_rough = np.array(results_rough["strong_empirical_relative_efficiency"])
 
 # Extract weak relative efficiencies
-weak_relative_efficiency_smooth = np.array(results_smooth["weak_relative_efficiency"])
-weak_relative_efficiency_supersmooth = np.array(results_supersmooth["weak_relative_efficiency"])
-weak_relative_efficiency_rough = np.array(results_rough["weak_relative_efficiency"])
+weak_relative_efficiency_supersmooth = np.array(results_supersmooth["weak_empirical_relative_efficiency"])
+weak_relative_efficiency_smooth = np.array(results_smooth["weak_empirical_relative_efficiency"])
+weak_relative_efficiency_rough = np.array(results_rough["weak_empirical_relative_efficiency"])
 
 # Extract the early stopping time and the oracle stopping time, smooth
-strong_oracle_smooth = np.array(results_smooth["strong_empirical_oracle"])
 strong_oracle_supersmooth = np.array(results_supersmooth["strong_empirical_oracle"])
+strong_oracle_smooth = np.array(results_smooth["strong_empirical_oracle"])
 strong_oracle_rough = np.array(results_rough["strong_empirical_oracle"])
 
-weak_oracle_smooth = np.array(results_smooth["weak_empirical_oracle"])
 weak_oracle_supersmooth = np.array(results_supersmooth["weak_empirical_oracle"])
+weak_oracle_smooth = np.array(results_smooth["weak_empirical_oracle"])
 weak_oracle_rough = np.array(results_rough["weak_empirical_oracle"])
 
-
-stopping_index_smooth = np.array(results_smooth["discrepancy_stop"])
-stopping_index_supersmooth = np.array(results_supersmooth["discrepancy_stop"])
-stopping_index_rough = np.array(results_rough["discrepancy_stop"])
+discrepancy_stop_supersmooth = np.array(results_supersmooth["discrepancy_stop"])
+discrepancy_stop_smooth = np.array(results_smooth["discrepancy_stop"])
+discrepancy_stop_rough = np.array(results_rough["discrepancy_stop"])
 
 
 # relative iterations, weak
-weak_relative_iteration_smooth = stopping_index_smooth / weak_oracle_smooth
-weak_relative_iteration_supersmooth = stopping_index_supersmooth / weak_oracle_supersmooth
-weak_relative_iteration_rough = stopping_index_rough / weak_oracle_rough
+weak_relative_iteration_supersmooth = discrepancy_stop_supersmooth / weak_oracle_supersmooth
+weak_relative_iteration_smooth = discrepancy_stop_smooth / weak_oracle_smooth
+weak_relative_iteration_rough = discrepancy_stop_rough / weak_oracle_rough
 
 # relative iterations, strong
-strong_relative_iteration_smooth = stopping_index_smooth / strong_oracle_smooth
-strong_relative_iteration_supersmooth = stopping_index_supersmooth / strong_oracle_supersmooth
-strong_relative_iteration_rough = stopping_index_rough / strong_oracle_rough
+strong_relative_iteration_supersmooth = discrepancy_stop_supersmooth / strong_oracle_supersmooth
+strong_relative_iteration_smooth = discrepancy_stop_smooth / strong_oracle_smooth
+strong_relative_iteration_rough = discrepancy_stop_rough / strong_oracle_rough
 
 
 efficiency_iteration_plot = [

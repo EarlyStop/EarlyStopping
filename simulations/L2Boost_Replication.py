@@ -7,7 +7,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import EarlyStopping as es
-import pandas as pd
 import os
 
 np.random.seed(21)
@@ -141,13 +140,13 @@ def create_custom_boxplot(data, labels, y_lim_lower, y_lim_upper, fig_dir, name)
 
 
 # Relative efficiency for discrepany stop
-relative_efficiency_discrepancy_beta_3 = results_beta_3["relative_efficiency_discrepancy"]
-relative_efficiency_discrepancy_beta_2 = results_beta_2["relative_efficiency_discrepancy"]
-relative_efficiency_discrepancy_beta_1 = results_beta_1["relative_efficiency_discrepancy"]
+relative_efficiency_discrepancy_beta_3 = results_beta_3["empirical_relative_efficiency_discrepancy"]
+relative_efficiency_discrepancy_beta_2 = results_beta_2["empirical_relative_efficiency_discrepancy"]
+relative_efficiency_discrepancy_beta_1 = results_beta_1["empirical_relative_efficiency_discrepancy"]
 
-relative_efficiency_discrepancy_beta_15 = results_beta_15["relative_efficiency_discrepancy"]
-relative_efficiency_discrepancy_beta_60 = results_beta_60["relative_efficiency_discrepancy"]
-relative_efficiency_discrepancy_beta_90 = results_beta_90["relative_efficiency_discrepancy"]
+relative_efficiency_discrepancy_beta_15 = results_beta_15["empirical_relative_efficiency_discrepancy"]
+relative_efficiency_discrepancy_beta_60 = results_beta_60["empirical_relative_efficiency_discrepancy"]
+relative_efficiency_discrepancy_beta_90 = results_beta_90["empirical_relative_efficiency_discrepancy"]
 
 data = [
     relative_efficiency_discrepancy_beta_3,
@@ -165,13 +164,13 @@ create_custom_boxplot(
 )
 
 # Relative efficiency for residual ratio stop
-relative_efficiency_residual_ratio_beta_3 = results_beta_3["relative_efficiency_residual_ratio"]
-relative_efficiency_residual_ratio_beta_2 = results_beta_2["relative_efficiency_residual_ratio"]
-relative_efficiency_residual_ratio_beta_1 = results_beta_1["relative_efficiency_residual_ratio"]
+relative_efficiency_residual_ratio_beta_3 = results_beta_3["empirical_relative_efficiency_residual_ratio"]
+relative_efficiency_residual_ratio_beta_2 = results_beta_2["empirical_relative_efficiency_residual_ratio"]
+relative_efficiency_residual_ratio_beta_1 = results_beta_1["empirical_relative_efficiency_residual_ratio"]
 
-relative_efficiency_residual_ratio_beta_15 = results_beta_15["relative_efficiency_residual_ratio"]
-relative_efficiency_residual_ratio_beta_60 = results_beta_60["relative_efficiency_residual_ratio"]
-relative_efficiency_residual_ratio_beta_90 = results_beta_90["relative_efficiency_residual_ratio"]
+relative_efficiency_residual_ratio_beta_15 = results_beta_15["empirical_relative_efficiency_residual_ratio"]
+relative_efficiency_residual_ratio_beta_60 = results_beta_60["empirical_relative_efficiency_residual_ratio"]
+relative_efficiency_residual_ratio_beta_90 = results_beta_90["empirical_relative_efficiency_residual_ratio"]
 
 data = [
     relative_efficiency_residual_ratio_beta_3,
@@ -195,55 +194,61 @@ create_custom_boxplot(
 
 # Quantities for AIC
 # Relative efficiency for residual ratio stop
-relative_efficiency_aic_beta_3 = results_beta_3["relative_efficiency_aic"]
-relative_efficiency_two_step_discrepancy_stop_beta_3 = results_beta_3["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_aic_beta_3 = results_beta_3["empirical_relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_3 = results_beta_3[
+    "empirical_relative_efficiency_two_step_discrepancy_stop"
+]
 relative_efficiency_two_step_residual_ratio_stop_beta_3 = results_beta_3[
-    "relative_efficiency_two_step_residual_ratio_stop"
+    "empirical_relative_efficiency_two_step_residual_ratio_stop"
 ]
 
 
-relative_efficiency_aic_beta_2 = results_beta_2["relative_efficiency_aic"]
-relative_efficiency_two_step_discrepancy_stop_beta_2 = results_beta_2["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_aic_beta_2 = results_beta_2["empirical_relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_2 = results_beta_2[
+    "empirical_relative_efficiency_two_step_discrepancy_stop"
+]
 relative_efficiency_two_step_residual_ratio_stop_beta_2 = results_beta_2[
-    "relative_efficiency_two_step_residual_ratio_stop"
+    "empirical_relative_efficiency_two_step_residual_ratio_stop"
 ]
 
 
-relative_efficiency_aic_beta_1 = results_beta_1["relative_efficiency_aic"]
-relative_efficiency_two_step_discrepancy_stop_beta_1 = results_beta_1["relative_efficiency_two_step_discrepancy_stop"]
+relative_efficiency_aic_beta_1 = results_beta_1["empirical_relative_efficiency_aic"]
+relative_efficiency_two_step_discrepancy_stop_beta_1 = results_beta_1[
+    "empirical_relative_efficiency_two_step_discrepancy_stop"
+]
 relative_efficiency_two_step_residual_ratio_stop_beta_1 = results_beta_1[
-    "relative_efficiency_two_step_residual_ratio_stop"
+    "empirical_relative_efficiency_two_step_residual_ratio_stop"
 ]
 
 
-aic_beta_60 = results_beta_60["aic_time"]
+aic_beta_60 = results_beta_60["aic_stop"]
 
-dp_time_beta_60 = results_beta_60["discrepancy_time"]
+dp_time_beta_60 = results_beta_60["discrepancy_stop"]
 
-relative_efficiency_aic_beta_15 = results_beta_15["relative_efficiency_aic"]
+relative_efficiency_aic_beta_15 = results_beta_15["empirical_relative_efficiency_aic"]
 relative_efficiency_two_step_discrepancy_stop_beta_15 = results_beta_15[
-    "relative_efficiency_two_step_discrepancy_stop"
+    "empirical_relative_efficiency_two_step_discrepancy_stop"
 ]
 relative_efficiency_two_step_residual_ratio_stop_beta_15 = results_beta_15[
-    "relative_efficiency_two_step_residual_ratio_stop"
+    "empirical_relative_efficiency_two_step_residual_ratio_stop"
 ]
 
 
-relative_efficiency_aic_beta_60 = results_beta_60["relative_efficiency_aic"]
+relative_efficiency_aic_beta_60 = results_beta_60["empirical_relative_efficiency_aic"]
 relative_efficiency_two_step_discrepancy_stop_beta_60 = results_beta_60[
-    "relative_efficiency_two_step_discrepancy_stop"
+    "empirical_relative_efficiency_two_step_discrepancy_stop"
 ]
 relative_efficiency_two_step_residual_ratio_stop_beta_60 = results_beta_60[
-    "relative_efficiency_two_step_residual_ratio_stop"
+    "empirical_relative_efficiency_two_step_residual_ratio_stop"
 ]
 
 
-relative_efficiency_aic_beta_90 = results_beta_90["relative_efficiency_aic"]
+relative_efficiency_aic_beta_90 = results_beta_90["empirical_relative_efficiency_aic"]
 relative_efficiency_two_step_discrepancy_stop_beta_90 = results_beta_90[
-    "relative_efficiency_two_step_discrepancy_stop"
+    "empirical_relative_efficiency_two_step_discrepancy_stop"
 ]
 relative_efficiency_two_step_residual_ratio_stop_beta_90 = results_beta_90[
-    "relative_efficiency_two_step_residual_ratio_stop"
+    "empirical_relative_efficiency_two_step_residual_ratio_stop"
 ]
 
 
