@@ -1,7 +1,6 @@
 # Todo's
 ## Known buggs and issues
 - Landweber computing the variance quantities in the case of ill-posed problems
-- Unifying the acces keys in the simmulation wrapper
 - What is when allowed to be sparse?
 - Example in Doku: Truncated SVD
 - Unify the examples

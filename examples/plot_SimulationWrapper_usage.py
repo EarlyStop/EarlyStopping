@@ -2,7 +2,7 @@
 Usage of the SimulationWrapper class
 ============================================
 
-We illustrate how the SimmulationWrapper class can be used to simplify
+We illustrate how the SimulationWrapper class can be used to simplify
 the process of creating a Montecarlo simmulation for analying the performance of the Landweber method.
 """
 
