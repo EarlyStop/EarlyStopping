@@ -2,7 +2,6 @@ import numpy as np
 from joblib import Parallel, delayed
 from scipy.linalg import toeplitz
 import scipy
-from scipy import sparse
 from scipy.sparse import dia_matrix
 from scipy.sparse.linalg import svds
 import pandas as pd
@@ -12,14 +11,6 @@ from .landweber import Landweber
 from .conjugate_gradients import ConjugateGradients
 from .truncated_svd import TruncatedSVD
 from .L2_boost import L2_boost
-
-# import matplotlib.pyplot as plt
-# from matplotlib.ticker import FixedLocator
-# import seaborn as sns
-# import pandas as pd
-# TODO: Update bias2 vs. bias/ mse vs risk, landweber empirical vs. non-empirical quantities for replication study
-# bias2
-# risk
 
 
 def custom_warning(message, category, filename, lineno, file=None, line=None):
@@ -781,6 +772,63 @@ class SimulationWrapper:
 
         self.sample_size = design.shape[0]
 
+    def run_simulation_truncated_svd(self, max_iteration, diagonal=False, data_set_name=None):
+        """
+        Runs a simulation for an inverse problem using truncated Singular Value Decomposition (SVD).
+        The function generates a noisy response based on the specified noise level and performs a Monte-Carlo
+        simulation to collect various metrics related to the estimator's performance.
+
+        **Parameters**
+
+        *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
+
+        *diagonal*: ``bool``, optional. Specifies whether to treat the matrix as diagonal. Default is False.
+
+        *data_set_name*: ``str``, optional. If specified, the results are saved to a CSV file with this name.
+
+        **Returns**
+
+        *results_df*: ``pd.DataFrame``. DataFrame containing the results of the Monte-Carlo simulation.
+
+        The resulting DataFrame can be saved to a CSV file if `data_set_name` is provided.
+        """
+        info("Running Monte-Carlo simulation for TruncatedSVD.")
+        self.diagonal = diagonal
+        if self.noise is None:
+            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
+
+        self.response = self.noise + (self.response_noiseless)[:, None]
+
+        results = Parallel(n_jobs=self.cores)(
+            delayed(self.monte_carlo_wrapper_truncated_svd)(m, max_iteration) for m in range(self.monte_carlo_runs)
+        )
+
+        column_names = [
+            "strong_empirical_risk_at_discrepancy_stop",
+            "weak_empirical_risk_at_discrepancy_stop",
+            "strong_empirical_relative_efficiency",
+            "weak_empirical_relative_efficiency",
+            "strong_bias2",
+            "strong_variance",
+            "strong_risk",
+            "weak_bias2",
+            "weak_variance",
+            "weak_risk",
+            "residuals",
+            "discrepancy_stop",
+            "strong_balanced_oracle",
+            "weak_balanced_oracle",
+            "strong_classical_oracle",
+            "weak_classical_oracle",
+        ]
+
+        results_df = pd.DataFrame(results, columns=column_names)
+
+        if data_set_name:
+            results_df.to_csv(f"{data_set_name}.csv", index=False)
+
+        return results_df
+
     def run_simulation_landweber(self, max_iteration, learning_rate=1, data_set_name=None):
         """
         Runs a simulation for an inverse problem using the Landweber iteration method.
@@ -816,10 +864,10 @@ class SimulationWrapper:
         )
 
         column_names = [
-            "strong_empirical_risk_es",
-            "weak_empirical_risk_es",
-            "weak_relative_efficiency",
-            "strong_relative_efficiency",
+            "strong_empirical_risk_at_discrepancy_stop",
+            "weak_empirical_risk_at_discrepancy_stop",
+            "strong_empirical_relative_efficiency",
+            "weak_empirical_relative_efficiency",
             "strong_bias2",
             "strong_variance",
             "strong_risk",
@@ -828,12 +876,12 @@ class SimulationWrapper:
             "weak_risk",
             "residuals",
             "discrepancy_stop",
-            "balanced_oracle_weak",
-            "balanced_oracle_strong",
-            # "weak_classical_oracle",
-            # "strong_classical_oracle",
-            # "weak_empirical_oracle",
-            # "strong_empirical_oracle"
+            "strong_balanced_oracle",
+            "weak_balanced_oracle",
+            "strong_classical_oracle",
+            "weak_classical_oracle",
+            "strong_empirical_oracle",
+            "weak_empirical_oracle",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -843,55 +891,42 @@ class SimulationWrapper:
 
         return results_df
 
-    def run_simulation_truncated_svd(self, max_iteration, diagonal=False, data_set_name=None):
+    def run_simulation_conjugate_gradients(self, max_iteration, data_set_name=None):
         """
-        Runs a simulation for an inverse problem using truncated Singular Value Decomposition (SVD).
-        The function generates a noisy response based on the specified noise level and performs a Monte-Carlo
-        simulation to collect various metrics related to the estimator's performance.
+        Runs a simulation for an inverse problem using the Conjugate Gradients method.
+        This function generates a noisy response based on the specified noise level and performs a
+        Monte-Carlo simulation to collect various metrics related to the estimator's performance.
 
         **Parameters**
 
         *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
 
-        *diagonal*: ``bool``, optional. Specifies whether to treat the matrix as diagonal. Default is False.
-
         *data_set_name*: ``str``, optional. If specified, the results are saved to a CSV file with this name.
 
         **Returns**
 
-        *results_df*: ``pd.DataFrame``. DataFrame containing the results of the Monte-Carlo simulation.
-
-        The resulting DataFrame can be saved to a CSV file if `data_set_name` is provided.
+        *results*: ``list``. A list of results from the Monte-Carlo simulation.
         """
-        info("Running Monte-Carlo simulation for TruncatedSVD.")
-        self.diagonal = diagonal
+        info("Running Monte-Carlo simulation for Conjugate Gradients.")
         if self.noise is None:
             self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-
         self.response = self.noise + (self.response_noiseless)[:, None]
 
         results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_truncated_svd)(m, max_iteration) for m in range(self.monte_carlo_runs)
+            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m, max_iteration)
+            for m in range(self.monte_carlo_runs)
         )
 
-        # TODO-BS-2024-11-02: Add AIC stop, classical oracles, etc. as column
         column_names = [
-            "strong_bias2",
-            "strong_variance",
-            "strong_risk",
-            "weak_bias2",
-            "weak_variance",
-            "weak_risk",
+            "strong_empirical_risk_at_discrepancy_stop",
+            "weak_empirical_risk_at_discrepancy_stop",
+            "strong_empirical_relative_efficiency",
+            "weak_empirical_relative_efficiency",
             "residuals",
             "discrepancy_stop",
-            "weak_balanced_oracle",
-            "strong_balanced_oracle",
-            "weak_classical_oracle",
-            "strong_classical_oracle",
-            "weak_relative_efficiency",
-            "strong_relative_efficiency",
-            "weak_error_at_stopping_time",
-            "strong_error_at_stopping_time",
+            "strong_empirical_oracle",
+            "weak_empirical_oracle",
+            "terminal_iteration",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -930,26 +965,26 @@ class SimulationWrapper:
         )
 
         column_names = [
-            "bias2",
-            "stochastic_error",
-            "risk",
-            "residuals",
-            "noise_estimate",
-            "discrepancy_time",
-            "residual_ratio_time",
-            "balanced_oracle",
-            "aic_time",
+            "empirical_risk_at_discrepancy_stop",
+            "empirical_risk_at_residual_ratio_stop",
+            "empirical_risk_at_aic_stop",
+            "empirical_risk_at_balanced_oracle",
+            "empirical_relative_efficiency_discrepancy",
+            "empirical_relative_efficiency_residual_ratio",
+            "empirical_relative_efficiency_aic",
+            "empirical_relative_efficiency_two_step_discrepancy_stop",
+            "empirical_relative_efficiency_two_step_residual_ratio_stop",
+            "empirical_bias2",
+            "empirical_stochastic_error",
+            "empirical_risk",
+            "mean_residuals",
+            "discrepancy_stop",
+            "residual_ratio_stop",
+            "aic_stop",
             "two_step_discrepancy_stop",
             "two_step_residual_ratio_stop",
-            "risk_at_discrepancy_time",
-            "risk_at_balanced_oracle",
-            "risk_at_residual_ratio_time",
-            "risk_at_aic_time",
-            "relative_efficiency_discrepancy",
-            "relative_efficiency_residual_ratio",
-            "relative_efficiency_aic",
-            "relative_efficiency_two_step_discrepancy_stop",
-            "relative_efficiency_two_step_residual_ratio_stop",
+            "balanced_oracle",
+            "noise_estimate",
         ]
 
         results_df = pd.DataFrame(results, columns=column_names)
@@ -958,65 +993,6 @@ class SimulationWrapper:
             results_df.to_csv(f"{data_set_name}.csv", index=False)
 
         return results_df
-
-    def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
-        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
-        model_L2_boost = L2_boost(design=self.design, response=self.response[:, m], true_signal=self.true_signal)
-
-        model_L2_boost.iterate(max_iteration)
-
-        bias2 = model_L2_boost.bias2
-        stochastic_error = model_L2_boost.stochastic_error
-        risk = model_L2_boost.risk
-        residuals = model_L2_boost.residuals
-
-        noise_estimate = model_L2_boost.get_noise_estimate()
-        print(
-            noise_estimate
-            - np.mean((model_L2_boost.response - model_L2_boost.design @ model_L2_boost.true_signal) ** 2)
-        )
-        discrepancy_time = model_L2_boost.get_discrepancy_stop(noise_estimate, max_iteration)
-        residual_ratio_time = model_L2_boost.get_residual_ratio_stop(max_iteration)
-        balanced_oracle = model_L2_boost.get_balanced_oracle(max_iteration)
-        aic_time = model_L2_boost.get_aic_iteration()
-        two_step_discrepancy_stop = model_L2_boost.get_aic_iteration(max_iteration=discrepancy_time)
-        two_step_residual_ratio_stop = model_L2_boost.get_aic_iteration(max_iteration=residual_ratio_time)
-
-        risk_at_discrepancy_time = risk[discrepancy_time]
-        risk_at_balanced_oracle = risk[balanced_oracle]
-        risk_at_residual_ratio_time = risk[residual_ratio_time]
-        risk_at_aic_time = risk[aic_time]
-        risk_at_two_step_discrepancy_stop = risk[two_step_discrepancy_stop]
-        risk_at_two_step_residual_ratio_stop = risk[two_step_residual_ratio_stop]
-
-        relative_efficiency_discrepancy = np.sqrt(np.min(risk) / risk_at_discrepancy_time)
-        relative_efficiency_residual_ratio = np.sqrt(np.min(risk) / risk_at_residual_ratio_time)
-        relative_efficiency_aic = np.sqrt(np.min(risk) / risk_at_aic_time)
-        relative_efficiency_two_step_discrepancy_stop = np.sqrt(np.min(risk) / risk_at_two_step_discrepancy_stop)
-        relative_efficiency_two_step_residual_ratio_stop = np.sqrt(np.min(risk) / risk_at_two_step_residual_ratio_stop)
-
-        return (
-            bias2,
-            stochastic_error,
-            risk,
-            residuals,
-            noise_estimate,
-            discrepancy_time,
-            residual_ratio_time,
-            balanced_oracle,
-            aic_time,
-            two_step_discrepancy_stop,
-            two_step_residual_ratio_stop,
-            risk_at_discrepancy_time,
-            risk_at_balanced_oracle,
-            risk_at_residual_ratio_time,
-            risk_at_aic_time,
-            relative_efficiency_discrepancy,
-            relative_efficiency_residual_ratio,
-            relative_efficiency_aic,
-            relative_efficiency_two_step_discrepancy_stop,
-            relative_efficiency_two_step_residual_ratio_stop,
-        )
 
     def monte_carlo_wrapper_truncated_svd(self, m, max_iteration):
         info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
@@ -1047,18 +1023,26 @@ class SimulationWrapper:
         weak_classical_oracle = np.argmin(weak_risk)
         strong_classical_oracle = np.argmin(strong_risk)
 
-        weak_error_vector_at_stopping_time = model_truncated_svd.design @ (
+        weak_empirical_risk_vector_at_discrepancy_stop = model_truncated_svd.design @ (
             model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal
         )
-        weak_error_at_stopping_time = np.sum(weak_error_vector_at_stopping_time**2)
-        weak_relative_efficiency = np.sqrt(np.min(weak_risk) / weak_error_at_stopping_time)
+        weak_empirical_risk_at_discrepancy_stop = np.sum(weak_empirical_risk_vector_at_discrepancy_stop**2)
+        weak_empirical_relative_efficiency = np.sqrt(
+            np.min(weak_risk) / weak_empirical_risk_at_discrepancy_stop
+        )  # This formula does not make sense.
 
-        strong_error_at_stopping_time = np.sum(
+        strong_empirical_risk_at_discrepancy_stop = np.sum(
             (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal) ** 2
         )
-        strong_relative_efficiency = np.sqrt(np.min(strong_risk) / strong_error_at_stopping_time)
+        strong_empirical_relative_efficiency = np.sqrt(
+            np.min(strong_risk) / strong_empirical_risk_at_discrepancy_stop
+        )  # This formula does not make sense.
 
         return (
+            strong_empirical_risk_at_discrepancy_stop,
+            weak_empirical_risk_at_discrepancy_stop,
+            strong_empirical_relative_efficiency,
+            weak_empirical_relative_efficiency,
             strong_bias2,
             strong_variance,
             strong_risk,
@@ -1067,62 +1051,203 @@ class SimulationWrapper:
             weak_risk,
             residuals,
             discrepancy_stop,
-            weak_balanced_oracle,
             strong_balanced_oracle,
-            weak_classical_oracle,
+            weak_balanced_oracle,
             strong_classical_oracle,
-            weak_relative_efficiency,
-            strong_relative_efficiency,
-            weak_error_at_stopping_time,
-            strong_error_at_stopping_time,
+            weak_classical_oracle,
         )
 
-    def run_simulation_conjugate_gradients(self, max_iteration, data_set_name=None):
-        """
-        Runs a simulation for an inverse problem using the Conjugate Gradients method.
-        This function generates a noisy response based on the specified noise level and performs a
-        Monte-Carlo simulation to collect various metrics related to the estimator's performance.
-
-        **Parameters**
-
-        *max_iteration*: ``int``. Specifies the maximum number of iterations to use within the simulation.
-
-        *data_set_name*: ``str``, optional. If specified, the results are saved to a CSV file with this name.
-
-        **Returns**
-
-        *results*: ``list``. A list of results from the Monte-Carlo simulation.
-        """
-        info("Running Monte-Carlo simulation for Conjugate Gradients.")
-        if self.noise is None:
-            self.noise = np.random.normal(0, self.true_noise_level, (self.sample_size, self.monte_carlo_runs))
-        self.response = self.noise + (self.response_noiseless)[:, None]
-
-        results = Parallel(n_jobs=self.cores)(
-            delayed(self.monte_carlo_wrapper_conjugate_gradients)(m, max_iteration)
-            for m in range(self.monte_carlo_runs)
+    def monte_carlo_wrapper_landweber(self, m, max_iteration):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+        model_landweber = Landweber(
+            design=self.design,
+            response=self.response[:, m],
+            true_signal=self.true_signal,
+            true_noise_level=self.true_noise_level,
+            learning_rate=self.learning_rate,
         )
 
-        column_names = [
-            "strong_empirical_oracle",
-            "weak_empirical_oracle",
-            "discrepancy_stop",
-            "strong_empirical_oracle_risk",
-            "strong_empirical_stopping_index_risk",
-            "weak_empirical_oracle_risk",
-            "weak_empirical_stopping_index_risk",
-            "squared_residual_at_stopping_index",
-            "strong_relative_efficiency",
-            "weak_relative_efficiency",
-            "terminal_iteration",
-        ]
+        model_landweber.iterate(max_iteration)
 
-        results_df = pd.DataFrame(results, columns=column_names)
+        strong_bias2 = model_landweber.strong_bias2
+        strong_variance = model_landweber.strong_variance
+        strong_risk = model_landweber.strong_risk
+        weak_bias2 = model_landweber.weak_bias2
+        weak_variance = model_landweber.weak_variance
+        weak_risk = model_landweber.weak_risk
+        residuals = model_landweber.residuals
 
-        if data_set_name:
-            results_df.to_csv(f"{data_set_name}.csv", index=False)
+        discrepancy_stop = model_landweber.get_discrepancy_stop(
+            self.sample_size * (self.true_noise_level**2), max_iteration
+        )
 
-        return results_df
+        weak_balanced_oracle = model_landweber.get_weak_balanced_oracle(max_iteration)
+        strong_balanced_oracle = model_landweber.get_strong_balanced_oracle(max_iteration)
+
+        if (weak_balanced_oracle is None) or (strong_balanced_oracle is None):
+            raise ValueError("Weak or strong balanced oracle is None. Relative efficiency cannot be computed.")
+
+        if discrepancy_stop is None:
+            discrepancy_stop = max_iteration
+            print("Stopping index is None. Setting to max iteration.")
+
+        strong_empirical_risk_at_discrepancy_stop = model_landweber.strong_empirical_risk[discrepancy_stop]
+        weak_empirical_risk_at_discrepancy_stop = model_landweber.weak_empirical_risk[discrepancy_stop]
+
+        weak_classical_oracle = np.argmin(weak_risk)
+        strong_classical_oracle = np.argmin(strong_risk)
+        weak_empirical_oracle = np.argmin(model_landweber.weak_empirical_risk)
+        strong_empirical_oracle = np.argmin(model_landweber.strong_empirical_risk)
+
+        weak_empirical_relative_efficiency = np.sqrt(
+            np.min(model_landweber.weak_empirical_risk) / weak_empirical_risk_at_discrepancy_stop
+        )
+        strong_empirical_relative_efficiency = np.sqrt(
+            np.min(model_landweber.strong_empirical_risk) / strong_empirical_risk_at_discrepancy_stop
+        )
+
+        return (
+            strong_empirical_risk_at_discrepancy_stop,
+            weak_empirical_risk_at_discrepancy_stop,
+            strong_empirical_relative_efficiency,
+            weak_empirical_relative_efficiency,
+            strong_bias2,
+            strong_variance,
+            strong_risk,
+            weak_bias2,
+            weak_variance,
+            weak_risk,
+            residuals,
+            discrepancy_stop,
+            strong_balanced_oracle,
+            weak_balanced_oracle,
+            strong_classical_oracle,
+            weak_classical_oracle,
+            strong_empirical_oracle,
+            weak_empirical_oracle,
+        )
+
+    def monte_carlo_wrapper_conjugate_gradients(self, m, max_iteration):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+
+        model_conjugate_gradients = ConjugateGradients(
+            design=self.design,
+            response=self.response[:, m],
+            initial_value=None,
+            true_signal=self.true_signal,
+            true_noise_level=self.true_noise_level,
+            computation_threshold=self.computation_threshold,
+        )
+
+        if self.critical_value is None:
+            self.critical_value = self.sample_size * (self.true_noise_level**2)
+
+        strong_empirical_oracle = model_conjugate_gradients.get_strong_empirical_oracle(
+            max_iteration=max_iteration, interpolation=self.interpolation
+        )
+        weak_empirical_oracle = model_conjugate_gradients.get_weak_empirical_oracle(
+            max_iteration=max_iteration, interpolation=self.interpolation
+        )
+        discrepancy_stop = model_conjugate_gradients.get_discrepancy_stop(
+            critical_value=self.critical_value, max_iteration=max_iteration, interpolation=self.interpolation
+        )
+        strong_empirical_oracle_risk = model_conjugate_gradients.get_strong_empirical_risk(strong_empirical_oracle)
+        weak_empirical_oracle_risk = model_conjugate_gradients.get_weak_empirical_risk(weak_empirical_oracle)
+
+        strong_empirical_risk_at_discrepancy_stop = model_conjugate_gradients.get_strong_empirical_risk(
+            discrepancy_stop
+        )
+        weak_empirical_risk_at_discrepancy_stop = model_conjugate_gradients.get_weak_empirical_risk(discrepancy_stop)
+
+        residuals = model_conjugate_gradients.residuals
+
+        strong_empirical_relative_efficiency = np.sqrt(
+            strong_empirical_oracle_risk / strong_empirical_risk_at_discrepancy_stop
+        )
+        weak_empirical_relative_efficiency = np.sqrt(
+            weak_empirical_oracle_risk / weak_empirical_risk_at_discrepancy_stop
+        )
+
+        terminal_iteration = model_conjugate_gradients.iteration
+
+        return (
+            strong_empirical_risk_at_discrepancy_stop,
+            weak_empirical_risk_at_discrepancy_stop,
+            strong_empirical_relative_efficiency,
+            weak_empirical_relative_efficiency,
+            residuals,
+            discrepancy_stop,
+            strong_empirical_oracle,
+            weak_empirical_oracle,
+            terminal_iteration,
+        )
+
+    def monte_carlo_wrapper_L2_boost(self, m, max_iteration):
+        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
+        model_L2_boost = L2_boost(design=self.design, response=self.response[:, m], true_signal=self.true_signal)
+
+        model_L2_boost.iterate(max_iteration)
+
+        empirical_bias2 = model_L2_boost.bias2
+        empirical_stochastic_error = model_L2_boost.stochastic_error
+        empirical_risk = model_L2_boost.risk
+        mean_residuals = model_L2_boost.residuals
+
+        noise_estimate = model_L2_boost.get_noise_estimate()
+        print(
+            noise_estimate
+            - np.mean((model_L2_boost.response - model_L2_boost.design @ model_L2_boost.true_signal) ** 2)
+        )
+        discrepancy_stop = model_L2_boost.get_discrepancy_stop(noise_estimate, max_iteration)
+        residual_ratio_stop = model_L2_boost.get_residual_ratio_stop(max_iteration)
+        balanced_oracle = model_L2_boost.get_balanced_oracle(max_iteration)
+        aic_stop = model_L2_boost.get_aic_iteration()
+        two_step_discrepancy_stop = model_L2_boost.get_aic_iteration(max_iteration=discrepancy_stop)
+        two_step_residual_ratio_stop = model_L2_boost.get_aic_iteration(max_iteration=residual_ratio_stop)
+
+        empirical_risk_at_discrepancy_stop = empirical_risk[discrepancy_stop]
+        empirical_risk_at_balanced_oracle = empirical_risk[balanced_oracle]
+        empirical_risk_at_residual_ratio_stop = empirical_risk[residual_ratio_stop]
+        empirical_risk_at_aic_stop = empirical_risk[aic_stop]
+        empirical_risk_at_two_step_discrepancy_stop = empirical_risk[two_step_discrepancy_stop]
+        empirical_risk_at_two_step_residual_ratio_stop = empirical_risk[two_step_residual_ratio_stop]
+
+        empirical_relative_efficiency_discrepancy = np.sqrt(
+            np.min(empirical_risk) / empirical_risk_at_discrepancy_stop
+        )
+        empirical_relative_efficiency_residual_ratio = np.sqrt(
+            np.min(empirical_risk) / empirical_risk_at_residual_ratio_stop
+        )
+        empirical_relative_efficiency_aic = np.sqrt(np.min(empirical_risk) / empirical_risk_at_aic_stop)
+        empirical_relative_efficiency_two_step_discrepancy_stop = np.sqrt(
+            np.min(empirical_risk) / empirical_risk_at_two_step_discrepancy_stop
+        )
+        empirical_relative_efficiency_two_step_residual_ratio_stop = np.sqrt(
+            np.min(empirical_risk) / empirical_risk_at_two_step_residual_ratio_stop
+        )
+
+        return (
+            empirical_risk_at_discrepancy_stop,
+            empirical_risk_at_residual_ratio_stop,
+            empirical_risk_at_aic_stop,
+            empirical_risk_at_balanced_oracle,
+            empirical_relative_efficiency_discrepancy,
+            empirical_relative_efficiency_residual_ratio,
+            empirical_relative_efficiency_aic,
+            empirical_relative_efficiency_two_step_discrepancy_stop,
+            empirical_relative_efficiency_two_step_residual_ratio_stop,
+            empirical_bias2,
+            empirical_stochastic_error,
+            empirical_risk,
+            mean_residuals,
+            discrepancy_stop,
+            residual_ratio_stop,
+            aic_stop,
+            two_step_discrepancy_stop,
+            two_step_residual_ratio_stop,
+            balanced_oracle,
+            noise_estimate,
+        )
 
     def search_learning_rate(self, max_iteration, search_depth):
         u, s, vh = svds(self.design, k=1)
@@ -1168,127 +1293,6 @@ class SimulationWrapper:
             stopping_index_landweber = max_iteration
 
         return converges, model_landweber.strong_empirical_risk[stopping_index_landweber]
-
-    def monte_carlo_wrapper_landweber(self, m, max_iteration):
-        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
-        model_landweber = Landweber(
-            design=self.design,
-            response=self.response[:, m],
-            true_signal=self.true_signal,
-            true_noise_level=self.true_noise_level,
-            learning_rate=self.learning_rate,
-        )
-
-        model_landweber.iterate(max_iteration)
-
-        landweber_strong_bias2 = model_landweber.strong_bias2
-        landweber_strong_variance = model_landweber.strong_variance
-        landweber_strong_risk = model_landweber.strong_risk
-        landweber_weak_bias2 = model_landweber.weak_bias2
-        landweber_weak_variance = model_landweber.weak_variance
-        landweber_weak_risk = model_landweber.weak_risk
-        landweber_residuals = model_landweber.residuals
-
-        stopping_index_landweber = model_landweber.get_discrepancy_stop(
-            self.sample_size * (self.true_noise_level**2), max_iteration
-        )
-
-        balanced_oracle_weak = model_landweber.get_weak_balanced_oracle(max_iteration)
-        balanced_oracle_strong = model_landweber.get_strong_balanced_oracle(max_iteration)
-
-        if (balanced_oracle_weak is None) or (balanced_oracle_strong is None):
-            raise ValueError("Weak or strong balanced oracle is None. Relative efficiency cannot be computed.")
-
-        if stopping_index_landweber is None:
-            stopping_index_landweber = max_iteration
-            print("Stopping index is None. Setting to max iteration.")
-
-        landweber_strong_empirical_risk_es = model_landweber.strong_empirical_risk[stopping_index_landweber]
-        landweber_weak_empirical_risk_es = model_landweber.weak_empirical_risk[stopping_index_landweber]
-
-        weak_classical_oracle = np.argmin(landweber_weak_risk)
-        strong_classical_oracle = np.argmin(landweber_strong_risk)
-        weak_empirical_oracle = np.argmin(model_landweber.weak_empirical_risk)
-        strong_empirical_oracle = np.argmin(model_landweber.strong_empirical_risk)
-
-        landweber_weak_relative_efficiency = np.sqrt(
-            np.min(model_landweber.weak_empirical_risk) / landweber_weak_empirical_risk_es
-        )
-        landweber_strong_relative_efficiency = np.sqrt(
-            np.min(model_landweber.strong_empirical_risk) / landweber_strong_empirical_risk_es
-        )
-
-        return (
-            landweber_strong_empirical_risk_es,
-            landweber_weak_empirical_risk_es,
-            landweber_weak_relative_efficiency,
-            landweber_strong_relative_efficiency,
-            landweber_strong_bias2,
-            landweber_strong_variance,
-            landweber_strong_risk,
-            landweber_weak_bias2,
-            landweber_weak_variance,
-            landweber_weak_risk,
-            landweber_residuals,
-            stopping_index_landweber,
-            balanced_oracle_weak,
-            balanced_oracle_strong,
-            # weak_classical_oracle,
-            # strong_classical_oracle,
-            # weak_empirical_oracle,
-            # strong_empirical_oracle
-        )
-
-    def monte_carlo_wrapper_conjugate_gradients(self, m, max_iteration):
-        info(f"Monte-Carlo run {m + 1}/{self.monte_carlo_runs}.")
-
-        model_conjugate_gradients = ConjugateGradients(
-            design=self.design,
-            response=self.response[:, m],
-            initial_value=None,
-            true_signal=self.true_signal,
-            true_noise_level=self.true_noise_level,
-            computation_threshold=self.computation_threshold,
-        )
-
-        if self.critical_value is None:
-            self.critical_value = self.sample_size * (self.true_noise_level**2)
-
-        strong_empirical_oracle = model_conjugate_gradients.get_strong_empirical_oracle(
-            max_iteration=max_iteration, interpolation=self.interpolation
-        )
-        weak_empirical_oracle = model_conjugate_gradients.get_weak_empirical_oracle(
-            max_iteration=max_iteration, interpolation=self.interpolation
-        )
-        stopping_index = model_conjugate_gradients.get_discrepancy_stop(
-            critical_value=self.critical_value, max_iteration=max_iteration, interpolation=self.interpolation
-        )
-        strong_empirical_oracle_risk = model_conjugate_gradients.get_strong_empirical_risk(strong_empirical_oracle)
-        weak_empirical_oracle_risk = model_conjugate_gradients.get_weak_empirical_risk(weak_empirical_oracle)
-
-        strong_empirical_stopping_index_risk = model_conjugate_gradients.get_strong_empirical_risk(stopping_index)
-        weak_empirical_stopping_index_risk = model_conjugate_gradients.get_weak_empirical_risk(stopping_index)
-
-        squared_residual_at_stopping_index = model_conjugate_gradients.get_residual(stopping_index)
-
-        strong_relative_efficiency = np.sqrt(strong_empirical_oracle_risk / strong_empirical_stopping_index_risk)
-        weak_relative_efficiency = np.sqrt(weak_empirical_oracle_risk / weak_empirical_stopping_index_risk)
-
-        terminal_iteration = model_conjugate_gradients.iteration
-
-        return (
-            strong_empirical_oracle,
-            weak_empirical_oracle,
-            stopping_index,
-            strong_empirical_oracle_risk,
-            strong_empirical_stopping_index_risk,
-            weak_empirical_oracle_risk,
-            weak_empirical_stopping_index_risk,
-            squared_residual_at_stopping_index,
-            strong_relative_efficiency,
-            weak_relative_efficiency,
-            terminal_iteration,
-        )
 
     def __str__(self):
         """Return a string representation of the SimulationWrapper"""

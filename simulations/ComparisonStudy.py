@@ -41,16 +41,16 @@ results_svd = simulation.run_simulation_truncated_svd(
 
 # Extract relative efficiencies for each method
 # Landweber
-landweber_weak_efficiency = np.array(results_landweber["weak_relative_efficiency"])
-landweber_strong_efficiency = np.array(results_landweber["strong_relative_efficiency"])
+landweber_weak_efficiency = np.array(results_landweber["weak_empirical_relative_efficiency"])
+landweber_strong_efficiency = np.array(results_landweber["strong_empirical_relative_efficiency"])
 
 # Conjugate Gradients
-cg_weak_efficiency = np.array(results_cg["weak_relative_efficiency"])
-cg_strong_efficiency = np.array(results_cg["strong_relative_efficiency"])
+cg_weak_efficiency = np.array(results_cg["weak_empirical_relative_efficiency"])
+cg_strong_efficiency = np.array(results_cg["strong_empirical_relative_efficiency"])
 
 # Truncated SVD
-svd_weak_efficiency = np.array(results_svd["weak_relative_efficiency"])
-svd_strong_efficiency = np.array(results_svd["strong_relative_efficiency"])
+svd_weak_efficiency = np.array(results_svd["weak_empirical_relative_efficiency"])
+svd_strong_efficiency = np.array(results_svd["strong_empirical_relative_efficiency"])
 
 # Extract stopping times for each method
 landweber_stopping_times = np.array(results_landweber["discrepancy_stop"])
@@ -58,9 +58,9 @@ cg_stopping_times = np.array(results_cg["discrepancy_stop"])
 svd_stopping_times = np.array(results_svd["discrepancy_stop"])
 
 # Error at stopping time
-landweber_errors = np.array(results_landweber["strong_empirical_risk_es"])
-cg_errors = np.array(results_cg["strong_empirical_stopping_index_risk"])
-svd_errors = np.array(results_svd["strong_error_at_stopping_time"])
+landweber_errors = np.array(results_landweber["strong_empirical_risk_at_discrepancy_stop"])
+cg_errors = np.array(results_cg["strong_empirical_risk_at_discrepancy_stop"])
+svd_errors = np.array(results_svd["strong_empirical_risk_at_discrepancy_stop"])
 
 # Prepare data for plotting
 efficiency_to_plot = [
