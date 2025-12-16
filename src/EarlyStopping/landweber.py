@@ -152,7 +152,7 @@ class Landweber:
                         category=UserWarning,
                     )
 
-                    self.illposed = False  # eventually True just bugged atm
+                    self.illposed = True
 
             self.perturbation_congruency_matrix = (
                 sparse.dia_matrix(np.eye(self.parameter_size)) - self.learning_rate * self.gram_matrix
@@ -161,7 +161,7 @@ class Landweber:
             self.perturbation_congruency_matrix_power = self.perturbation_congruency_matrix
 
             if self.illposed:
-                self.accomulated_perturbation_congruency_matrix_power = self.perturbation_congruency_matrix_power
+                self.accumulated_perturbation_congruency_matrix_power = sparse.dia_matrix(np.eye(self.parameter_size))
 
             # initialize strong/weak bias and variance
             self.expectation_estimator = self.initial_value
@@ -317,14 +317,14 @@ class Landweber:
             self.true_signal - self.expectation_estimator
         )
 
+        if self.illposed:
+            self.accumulated_perturbation_congruency_matrix_power = (
+                self.accumulated_perturbation_congruency_matrix_power + self.perturbation_congruency_matrix_power
+            )
+
         self.perturbation_congruency_matrix_power = (
             self.perturbation_congruency_matrix_power @ self.perturbation_congruency_matrix
         )
-
-        if self.illposed:
-            self.accomulated_perturbation_congruency_matrix_power = (
-                self.accomulated_perturbation_congruency_matrix_power + self.perturbation_congruency_matrix_power
-            )
 
     def __update_strong_bias2(self):
         """Update strong bias
@@ -358,8 +358,8 @@ class Landweber:
                 category=UserWarning,
             )
             square_matrix = (
-                self.accomulated_perturbation_congruency_matrix_power
-                @ self.accomulated_perturbation_congruency_matrix_power
+                self.accumulated_perturbation_congruency_matrix_power
+                @ self.accumulated_perturbation_congruency_matrix_power
             )
             pretrace_temporary_matrix = square_matrix @ self.gram_matrix
             new_strong_variance = (
@@ -391,7 +391,7 @@ class Landweber:
             )
 
             pretrace_temporary_matrix_presquare = (
-                self.design @ self.accomulated_perturbation_congruency_matrix_power @ self.design_T
+                self.design @ self.accumulated_perturbation_congruency_matrix_power @ self.design_T
             )
             square_matrix = pretrace_temporary_matrix_presquare @ pretrace_temporary_matrix_presquare
             new_weak_variance = (self.true_noise_level**2) * (self.learning_rate**2) * square_matrix.trace()
