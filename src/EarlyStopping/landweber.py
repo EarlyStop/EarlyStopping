@@ -148,7 +148,7 @@ class Landweber:
 
                 if not (rank == self.gram_matrix.shape[0]):
                     warnings.warn(
-                        "PARAMETER WARNING: The inverse problem is ill-posed, setting illposed flag. EXPERIMENTAL FEATURE",
+                        "PARAMETER WARNING: The inverse problem is ill-posed, setting illposed flag.",
                         category=UserWarning,
                     )
 
