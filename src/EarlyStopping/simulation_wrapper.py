@@ -1027,16 +1027,12 @@ class SimulationWrapper:
             model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal
         )
         weak_empirical_risk_at_discrepancy_stop = np.sum(weak_empirical_risk_vector_at_discrepancy_stop**2)
-        weak_empirical_relative_efficiency = np.sqrt(
-            np.min(weak_risk) / weak_empirical_risk_at_discrepancy_stop
-        )  # This formula does not make sense.
+        weak_empirical_relative_efficiency = np.sqrt(np.min(weak_risk) / weak_empirical_risk_at_discrepancy_stop)
 
         strong_empirical_risk_at_discrepancy_stop = np.sum(
             (model_truncated_svd.get_estimate(discrepancy_stop) - model_truncated_svd.true_signal) ** 2
         )
-        strong_empirical_relative_efficiency = np.sqrt(
-            np.min(strong_risk) / strong_empirical_risk_at_discrepancy_stop
-        )  # This formula does not make sense.
+        strong_empirical_relative_efficiency = np.sqrt(np.min(strong_risk) / strong_empirical_risk_at_discrepancy_stop)
 
         return (
             strong_empirical_risk_at_discrepancy_stop,
@@ -1100,10 +1096,10 @@ class SimulationWrapper:
         strong_empirical_oracle = np.argmin(model_landweber.strong_empirical_risk)
 
         weak_empirical_relative_efficiency = np.sqrt(
-            np.min(model_landweber.weak_empirical_risk) / weak_empirical_risk_at_discrepancy_stop
+            np.min(model_landweber.weak_risk) / weak_empirical_risk_at_discrepancy_stop
         )
         strong_empirical_relative_efficiency = np.sqrt(
-            np.min(model_landweber.strong_empirical_risk) / strong_empirical_risk_at_discrepancy_stop
+            np.min(model_landweber.strong_risk) / strong_empirical_risk_at_discrepancy_stop
         )
 
         return (

@@ -1,7 +1,5 @@
 # Todo's
 ## Known buggs and issues
-- Landweber computing the variance quantities in the case of ill-posed problems
-- What is when allowed to be sparse?
 - Example in Doku: Truncated SVD
 - Unify the examples
 - Plotstyle file
