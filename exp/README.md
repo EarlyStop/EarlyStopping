@@ -16,3 +16,5 @@ Feature data set: UCSF - Cross-Sectional FreeSurfer (7.x) [ADNI1,GO,2,3,4]
 
 
 Cognitive score data set: Mini-Mental State Examination (MMSE) [ADNI1,GO,2,3,4]
+
+Diagnostic Summary data set: - Baseline Changes [ADNI1,GO,2,3,4]

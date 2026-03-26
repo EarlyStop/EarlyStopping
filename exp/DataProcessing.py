@@ -1,5 +1,5 @@
 ###################################################################################################
-# ADNI example: data processing                                                                    #
+# ADNI example: data processing                                                                   #
 ###################################################################################################
 
 
@@ -10,7 +10,7 @@ import pandas as pd
 
 
 #|%%--%%| <4mSeyVP6ks|AjXshz7rSK>
-# Constructing a minimal ADNI I data set -----------------------------------------------------------
+# Constructing a minimal ADNI I data sets ---------------------------------------------------------
 
 # Importing data sets
 cognitive_test_data = pd.read_csv("data/MMSE_04Oct2025.csv")
@@ -32,138 +32,29 @@ ADNI_I_data = merged_data[merged_data["PHASE"] == "ADNI1"]
 ADNI_I_data = ADNI_I_data[ADNI_I_data["OVERALLQC"].isna()]     # Remove image records with failed quality control (There are none)
 ADNI_I_data = ADNI_I_data.drop(columns = ["ST68SV", "ST8SV"])  # Drop features ST68SV and ST8SV for missing entries
 
-ADNI_I_data.to_csv("data/merged_data.csv", index=False)
+# Write to file
+ADNI_I_data.to_csv("data/ADNI_I_data.csv", index=False)
 
+# Extract m06 data
+ADNI_I_m06_data = ADNI_I_data[ADNI_I_data['VISCODE2'] == 'm06']
+ADNI_I_m06_data.to_csv("data/ADNI_I_m06_data.csv", index=False)
 
-#|%%--%%| <AjXshz7rSK|CBv7JXAUOg>
-# Importing data and merging
-mmse_data    = pd.read_csv("/home/be5tan/Projects/EarlyStopping/exp/data/MMSE_04Oct2025.csv")
-mri_roi_data = pd.read_csv("/home/be5tan/Projects/EarlyStopping/exp/data/UCSFFSX7_04Oct2025.csv")
+# Extract m12 data
+ADNI_I_m12_data = ADNI_I_data[ADNI_I_data['VISCODE2'] == 'm12']
+ADNI_I_m12_data.to_csv("data/ADNI_I_m12_data.csv", index=False)
 
-# Merge MMSCORE from df2 into df1 only for rows where RID, VISCODE, and VISCODE2 match
-merged_data = pd.merge(
-    mri_roi_data, 
-    mmse_data[['RID', 'VISCODE', 'VISCODE2', 'MMSCORE']],  # only keep relevant columns from df2
-    on=['RID', 'VISCODE', 'VISCODE2'],                     # merge on these columns
-    how='inner'                                            # keep only rows that match
-)
+# Extract m18 data
+ADNI_I_m18_data = ADNI_I_data[ADNI_I_data['VISCODE2'] == 'm18']
+ADNI_I_m18_data.to_csv("data/ADNI_I_m18_data.csv", index=False)
 
-RID2_test_data = merged_data[merged_data["RID"] == 2]
-print(RID2_test_data[['RID', 'VISCODE', 'VISCODE2', 'MMSCORE']])  # Correct values are: 2, sc, sc, 28
+# Extract m24 data
+ADNI_I_m24_data = ADNI_I_data[ADNI_I_data['VISCODE2'] == 'm24']
+ADNI_I_m24_data.to_csv("data/ADNI_I_m24_data.csv", index=False)
 
-# merged_data.to_csv("merged_data.csv", index=False)
+# Extract m30 data
+ADNI_I_m30_data = ADNI_I_data[ADNI_I_data['VISCODE2'] == 'm30']
+ADNI_I_m30_data.to_csv("data/ADNI_I_m30_data.csv", index=False)
 
-
-ADNI_I_data = merged_data[merged_data["PHASE"] == "ADNI1"]                  # Only phase = ADNI_1 
-ADNI_I_data = ADNI_I_data.drop_duplicates(subset=["RID"], keep = "first")   # Only the first entries of each individual patient
-
-first_covariate_location = ADNI_I_data.columns.get_loc("ST101SV")
-last_covariate_location  = ADNI_I_data.columns.get_loc("ST155SV")
-design                   = ADNI_I_data.iloc[:, first_covariate_location:last_covariate_location]
-design                   = design.fillna(design.mean(numeric_only=True))    # Replace missing values by column means    
-design                   = design.to_numpy()
-
-design                   = np.nan_to_num(design, nan = 0)
-np.isnan(response).any()
-
-
-
-ADNI_I_data.info()
-
-# ADNI_I_data.to_csv("ADNI_I_data.csv", index=False)
-
-
-np.sum((ADNI_I_data["OVERALLQC"] == "Pass"))
-
-ADNI_I_data["OVERALLQC"]
-
-
-
-ADNI_I_data["OVERALLQC"].type()
-
-
-
-
-
-
-
-
-
-
-
-#|%%--%%| <CBv7JXAUOg|7zHp5GZPFs>
-# Boosting example for PHASE = ADNI1
-min_example_data = merged_data[merged_data["PHASE"] == "ADNI1"]
-min_example_data = min_example_data.drop_duplicates(subset=["RID"], keep = "first")
-min_example_data.info()
-min_example_data.to_csv("min_example_data.csv", index=False)
-
-response                 = min_example_data["MMSCORE"].to_numpy()
-np.isnan(response).any()
-
-first_covariate_location = min_example_data.columns.get_loc("ST101SV")
-last_covariate_location  = min_example_data.columns.get_loc("ST155SV")
-design                   = min_example_data.iloc[:, first_covariate_location:last_covariate_location].to_numpy()
-design                   = np.nan_to_num(design, nan = 0)
-np.isnan(response).any()
-
-alg = es.L2_boost(design, response)
-alg.iterate(300)
-
-# Discrepancy stop
-noise_estimate = alg.get_noise_estimate(K = 1)
-stopping_time  = alg.get_discrepancy_stop(critical_value = noise_estimate, max_iteration=300)
-stopping_time
-
-# Early stopping via residual ratios
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=1.2)
-stopping_time
-
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.2)
-stopping_time
-
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.1)
-stopping_time
-
-# Classical model selection via AIC
-aic_minimizer = alg.get_aic_iteration(K=2)
-aic_minimizer
-
-#|%%--%%| <7zHp5GZPFs|yGBCSvQKlA>
-# Boosting example for PHASE = ADNI2
-min_example_data = merged_data[merged_data["PHASE"] == "ADNI2"]
-min_example_data = min_example_data.drop_duplicates(subset=["RID"], keep = "first")
-min_example_data.info()
-min_example_data.to_csv("min_example_data.csv", index=False)
-
-response                 = min_example_data["MMSCORE"].to_numpy()
-response                 = np.nan_to_num(response, nan = 0)
-np.isnan(response).any()
-
-first_covariate_location = min_example_data.columns.get_loc("ST101SV")
-last_covariate_location  = min_example_data.columns.get_loc("ST155SV")
-design                   = min_example_data.iloc[:, first_covariate_location:last_covariate_location].to_numpy()
-design                   = np.nan_to_num(design, nan = 0)
-np.isnan(design).any()
-
-alg = es.L2_boost(design, response)
-alg.iterate(300)
-
-# Discrepancy stop
-noise_estimate = alg.get_noise_estimate(K = 1)
-stopping_time  = alg.get_discrepancy_stop(critical_value = noise_estimate, max_iteration=300)
-stopping_time
-
-# Early stopping via residual ratios
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=1.2)
-stopping_time
-
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.2)
-stopping_time
-
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.1)
-stopping_time
-
-# Classical model selection via AIC
-aic_minimizer = alg.get_aic_iteration(K=2)
-aic_minimizer
+# Extract m36 data
+ADNI_I_m36_data = ADNI_I_data[ADNI_I_data['VISCODE2'] == 'm36']
+ADNI_I_m36_data.to_csv("data/ADNI_I_m36_data.csv", index=False)
