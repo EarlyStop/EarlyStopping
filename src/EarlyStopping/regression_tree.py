@@ -145,6 +145,13 @@ class RegressionTree:
                     indices=parent_indices
                 )
 
+                # No admissible split (e.g. duplicate feature rows in this node).
+                # Treat the node as terminal so that predict() does not encounter
+                # a non-terminal node with split_threshold=None.
+                if split_variable is None:
+                    self.node.is_terminal = True
+                    continue
+
                 # ILeft and right child node
                 self.node.left_child = self.Node()
                 self.node.right_child = self.Node()
@@ -182,30 +189,60 @@ class RegressionTree:
 
         **Parameters**
 
-        *indices*: ``list``. Indices of samples to be split.
+        *indices*: ``np.ndarray``. Indices of samples to be split.
         """
+        indices = np.asarray(indices)
+        n = len(indices)
         best_impurity = float("inf")
-        best_split = (None, None, [], [])
-        range_variables = range(self.dimension)
+        best_split = (None, None, np.array([], dtype=int), np.array([], dtype=int))
+        if n < 2:
+            return best_split
 
-        # Iterate through the possible variable/split combinations
-        for variable in range_variables:
-            thresholds = np.unique(self.design[indices, variable])
-            for split_threshold in thresholds:
-                left_node_indices = [i for i in indices if self.design[i, variable] <= split_threshold]
-                right_node_indices = [i for i in indices if self.design[i, variable] > split_threshold]
+        response_node = self.response[indices]
+        total_sum = response_node.sum()
+        total_sq = (response_node ** 2).sum()
+        ks = np.arange(1, n)  # admissible left-side sizes
 
-                if len(left_node_indices) == 0 or len(right_node_indices) == 0:
-                    continue
-                impurity = (
-                    len(self.design[left_node_indices]) * self._impurity(left_node_indices)
-                    + len(self.design[right_node_indices]) * self._impurity(right_node_indices)
-                ) / self.sample_size
+        for variable in range(self.dimension):
+            feature_vals = self.design[indices, variable]
+            order = np.argsort(feature_vals, kind="stable")
+            sorted_vals = feature_vals[order]
+            sorted_resp = response_node[order]
 
-                # Update the impurity and choice of variable/split
-                if impurity < best_impurity:
-                    best_impurity = impurity
-                    best_split = (variable, split_threshold, np.array(left_node_indices), np.array(right_node_indices))
+            # Cumulative sums for the left partition at split position k.
+            cumsum = np.cumsum(sorted_resp)
+            cumsum_sq = np.cumsum(sorted_resp ** 2)
+
+            # Admissible split positions: between consecutive samples with
+            # *different* feature values (otherwise the threshold is degenerate).
+            valid = sorted_vals[1:] > sorted_vals[:-1]
+            if not valid.any():
+                continue
+            ks_valid = ks[valid]
+
+            left_size = ks_valid.astype(float)
+            right_size = n - left_size
+            left_sum = cumsum[ks_valid - 1]
+            right_sum = total_sum - left_sum
+            left_sq = cumsum_sq[ks_valid - 1]
+            right_sq = total_sq - left_sq
+
+            # Sum of squared errors per side: SSE = sum(y^2) - sum(y)^2 / n.
+            left_sse = left_sq - left_sum ** 2 / left_size
+            right_sse = right_sq - right_sum ** 2 / right_size
+            # Match the original normalisation:
+            # (n_L * mse_L + n_R * mse_R) / N == (SSE_L + SSE_R) / N.
+            impurity = (left_sse + right_sse) / self.sample_size
+
+            local_idx = int(np.argmin(impurity))
+            local_imp = float(impurity[local_idx])
+            if local_imp < best_impurity:
+                best_impurity = local_imp
+                k = int(ks_valid[local_idx])
+                split_threshold = float(sorted_vals[k - 1])
+                left_idx = indices[order[:k]]
+                right_idx = indices[order[k:]]
+                best_split = (variable, split_threshold, left_idx, right_idx)
 
         return best_split
 
