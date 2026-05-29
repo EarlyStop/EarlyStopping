@@ -1,3 +1,7 @@
+###################################################################################################
+# ADNI exaple: data processing                                                                    #
+###################################################################################################
+
 # Importing libraries
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,7 +9,18 @@ import pandas as pd
 import seaborn as sns
 import EarlyStopping as es
 
-#|%%--%%| <RTFTaisXbt|CBv7JXAUOg>
+
+#|%%--%%| <RTFTaisXbt|AjXshz7rSK>
+# Minimal ADNI I data set
+
+mmse_data    = pd.read_csv("/home/be5tan/Projects/EarlyStopping/exp/data/MMSE_04Oct2025.csv")
+mri_roi_data = pd.read_csv("/home/be5tan/Projects/EarlyStopping/exp/data/UCSFFSX7_04Oct2025.csv")
+
+
+
+
+
+#|%%--%%| <AjXshz7rSK|CBv7JXAUOg>
 # Importing data and merging
 mmse_data    = pd.read_csv("/home/be5tan/Projects/EarlyStopping/exp/data/MMSE_04Oct2025.csv")
 mri_roi_data = pd.read_csv("/home/be5tan/Projects/EarlyStopping/exp/data/UCSFFSX7_04Oct2025.csv")
@@ -22,6 +37,47 @@ RID2_test_data = merged_data[merged_data["RID"] == 2]
 print(RID2_test_data[['RID', 'VISCODE', 'VISCODE2', 'MMSCORE']])  # Correct values are: 2, sc, sc, 28
 
 # merged_data.to_csv("merged_data.csv", index=False)
+
+
+ADNI_I_data = merged_data[merged_data["PHASE"] == "ADNI1"]                  # Only phase = ADNI_1 
+ADNI_I_data = ADNI_I_data.drop_duplicates(subset=["RID"], keep = "first")   # Only the first entries of each individual patient
+ADNI_I_data = ADNI_I_data[ADNI_I_data["OVERALLQC"].isna()]                  # Remove image records with failed quality control (There are none)
+ADNI_I_data = ADNI_I_data.drop(columns = ["ST68SV", "ST8SV"])               # Drop ST68SV and ST8SV for missing entries
+
+first_covariate_location = ADNI_I_data.columns.get_loc("ST101SV")
+last_covariate_location  = ADNI_I_data.columns.get_loc("ST155SV")
+design                   = ADNI_I_data.iloc[:, first_covariate_location:last_covariate_location]
+design                   = design.fillna(design.mean(numeric_only=True))    # Replace missing values by column means    
+design                   = design.to_numpy()
+
+design                   = np.nan_to_num(design, nan = 0)
+np.isnan(response).any()
+
+
+
+ADNI_I_data.info()
+
+# ADNI_I_data.to_csv("ADNI_I_data.csv", index=False)
+
+
+np.sum((ADNI_I_data["OVERALLQC"] == "Pass"))
+
+ADNI_I_data["OVERALLQC"]
+
+
+
+ADNI_I_data["OVERALLQC"].type()
+
+
+
+
+
+
+
+
+
+
+
 #|%%--%%| <CBv7JXAUOg|7zHp5GZPFs>
 # Boosting example for PHASE = ADNI1
 min_example_data = merged_data[merged_data["PHASE"] == "ADNI1"]
