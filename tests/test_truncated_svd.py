@@ -1,62 +1,112 @@
 import unittest
+
 import numpy as np
+from scipy.sparse import dia_matrix
+
 import EarlyStopping as es
-from scipy.sparse.linalg import svds
+
 
 class TestTruncatedSVD(unittest.TestCase):
     def setUp(self):
-        # setUp is a class from unittest
         self.sample_size = 5
-        self.para_size = 5
+        self.parameter_size = 5
+        self.rng = np.random.default_rng(42)
 
     def test_inversion_without_noise(self):
-        design = np.random.normal(0, 1, size = (self.sample_size, self.sample_size))
-        signal = np.random.uniform(0, 1, size = self.sample_size)
+        design = self.rng.normal(0, 1, size=(self.sample_size, self.sample_size))
+        signal = self.rng.uniform(0, 1, size=self.sample_size)
         noiseless_response = design @ signal
-        alg = es.TruncatedSVD(design, noiseless_response)
-        alg.iterate(self.sample_size)
-        truncated_svd_estimate = alg.get_estimate(alg.iteration)
-        self.assertAlmostEqual(np.mean(truncated_svd_estimate - signal), 0, places=5)
+        algorithm = es.TruncatedSVD(design, noiseless_response)
+
+        algorithm.iterate(self.sample_size)
+
+        np.testing.assert_allclose(
+            algorithm.get_estimate(algorithm.iteration),
+            signal,
+            atol=1e-5,
+        )
 
     def test_diagonal_inversion_without_noise(self):
-        design = np.diag(np.random.uniform(0, 1, size = self.sample_size))
-        signal = np.random.uniform(0, 1, size = self.sample_size)
+        diagonal = self.rng.uniform(0.2, 1, size=self.sample_size)
+        design = dia_matrix((diagonal[np.newaxis, :], [0]), shape=(self.sample_size, self.sample_size))
+        signal = self.rng.uniform(0, 1, size=self.sample_size)
         noiseless_response = design @ signal
-        alg = es.TruncatedSVD(design, noiseless_response, diagonal = True)
-        alg.iterate(self.sample_size)
-        truncated_svd_estimate = alg.get_estimate(alg.iteration)
-        self.assertAlmostEqual(np.mean(truncated_svd_estimate - signal), 0, places=5)
+        algorithm = es.TruncatedSVD(design, noiseless_response, diagonal=True)
+
+        algorithm.iterate(self.sample_size)
+
+        np.testing.assert_allclose(
+            algorithm.get_estimate(algorithm.iteration),
+            signal,
+            atol=1e-5,
+        )
+
+    def test_diagonal_mode_rejects_dense_design(self):
+        design = np.diag(self.rng.uniform(0.2, 1, size=self.sample_size))
+        signal = self.rng.uniform(0, 1, size=self.sample_size)
+
+        with self.assertRaises(TypeError):
+            es.TruncatedSVD(design, design @ signal, diagonal=True)
 
     def test_monotonicity_of_theoretical_quantities(self):
-        design = np.random.normal(0, 1, size = (self.sample_size, self.sample_size))
-        signal = np.random.uniform(0, 1, size = self.sample_size)
-        response = design @ signal + np.random.normal(0, 0.1, self.sample_size)
-        alg = es.TruncatedSVD(design, response, true_signal = signal, true_noise_level = 0.1)
+        design = self.rng.normal(0, 1, size=(self.sample_size, self.sample_size))
+        signal = self.rng.uniform(0, 1, size=self.sample_size)
+        response = design @ signal + self.rng.normal(0, 0.1, self.sample_size)
+        algorithm = es.TruncatedSVD(design, response, true_signal=signal, true_noise_level=0.1)
 
         for _ in range(self.sample_size):
-            alg.iterate(1)
+            algorithm.iterate(1)
 
-            self.assertLessEqual(alg.weak_bias2[alg.iteration], alg.weak_bias2[alg.iteration - 1])
-            self.assertLessEqual(alg.strong_bias2[alg.iteration], alg.strong_bias2[alg.iteration - 1])
-
-            self.assertLessEqual(alg.weak_variance[alg.iteration - 1], alg.weak_variance[alg.iteration])
-            self.assertLessEqual(alg.strong_variance[alg.iteration - 1], alg.strong_variance[alg.iteration])
+            self.assertLessEqual(
+                algorithm.weak_bias2[algorithm.iteration],
+                algorithm.weak_bias2[algorithm.iteration - 1],
+            )
+            self.assertLessEqual(
+                algorithm.strong_bias2[algorithm.iteration],
+                algorithm.strong_bias2[algorithm.iteration - 1],
+            )
+            self.assertLessEqual(
+                algorithm.weak_variance[algorithm.iteration - 1],
+                algorithm.weak_variance[algorithm.iteration],
+            )
+            self.assertLessEqual(
+                algorithm.strong_variance[algorithm.iteration - 1],
+                algorithm.strong_variance[algorithm.iteration],
+            )
 
     def test_diagonal_monotonicity_of_theoretical_quantities(self):
-        design = np.diag(np.random.uniform(0, 1, size = self.sample_size))
-        signal = np.random.uniform(0, 1, size = self.sample_size)
-        response = design @ signal + np.random.normal(0, 0.1, self.sample_size)
-        alg = es.TruncatedSVD(design, response, true_signal = signal, true_noise_level = 0.1, diagonal = True)
+        diagonal = self.rng.uniform(0.2, 1, size=self.sample_size)
+        design = dia_matrix((diagonal[np.newaxis, :], [0]), shape=(self.sample_size, self.sample_size))
+        signal = self.rng.uniform(0, 1, size=self.sample_size)
+        response = design @ signal + self.rng.normal(0, 0.1, self.sample_size)
+        algorithm = es.TruncatedSVD(
+            design,
+            response,
+            true_signal=signal,
+            true_noise_level=0.1,
+            diagonal=True,
+        )
 
         for _ in range(self.sample_size):
-            alg.iterate(1)
+            algorithm.iterate(1)
 
-            self.assertLessEqual(alg.weak_bias2[alg.iteration], alg.weak_bias2[alg.iteration - 1])
-            self.assertLessEqual(alg.strong_bias2[alg.iteration], alg.strong_bias2[alg.iteration - 1])
+            self.assertLessEqual(
+                algorithm.weak_bias2[algorithm.iteration],
+                algorithm.weak_bias2[algorithm.iteration - 1],
+            )
+            self.assertLessEqual(
+                algorithm.strong_bias2[algorithm.iteration],
+                algorithm.strong_bias2[algorithm.iteration - 1],
+            )
+            self.assertLessEqual(
+                algorithm.weak_variance[algorithm.iteration - 1],
+                algorithm.weak_variance[algorithm.iteration],
+            )
+            self.assertLessEqual(
+                algorithm.strong_variance[algorithm.iteration - 1],
+                algorithm.strong_variance[algorithm.iteration],
+            )
 
-            self.assertLessEqual(alg.weak_variance[alg.iteration - 1], alg.weak_variance[alg.iteration])
-            self.assertLessEqual(alg.strong_variance[alg.iteration - 1], alg.strong_variance[alg.iteration])
 
-
-if __name__ == '__main__':
-     unittest.main()
+if __name__ == "__main__":
+    unittest.main()
