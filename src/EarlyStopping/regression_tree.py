@@ -334,18 +334,14 @@ class RegressionTree:
 
         *critical_value*: ``float``. Threshold for discrepancy-based stopping.
 
-        *max_depth*: ``int or None``. Retained for backward compatibility. The tree must be grown by calling
-        ``iterate(max_depth=...)`` before this method.
-
-        **Raises**
-
-        *RuntimeError*: If the regression tree has not been grown.
+        *max_depth*: ``None``. Maximum depth for the tree if it has not been grown yet.
         """
 
-        if not hasattr(self, "residuals") or self.residuals.size == 0:
-            raise RuntimeError(
-                "Regression tree has not been grown. Call iterate() before requesting a discrepancy stop."
-            )
+        # If no iteration done before, grow the tree until max_depth
+        if self.residuals.size == 0:
+            self.maximal_depth = max_depth
+            while not self.queue.empty():
+                self._grow_one_iteration()
 
         if np.any(self.residuals <= critical_value):
             # argmax takes the first instance of True in the true-false array
@@ -361,18 +357,14 @@ class RegressionTree:
 
         **Parameters**
 
-        *max_depth*: ``int or None``. Retained for backward compatibility. The tree must be grown by calling
-        ``iterate(max_depth=...)`` before this method.
-
-        **Raises**
-
-        *RuntimeError*: If the regression tree has not been grown.
+        *max_depth*: ``None``. Maximum depth for the tree if it has not been grown yet.
         """
 
-        if not hasattr(self, "residuals") or self.residuals.size == 0:
-            raise RuntimeError(
-                "Regression tree has not been grown. Call iterate() before requesting a balanced oracle."
-            )
+        # If no iteration done before, grow the tree until max_depth
+        if self.residuals.size == 0:
+            self.maximal_depth = max_depth
+            while not self.queue.empty():
+                self._grow_one_iteration()
 
         if np.any(self.bias2 <= self.variance):
             # argmax takes the first instance of True in the true-false array

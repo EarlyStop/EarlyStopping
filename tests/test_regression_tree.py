@@ -56,38 +56,5 @@ class TestRegressionTree(unittest.TestCase):
             np.repeat(np.mean(response), response.size),
         )
 
-    def test_discrepancy_stop_requires_grown_tree(self):
-        tree = RegressionTree(self.design, self.response, min_samples_split=1)
-
-        with self.assertRaisesRegex(RuntimeError, "Call iterate"):
-            tree.get_discrepancy_stop(critical_value=1.0, max_depth=2)
-
-        tree.iterate(max_depth=2)
-        stopping_depth = tree.get_discrepancy_stop(critical_value=1.0, max_depth=2)
-
-        self.assertEqual(stopping_depth, 1)
-        np.testing.assert_allclose(tree.residuals, np.array([25.0, 0.0]))
-
-    def test_balanced_oracle_requires_grown_tree(self):
-        design = np.arange(8, dtype=float).reshape(-1, 1)
-        true_signal = np.array([0.0, 0.0, 0.0, 0.0, 10.0, 10.0, 10.0, 10.0])
-        noise = np.array([1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0])
-        response = true_signal + noise
-
-        tree = RegressionTree(
-            design,
-            response,
-            min_samples_split=1,
-            true_signal=true_signal,
-            true_noise_vector=noise,
-        )
-
-        with self.assertRaisesRegex(RuntimeError, "Call iterate"):
-            tree.get_balanced_oracle(max_depth=4)
-
-        tree.iterate(max_depth=4)
-        self.assertEqual(tree.get_balanced_oracle(max_depth=4), 0)
-
-
 if __name__ == "__main__":
     unittest.main()
