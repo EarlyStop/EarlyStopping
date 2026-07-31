@@ -115,7 +115,7 @@ def single_monte_carlo_run(dgp, noise_level, run_idx):
     return results
 
 
-def run_simulation_wrapper(dgp, M=200, noise_level=1):
+def run_simulation_wrapper(dgp, M=100, noise_level=1):
     """Run simulation with parallel Monte Carlo runs."""
     
     # Parallelize across Monte Carlo runs (auto-detect CPU cores, leave one free for system)
