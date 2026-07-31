@@ -79,27 +79,6 @@ class TestRegressionTree(unittest.TestCase):
         self.assertEqual(tree.indices_processed, {})
         self.assertEqual(tree.block_matrices_full, {})
 
-    def test_theoretical_storage_can_be_disabled_with_oracle_inputs(self):
-        true_signal = np.array([0.0, 0.0, 10.0, 10.0])
-        noise = np.array([1.0, -1.0, 1.0, -1.0])
-        tree = RegressionTree(
-            self.design,
-            true_signal + noise,
-            min_samples_split=1,
-            true_signal=true_signal,
-            true_noise_vector=noise,
-            store_theoretical_quantities=False,
-        )
-
-        with patch.object(tree, "_block_matrix_processing", wraps=tree._block_matrix_processing) as process:
-            tree.iterate(max_depth=2)
-
-        process.assert_not_called()
-        np.testing.assert_array_equal(tree.residuals, np.array([26.0, 1.0]))
-        self.assertEqual(tree.bias2.size, 0)
-        self.assertEqual(tree.variance.size, 0)
-        self.assertEqual(tree.risk.size, 0)
-
     def test_duplicate_features_create_terminal_root(self):
         design = np.ones((4, 2))
         response = np.array([1.0, 2.0, 3.0, 4.0])

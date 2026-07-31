@@ -23,9 +23,6 @@ class RegressionTree:
 
     *true_noise_vector*: ``array or None``. Used only in simulation contexts for theoretical quantities.
 
-    *store_theoretical_quantities*: ``bool``. Whether theoretical quantities should be computed when both
-    ``true_signal`` and ``true_noise_vector`` are supplied.
-
     **Attributes**
 
     *sample_size*: ``int``. The number of samples in the data.
@@ -80,16 +77,13 @@ class RegressionTree:
         min_samples_split,
         true_signal=None,
         true_noise_vector=None,
-        store_theoretical_quantities: bool = True,
     ):
 
         self.true_signal = true_signal
         self.minimal_samples_split = min_samples_split
         self.true_noise_vector = true_noise_vector
-        self.store_theoretical_quantities = store_theoretical_quantities
         self._track_theoretical_quantities = (
-            self.store_theoretical_quantities
-            and self.true_signal is not None
+            self.true_signal is not None
             and self.true_noise_vector is not None
         )
         self.design = design
