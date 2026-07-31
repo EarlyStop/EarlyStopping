@@ -18,29 +18,31 @@ importlib.reload(data_generation)
 importlib.reload(es)
 
 
-def methods_stopping(X_train, y_train, X_test, noise_level, noise, true_signal, true_signal_test):
+def methods_stopping(X_train, y_train, X_test, noise_level, true_signal_test):
 
     return global_ES(
         X_train=X_train,
         y_train=y_train,
         X_test=X_test,
-        noise=noise,
-        true_signal=true_signal,
         signal_test=true_signal_test,
         kappa=noise_level,
     )
 
 
-def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
+def global_ES(X_train, y_train, X_test, signal_test, kappa):
 
-    regression_tree = es.RegressionTree(
-        design=X_train, response=y_train, min_samples_split=1, true_signal=true_signal, true_noise_vector=noise
-    )
+    regression_tree = es.RegressionTree(design=X_train, response=y_train, min_samples_split=1)
     regression_tree.iterate(max_depth=30)
     early_stopping_iteration = regression_tree.get_discrepancy_stop(critical_value=kappa)
 
+    residuals = regression_tree.residuals
+    max_possible_depth = len(residuals)
+    predictions_by_depth = [
+        regression_tree.predict(X_test, depth=depth) for depth in range(max_possible_depth)
+    ]
+
     # Global ES prediction
-    prediction_global_k1 = regression_tree.predict(X_test, depth=early_stopping_iteration)
+    prediction_global_k1 = predictions_by_depth[early_stopping_iteration]
     mse_global = np.mean((prediction_global_k1 - signal_test) ** 2)
 
     # Interpolation:
@@ -48,8 +50,7 @@ def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
         mse_global_inter = mse_global
         print("No Interpolation done.")
     else:
-        prediction_global_k = regression_tree.predict(X_test, depth=early_stopping_iteration - 1)
-        residuals = regression_tree.residuals
+        prediction_global_k = predictions_by_depth[early_stopping_iteration - 1]
         r2_k1 = residuals[early_stopping_iteration]
         r2_k = residuals[early_stopping_iteration - 1]
         alpha = 1 - np.sqrt(1 - (r2_k - kappa) / (r2_k - r2_k1))
@@ -59,14 +60,12 @@ def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
     # Oracle on test set for interpolated global and global
     mse_global_list = []
     mse_global_interpolated_list = []
-    residuals = regression_tree.residuals
-    max_possible_depth = len(residuals)
 
     for iter in range(1, max_possible_depth):
-        predictions_global_k1 = regression_tree.predict(X_test, depth=iter)
-        predictions_global_k = regression_tree.predict(X_test, depth=iter - 1)
-        r2_k1_test = regression_tree.residuals[iter]
-        r2_k_test = regression_tree.residuals[iter - 1]
+        predictions_global_k1 = predictions_by_depth[iter]
+        predictions_global_k = predictions_by_depth[iter - 1]
+        r2_k1_test = residuals[iter]
+        r2_k_test = residuals[iter - 1]
         alpha_test = 1 - np.sqrt(1 - (r2_k_test - kappa) / (r2_k_test - r2_k1_test))
         predictions_interpolated = (1 - alpha_test) * predictions_global_k + alpha_test * predictions_global_k1
         mse_global_interpolated_list.append(np.mean((predictions_interpolated - signal_test) ** 2))
@@ -74,12 +73,6 @@ def global_ES(X_train, y_train, X_test, noise, true_signal, signal_test, kappa):
         # Empirical MSE on test set
         mse_global_temp = np.mean((predictions_global_k1 - signal_test) ** 2)
         mse_global_list.append(mse_global_temp)
-
-    global_stopping_iteration_oracle = np.argmin(mse_global_list) + 1
-    oracle_tree = es.RegressionTree(
-        design=X_train, response=y_train, min_samples_split=1, true_signal=true_signal, true_noise_vector=noise
-    )
-    oracle_tree.iterate(max_depth=global_stopping_iteration_oracle + 1)
 
     # Interpolated oracle:
     mse_oracle_global_interpolated = np.nanmin(mse_global_interpolated_list)
@@ -101,10 +94,10 @@ def single_monte_carlo_run(dgp, noise_level, run_idx):
         X_train = np.random.uniform(-2.5, 2.5, size=(n_train, d))
         X_test = np.random.uniform(-2.5, 2.5, size=(n_test, d))
 
-    y_train, noise = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=True)
-    y_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=True)
-    f, nuisance = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=False)
-    f_test, nuisance = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=False)
+    y_train, _ = data_generation.generate_data_from_X(X_train, noise_level, dgp_name=dgp, add_noise=True)
+    # Preserve this draw so subsequent Monte Carlo runs use the historical random-number stream.
+    data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=True)
+    f_test, _ = data_generation.generate_data_from_X(X_test, noise_level, dgp_name=dgp, add_noise=False)
     
     print(f"{dgp}, global, {run_idx}")
     
@@ -113,8 +106,6 @@ def single_monte_carlo_run(dgp, noise_level, run_idx):
         y_train,
         X_test,
         noise_level=noise_level,
-        noise=noise,
-        true_signal=f,
         true_signal_test=f_test,
     )
     

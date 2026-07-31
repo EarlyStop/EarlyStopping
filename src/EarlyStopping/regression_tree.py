@@ -1,8 +1,10 @@
 from __future__ import annotations
+
+import warnings
+from collections import deque
+
 import numpy as np
 import pandas as pd
-from queue import Queue
-import warnings
 
 
 class RegressionTree:
@@ -69,12 +71,21 @@ class RegressionTree:
             self.variable = variable
 
     def __init__(
-        self, design: np.array, response: np.array, min_samples_split, true_signal=None, true_noise_vector=None
+        self,
+        design: np.array,
+        response: np.array,
+        min_samples_split,
+        true_signal=None,
+        true_noise_vector=None,
     ):
 
         self.true_signal = true_signal
         self.minimal_samples_split = min_samples_split
         self.true_noise_vector = true_noise_vector
+        self._track_theoretical_quantities = (
+            self.true_signal is not None
+            and self.true_noise_vector is not None
+        )
         self.design = design
         self.response = response
         self.sample_size = self.design.shape[0]
@@ -89,7 +100,7 @@ class RegressionTree:
         *max_depth*: ``int or None``. Maximum depth to which the tree should grow. If None, the tree grows fully.
         """
 
-        self.residuals = np.array([])
+        self.residuals = []
         # For theoretical quantities:
         self.block_matrix = {}
         self.indices_processed = {}
@@ -100,14 +111,14 @@ class RegressionTree:
 
         # Initialize root node of the tree
         self.regression_tree = self.Node()
-        self.queue = Queue()
-        self.queue.put((self.regression_tree, np.arange(self.sample_size), 1))  # start with level 1
+        self.queue = deque([(self.regression_tree, np.arange(self.sample_size), 1)])  # start with level 1
         self.terminal_indices = {}
 
         # Process all nodes at the current level (= perform 'one iteration'):
         self.maximal_depth = max_depth
-        while not self.queue.empty():
+        while self.queue:
             self._grow_one_iteration()
+        self.residuals = np.asarray(self.residuals, dtype=float)
 
     def _grow_one_iteration(self):
         """
@@ -116,20 +127,21 @@ class RegressionTree:
 
         # Initialize:
         level_mse_sum = 0
-        level_node_count = 0
-        next_level_queue = Queue()
-        self.level_indices = []
-        current_level_observations = {}
+        next_level_queue = deque()
+        if self._track_theoretical_quantities:
+            self.level_indices = []
+            current_level_observations = {}
+        else:
+            current_level_observations = None
 
         # Process all nodes at the current level
-        for _ in range(self.queue.qsize()):
-            self.node, parent_indices, level = self.queue.get()
+        for _ in range(len(self.queue)):
+            self.node, parent_indices, level = self.queue.popleft()
             number_observations_node = len(self.response[parent_indices])
             self.node.node_prediction = np.mean(self.response[parent_indices])
 
             # Calculate MSE for the current node and update level MSE
             level_mse_sum += self._impurity(parent_indices) * (number_observations_node / self.sample_size)
-            level_node_count += 1
 
             # Check termination conditions
             terminal_due_to_samples = number_observations_node == self.minimal_samples_split
@@ -158,28 +170,30 @@ class RegressionTree:
                 self.node.left_child.node_prediction = np.mean(self.response[left_indices])
                 self.node.right_child.node_prediction = np.mean(self.response[right_indices])
                 self.node.set_params(split_value, split_variable)
-                self.level_indices.extend([left_indices, right_indices])
+                if self._track_theoretical_quantities:
+                    self.level_indices.extend([left_indices, right_indices])
 
                 # Add child nodes to the next level queue
-                next_level_queue.put((self.node.left_child, left_indices, level + 1))
-                next_level_queue.put((self.node.right_child, right_indices, level + 1))
+                next_level_queue.append((self.node.left_child, left_indices, level + 1))
+                next_level_queue.append((self.node.right_child, right_indices, level + 1))
 
-                # Store observations for each node
-                current_level_observations[self.node.left_child] = len(self.response[left_indices])
-                current_level_observations[self.node.right_child] = len(self.response[right_indices])
+                if self._track_theoretical_quantities:
+                    # Store observations for each node
+                    current_level_observations[self.node.left_child] = len(self.response[left_indices])
+                    current_level_observations[self.node.right_child] = len(self.response[right_indices])
 
-                if len(left_indices) == self.minimal_samples_split:
-                    if level not in self.terminal_indices:
-                        self.terminal_indices[level] = []
-                    self.terminal_indices[level].append(left_indices)
+                    if len(left_indices) == self.minimal_samples_split:
+                        if level not in self.terminal_indices:
+                            self.terminal_indices[level] = []
+                        self.terminal_indices[level].append(left_indices)
 
-                if len(right_indices) == self.minimal_samples_split:
-                    if level not in self.terminal_indices:
-                        self.terminal_indices[level] = []
-                    self.terminal_indices[level].append(right_indices)
+                    if len(right_indices) == self.minimal_samples_split:
+                        if level not in self.terminal_indices:
+                            self.terminal_indices[level] = []
+                        self.terminal_indices[level].append(right_indices)
 
         # Update the residuals, theoretical quantities, and queue for the next level
-        self.residuals = np.append(self.residuals, level_mse_sum)
+        self.residuals.append(level_mse_sum)
         self._update_theoretical_quantities(current_level_observations, level)
         self.queue = next_level_queue
 
@@ -301,6 +315,9 @@ class RegressionTree:
 
         *level*: ``int``. Current level of the tree.
         """
+        if not self._track_theoretical_quantities:
+            return
+
         # Exit the function if empty
         if not self.level_indices:
             return
@@ -340,7 +357,7 @@ class RegressionTree:
         # If no iteration done before, grow the tree until max_depth
         if self.residuals.size == 0:
             self.maximal_depth = max_depth
-            while not self.queue.empty():
+            while self.queue:
                 self._grow_one_iteration()
 
         if np.any(self.residuals <= critical_value):
@@ -363,7 +380,7 @@ class RegressionTree:
         # If no iteration done before, grow the tree until max_depth
         if self.residuals.size == 0:
             self.maximal_depth = max_depth
-            while not self.queue.empty():
+            while self.queue:
                 self._grow_one_iteration()
 
         if np.any(self.bias2 <= self.variance):
