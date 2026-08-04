@@ -13,39 +13,39 @@ class Landweber:
     Consider the *linear model*
 
     .. math::
-        Y = Af + \delta Z,
+        Y = Af + \\delta Z,
 
     where :math:`Z` is a :math:`D`-dimensional normal distribution. The landweber iteration is defined through:
 
     .. math::
-        \hat{f}^{(0)}=\hat{f}_0, \quad \hat{f}^{(m+1)}= \hat{f}^{(m)} + A^{\\top}(Y-A \hat{f}^{(m)}).
+        \\hat{f}^{(0)}=\\hat{f}_0, \\quad \\hat{f}^{(m+1)}= \\hat{f}^{(m)} + A^{\\top}(Y-A \\hat{f}^{(m)}).
 
     **Parameters**
 
-    *design*: ``array``. design matrix of the linear model. ( :math:`A \in \mathbb{R}^{D \\times p}` )
+    *design*: ``array``. design matrix of the linear model. ( :math:`A \\in \\mathbb{R}^{D \\times p}` )
 
-    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{D}` )
+    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \\in \\mathbb{R}^{D}` )
 
-    *initial_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\hat{f}_0` )
+    *initial_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\\hat{f}_0` )
 
-    *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` )
+    *true_signal*: ``array, default = None``.  p-dim vector For simulation purposes only. For simulated data the true signal can be included to compute theoretical quantities such as the bias and the mse alongside the iterative procedure. ( :math:`f \\in \\mathbb{R}^{p}` )
 
-    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` )
+    *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the standard deviation of normally distributed noise contributing to the response variable. Allows the analytic computation of the strong and weak variance. ( :math:`\\delta \\geq 0` )
 
     **Attributes**
 
-    *sample_size*: ``int``. Sample size of the linear model ( :math:`D \in \mathbb{N}` )
+    *sample_size*: ``int``. Sample size of the linear model ( :math:`D \\in \\mathbb{N}` )
 
-    *parameter_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
+    *parameter_size*: ``int``. Parameter size of the linear model ( :math:`p \\in \\mathbb{N}` )
 
-    *iteration*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \in \mathbb{N}` )
+    *iteration*: ``int``. Current Landweber iteration of the algorithm ( :math:`m \\in \\mathbb{N}` )
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data and the Landweber estimator.
 
     *strong_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the strong squared bias up to the current Landweber iteration.
 
     .. math::
-       B^{2}_{m} = \\Vert (I-A^{\\top}A)(f-\hat{f}_{m-1}) \\Vert^{2}
+       B^{2}_{m} = \\Vert (I-A^{\\top}A)(f-\\hat{f}_{m-1}) \\Vert^{2}
 
     *strong_variance*: ``array``. Only exists if true_signal was given. Lists the values of the strong variance up to the current Landweber iteration.
 
@@ -55,12 +55,12 @@ class Landweber:
     *strong_risk*: ``array``. Only exists if true_signal was given. Lists the values of the strong norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
     .. math::
-        E[\\Vert \hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m
+        E[\\Vert \\hat{f}_{m} - f \\Vert^2] = B^{2}_{m} + V_m
 
     *weak_bias2*: ``array``. Only exists if true_signal was given. Lists the values of the weak squared bias up to the current Landweber iteration.
 
     .. math::
-        B^{2}_{m,A} = \\Vert A(I-A^{\\top}A)(f-\hat{f}_{m-1}) \\Vert^{2}
+        B^{2}_{m,A} = \\Vert A(I-A^{\\top}A)(f-\\hat{f}_{m-1}) \\Vert^{2}
 
     *weak_variance*: ``array``. Only exists if true_signal was given. Lists the values of the weak variance up to the current Landweber iteration.
 
@@ -70,7 +70,7 @@ class Landweber:
     *weak_risk*: ``array``. Only exists if true_signal was given. Lists the values of the weak norm error between the Landweber estimator and the true signal up to the current Landweber iteration.
 
     .. math::
-        E[\\Vert \hat{f}_{m} - f \\Vert_A^2] = B^{2}_{m,A} + V_{m,A}
+        E[\\Vert \\hat{f}_{m} - f \\Vert_A^2] = B^{2}_{m,A} + V_{m,A}
 
     **Methods**
 
@@ -215,7 +215,7 @@ class Landweber:
         **Parameters**
 
         *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm stops when
-        :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},`
+        :math: `\\Vert Y - A \\hat{f}^{(m)} \\Vert^{2} \\leq \\kappa^{2},`
         where :math: `\\kappa` is the critical value.
 
         *max_iteration*: ``int``. The maximum number of total iterations to be considered.

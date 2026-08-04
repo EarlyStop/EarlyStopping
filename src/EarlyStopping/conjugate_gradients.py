@@ -21,7 +21,7 @@ class ConjugateGradients:
 
     *design*: ``ndarray``. nxp design matrix of the linear model. ( :math:`A \\in \\mathbb{R}^{n \\times p}` )
 
-    *response*: ``ndarray``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{n}` )
+    *response*: ``ndarray``. n-dim vector of the observed data in the linear model. ( :math:`Y \\in \\mathbb{R}^{n}` )
 
     *initial_value*: ``array, default = None``. Determines the zeroth step of the iterative procedure. Default is zero. ( :math:`\\hat{f}_0` )
 

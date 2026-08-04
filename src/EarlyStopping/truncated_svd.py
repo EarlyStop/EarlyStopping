@@ -13,17 +13,17 @@ class TruncatedSVD:
 
     **Parameters**
 
-    *design*: ``array``. Design matrix of the linear model. ( :math:`A \in \mathbb{R}^{D \\times p}` ).
+    *design*: ``array``. Design matrix of the linear model. ( :math:`A \\in \\mathbb{R}^{D \\times p}` ).
 
-    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \in \mathbb{R}^{n}` ).
+    *response*: ``array``. n-dim vector of the observed data in the linear model. ( :math:`Y \\in \\mathbb{R}^{n}` ).
 
     *true_signal*: ``array, default = None``. p-dim vector of the true signal. For simulation purposes only.
     For simulated data, the true signal can be included to compute theoretical quantities such as
-    the bias and the risk alongside the iterative procedure. ( :math:`f \in \mathbb{R}^{p}` ).
+    the bias and the risk alongside the iterative procedure. ( :math:`f \\in \\mathbb{R}^{p}` ).
 
     *true_noise_level*: ``float, default = None`` For simulation purposes only. Corresponds to the
     standard deviation of normally distributed noise contributing to the response variable. Allows
-    the analytic computation of the strong and weak variance. ( :math:`\delta \geq 0` ).
+    the analytic computation of the strong and weak variance. ( :math:`\\delta \\geq 0` ).
 
     *diagonal*: ``bool, default = False`` The user may set this to true if the design matrix is
     diagonal with strictly positive singular values to avoid unnecessary computation in the diagonal
@@ -32,11 +32,11 @@ class TruncatedSVD:
 
     **Attributes**
 
-    *iteration*: ``int``. Current iteration of the algorithm ( :math:`m \in \mathbb{N}` )
+    *iteration*: ``int``. Current iteration of the algorithm ( :math:`m \\in \\mathbb{N}` )
 
-    *sample_size*: ``int``. Sample size of the linear model ( :math:`D \in \mathbb{N}` )
+    *sample_size*: ``int``. Sample size of the linear model ( :math:`D \\in \\mathbb{N}` )
 
-    *parameter_size*: ``int``. Parameter size of the linear model ( :math:`p \in \mathbb{N}` )
+    *parameter_size*: ``int``. Parameter size of the linear model ( :math:`p \\in \\mathbb{N}` )
 
     *residuals*: ``array``. Lists the sequence of the squared residuals between the observed data
     and the estimator.
@@ -161,7 +161,7 @@ class TruncatedSVD:
         **Parameters**
 
         *critical_value*: ``float``. The critical value for the discrepancy principle. The algorithm
-        stops when :math: `\\Vert Y - A \hat{f}^{(m)} \\Vert^{2} \leq \\kappa^{2},` where
+        stops when :math: `\\Vert Y - A \\hat{f}^{(m)} \\Vert^{2} \\leq \\kappa^{2},` where
         :math: `\\kappa` is the critical value.
 
         *max_iteration*: ``int``. The maximum number of total iterations to be considered.
