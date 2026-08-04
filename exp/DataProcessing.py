@@ -13,8 +13,8 @@ import pandas as pd
 # Constructing a minimal ADNI I data sets ---------------------------------------------------------
 
 # Importing data sets
-cognitive_test_data = pd.read_csv("data/MMSE_26Mar2026.csv")
-mri_data            = pd.read_csv("data/UCSFFSX7_26Mar2026.csv")
+cognitive_test_data = pd.read_csv("data/MMSE.csv")
+mri_data            = pd.read_csv("data/UCSFFSX7.csv")
 
 # Merge cognitive test score from 2nd data frame into 1st data frame only for rows where RID, VISCODE, and VISCODE2 match
 merged_data = pd.merge(

@@ -5,6 +5,7 @@ import seaborn as sns
 import EarlyStopping as es
 
 from sklearn import linear_model
+from sklearn.model_selection import train_test_split
 
 data_06 = pd.read_csv("data/ADNI_I_m06_data.csv")
 data_36 = pd.read_csv("data/ADNI_I_m36_data.csv")
@@ -28,99 +29,105 @@ first_covariate_location = data_06_reduced.columns.get_loc("ST101SV")
 last_covariate_location = data_06_reduced.columns.get_loc("ST155SV")
 
 design_06 = data_06_reduced.iloc[:, first_covariate_location:last_covariate_location]
-design_06 = design_06.fillna(design_06.mean(numeric_only=True)) # Replace missing values with the mean of the respective column
+design_06 = design_06.fillna(
+    design_06.mean(numeric_only=True)
+)  # Replace missing values with the mean of the respective column
 design_06 = design_06.to_numpy()
 
 first_covariate_location = data_36_reduced.columns.get_loc("ST101SV")
 last_covariate_location = data_36_reduced.columns.get_loc("ST155SV")
 
 design_36 = data_36_reduced.iloc[:, first_covariate_location:last_covariate_location]
-design_36 = design_36.fillna(design_36.mean(numeric_only=True)) # Replace missing values with the mean of the respective column
+design_36 = design_36.fillna(
+    design_36.mean(numeric_only=True)
+)  # Replace missing values with the mean of the respective column
 design_36 = design_36.to_numpy()
 
 design_diff = design_36 - design_06
 
-alg = es.L2_boost(design_diff, response_diff)
-alg.iterate(300)
 
-# Discrepancy stop
-noise_estimate = alg.get_noise_estimate(K = 1)
-print(f"Noise estimate: {noise_estimate}")
-
-stopping_time  = alg.get_discrepancy_stop(critical_value = 6, max_iteration=300)
-print(f"Stopping time (discrepancy): {stopping_time}")
-
-# Early stopping via residual ratios
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=1.2)
-print(f"Stopping time (residual ratio): {stopping_time}")
-
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.25)
-print(f"Stopping time (residual ratio): {stopping_time}")
-
-stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.1)
-print(f"Stopping time (residual ratio): {stopping_time}")
-
-# Classical model selection via AIC
-aic_minimizer = alg.get_aic_iteration(K = 2)
-print(f"Best model (AIC): {aic_minimizer}")
-
-# Identifying the selected covariates by label
-last_iteration = 17
-data_36_reduced_model_components = data_36_reduced.iloc[:, first_covariate_location:last_covariate_location]
-data_36_reduced_selected_components = data_36_reduced_model_components.iloc[:, alg.selected_components[0:last_iteration]]
-boost_selected_covariates = data_36_reduced_selected_components.columns
-
-alg.coefficients_list[1]
+print(f"Design shape {design_diff.shape}")
 
 
-design_36 = data_36_reduced.iloc[:, ]
-design_36.head()
+def my_function(input_seed):
+    # Split the data
+    design_diff_train, design_diff_test, response_diff_train, response_diff_test = train_test_split(
+        design_diff, response_diff, test_size=0.2, random_state=input_seed
+    )
 
-# Comparison with the Lasso
-alg.residuals
-alg.residuals[81]
+    # alg = es.L2_boost(design_diff, response_diff)
+    alg = es.L2_boost(design_diff_train, response_diff_train)
+    alg.iterate(50)
+
+    # noise_estimate = alg.get_noise_estimate(K=1)
+    # stopping_time = alg.get_discrepancy_stop(critical_value=noise_estimate, max_iteration=300)
+    # print(f"Stopping time discrepancy {stopping_time}")
+
+    # Discrepancy stop
+    noise_estimate = alg.get_noise_estimate(K=1)
+    print(f"Noise estimate: {noise_estimate}")
+
+    stopping_time = alg.get_discrepancy_stop(critical_value=noise_estimate, max_iteration=300)
+    print(f"Stopping time (discrepancy): {stopping_time}")
+
+    # # Early stopping via residual ratios
+    # stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=1.2)
+    # print(f"Stopping time (residual ratio): {stopping_time}")
+
+    # stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.25)
+    # print(f"Stopping time (residual ratio): {stopping_time}")
+
+    # stopping_time = alg.get_residual_ratio_stop(max_iteration=200, K=0.1)
+    # print(f"Stopping time (residual ratio): {stopping_time}")
+
+    # Classical model selection via AIC
+    # stopping_time = alg.get_aic_iteration(K=2)
+    # print(f"Best model (AIC): {stopping_time}")
+
+    # Identifying the selected covariates by label
+    last_iteration = stopping_time
+    data_36_reduced_model_components = data_36_reduced.iloc[:, first_covariate_location:last_covariate_location]
+    data_36_reduced_selected_components = data_36_reduced_model_components.iloc[
+        :, alg.selected_components[0:last_iteration]
+    ]
+    boost_selected_covariates = data_36_reduced_selected_components.columns
+    print(f"Boost selected covariates: {boost_selected_covariates}")
+
+    # alg.coefficients_list[1]
+
+    # design_36 = data_36_reduced.iloc[:, ]
+    # design_36.head()
+
+    # # Comparison with the Lasso
+    # alg.residuals
+    # alg.residuals[81]
+
+    # alpha = np.sqrt(1 * np.log(alg.parameter_size) / alg.sample_size)
+    # lasso = linear_model.Lasso(alpha, fit_intercept=False, max_iter=2000)
+    # lasso.fit(design_diff, response_diff)
+    # np.mean((response_diff - lasso.predict(design_diff)) ** 2)
+
+    lassoCV = linear_model.LassoCV(fit_intercept=False)
+    lassoCV.fit(design_diff_train, response_diff_train)
+    # np.mean((response_diff - lassoCV.predict(design_diff)) ** 2)
+
+    selected_mask = lassoCV.coef_ != 0
+
+    # # Identifying the selected covariates by label
+    data_36_reduced_model_components = data_36_reduced.iloc[:, first_covariate_location:last_covariate_location]
+    lasso_selected_covariates = data_36_reduced_model_components.columns[selected_mask]
+    print(f"Lasso selected covariates: {lasso_selected_covariates}")
+
+    intersection = list(set(boost_selected_covariates) & set(lasso_selected_covariates))
+
+    print(f"Intersection: {intersection}")
+    # selected_covariates = data_36_reduced_selected_components.columns
+
+    # # alg.sample_size
+    # # alg.parameter_size
+    print(f"LassoCV predict MSE: {np.mean((response_diff_test - lassoCV.predict(design_diff_test)) ** 2)}")
+    print(f"L2Boost: {np.mean((response_diff_test - alg.predict(design_diff_test, stopping_time))**2)}")
 
 
-
-alpha = np.sqrt(1 * np.log(alg.parameter_size) / alg.sample_size)
-lasso = linear_model.Lasso(alpha, fit_intercept=False, max_iter=2000)
-lasso.fit(design_diff, response_diff)
-np.mean((response_diff - lasso.predict(design_diff)) ** 2)
-
-
-lassoCV = linear_model.LassoCV(fit_intercept=False)
-lassoCV.fit(design_diff, response_diff)
-np.mean((response_diff - lassoCV.predict(design_diff)) ** 2)
-
-
-selected_mask = lassoCV.coef_ != 0
-
-# Identifying the selected covariates by label
-data_36_reduced_model_components = data_36_reduced.iloc[:, first_covariate_location:last_covariate_location]
-lasso_selected_covariates = data_36_reduced_model_components.columns[selected_mask]
-
-intersection = list(set(boost_selected_covariates) & set(lasso_selected_covariates))
-
-selected_covariates = data_36_reduced_selected_components.columns
-
-
-alg.sample_size
-alg.parameter_size
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for my_seed in range(10):
+    my_function(my_seed)
